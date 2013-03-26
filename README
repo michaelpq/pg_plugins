@@ -1,0 +1,18 @@
+Custom background workers for PostgreSQL
+================================================================================
+Custom background workers have been introduced in PostgreSQL 9.3, and this
+repository has as goal to gather a bunch of bgworkers I developped as
+reference.
+
+================================================================================
+LICENSE
+================================================================================
+pg_workers is free software distributed under the PostgreSQL Licence.
+
+Copyright (c) 2013, Michael Paquier
+
+================================================================================
+More about your host
+================================================================================
+Twitter: http://twitter.com/michaelpq
+Blog: http://michael.otacoo.com
