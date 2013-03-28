@@ -1,3 +1,3 @@
-hello_signal, cusom bgworker for PostgreSQL
+hello_signal, custom bgworker for PostgreSQL
 ================================================================================
 Small bgworker presenting how to handle properly signals.
