@@ -1,0 +1,3 @@
+hello_world, custom bgworker for PostgreSQL
+================================================================================
+Simple bgworker example priting hello_world in logs.
