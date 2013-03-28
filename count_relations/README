@@ -1,0 +1,4 @@
+count_relation, custom bgworker for PostgreSQL
+================================================================================
+Small bgworker presenting how to connect to database and log some basic
+information about what is fetched.
