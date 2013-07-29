@@ -44,8 +44,11 @@ hello_sigterm(SIGNAL_ARGS)
  * Main loop processing.
  */
 static void
-hello_main(void *main_arg)
+hello_main(Datum main_arg)
 {
+	/* Set up the sigterm signal before unblocking them */
+	pqsignal(SIGTERM, hello_sigterm);
+
 	/* We're now ready to receive signals */
 	BackgroundWorkerUnblockSignals();
 	while (!got_sigterm)
@@ -80,11 +83,14 @@ _PG_init(void)
 	/* Register the worker processes */
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
+
+	/*
+	 * Function to call when starting bgworker, in this case library is
+	 * already loaded.
+	 */
 	worker.bgw_main = hello_main;
-	worker.bgw_sighup = NULL;
-	worker.bgw_sigterm = hello_sigterm;
-	worker.bgw_name = "hello world";
+	snprintf(worker.bgw_name, BGW_MAXLEN, "hello world");
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
-	worker.bgw_main_arg = NULL;
+	worker.bgw_main_arg = (Datum) 0;
 	RegisterBackgroundWorker(&worker);
 }
