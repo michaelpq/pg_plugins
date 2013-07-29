@@ -58,8 +58,12 @@ worker_spi_sighup(SIGNAL_ARGS)
 }
 
 static void
-worker_spi_main(void *main_arg)
+worker_spi_main(Datum main_arg)
 {
+	/* Register functions for SIGTERM/SIGHUP management */
+	pqsignal(SIGHUP, worker_spi_sighup);
+	pqsignal(SIGTERM, worker_spi_sigterm);
+
 	/* We're now ready to receive signals */
 	BackgroundWorkerUnblockSignals();
 
@@ -136,10 +140,8 @@ _PG_init(void)
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
 	worker.bgw_main = worker_spi_main;
-	worker.bgw_sighup = worker_spi_sighup;
-	worker.bgw_sigterm = worker_spi_sigterm;
-	worker.bgw_name = "count relations";
+	snprintf(worker.bgw_name, BGW_MAXLEN, "count relations");
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
-	worker.bgw_main_arg = NULL;
+	worker.bgw_main_arg = (Datum) 0;
 	RegisterBackgroundWorker(&worker);
 }
