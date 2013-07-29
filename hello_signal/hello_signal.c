@@ -53,15 +53,18 @@ hello_sighup(SIGNAL_ARGS)
 }
 
 static void
-hello_main(void *main_arg)
+hello_main(Datum main_arg)
 {
-
 	/*
 	 * Initialize latch for this worker. Note that this initialization needs to
 	 * be done absolutely before unblocking signals.
 	 */
 	InitializeLatchSupport();
 	InitLatch(&signalLatch);
+
+	/* Register functions for SIGTERM/SIGHUP management */
+	pqsignal(SIGHUP, hello_sighup);
+	pqsignal(SIGTERM, hello_sigterm);
 
 	/* We're now ready to receive signals */
 	BackgroundWorkerUnblockSignals();
@@ -110,11 +113,9 @@ _PG_init(void)
 	worker.bgw_flags = 0;
 	worker.bgw_start_time = BgWorkerStart_PostmasterStart;
 	worker.bgw_main = hello_main;
-	worker.bgw_sigterm = hello_sigterm;
-	worker.bgw_sighup = hello_sighup;
-	worker.bgw_name = worker_name;
+	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", worker_name);
 	/* Wait 10 seconds for restart before crash */
 	worker.bgw_restart_time = 10;
-	worker.bgw_main_arg = NULL;
+	worker.bgw_main_arg = (Datum) 0;
 	RegisterBackgroundWorker(&worker);
 }
