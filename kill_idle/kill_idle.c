@@ -137,6 +137,7 @@ kill_idle_main(Datum main_arg)
 		StartTransactionCommand();
 		SPI_connect();
 		PushActiveSnapshot(GetTransactionSnapshot());
+		pgstat_report_activity(STATE_RUNNING, buf.data);
 
 		/* Statement start time */
 		SetCurrentStatementStartTimestamp();
@@ -181,6 +182,7 @@ kill_idle_main(Datum main_arg)
 		SPI_finish();
 		PopActiveSnapshot();
 		CommitTransactionCommand();
+		pgstat_report_activity(STATE_IDLE, NULL);
 	}
 
 	/* No problems, so clean exit */
