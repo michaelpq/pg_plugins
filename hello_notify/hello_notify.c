@@ -115,7 +115,7 @@ static void worker_spi_main(Datum main_arg)
 		PushActiveSnapshot(GetTransactionSnapshot());
 
 		ret = SPI_execute(buf.data, false, 0);
-		if (ret != SPI_OK_UPDATE)
+		if (ret != SPI_OK_SELECT)
 			elog(FATAL, "hello_notify: SPI_execute failed with error code %d", ret);
 
 		process_notifies = SPI_processed > 0;
