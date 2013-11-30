@@ -2,8 +2,7 @@
  * hello_world.c
  *		bgworker logging hello world on server
  *
- * Copyright (c) 2013, Michael Paquier
- * Portions Copyright (c) 1996-2013, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2013, PostgreSQL Global Development Group
  */
 
 /* Minimum set of headers */

@@ -3,8 +3,7 @@
  *		Kill idle connections of a Postgres server inactive for a given
  *		amount of time.
  *
- * Copyright (c) 2013, Michael Paquier
- * Portions Copyright (c) 1996-2013, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2013, PostgreSQL Global Development Group
  *
  * NOTES
  *		This facility might have some usefulness for some servers...
