@@ -1,0 +1,3 @@
+hello_notify, custom bgworker for PostgreSQL
+================================================================================
+Small bgworker presenting how to read varibales and send out notifications.
