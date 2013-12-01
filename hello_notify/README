@@ -1,0 +1,18 @@
+hello_notify, custom bgworker for PostgreSQL
+================================================================================
+Small bgworker presenting how to manage send-out notifications for queries
+taking a too long time to run. This worker uses a simply method based on
+pg_notify to initialize a channel that can be listened by the other backends.
+
+This worker can use the following parameters:
+- hello_notify.database, the database to send notification messages to.
+  This cannot change after server startup.
+- hello_notify.channel_name, name of the channel initialized by the worker.
+  Can be reloaded with SIGHUP.
+- hello_notify.nap_time, internal of time in seconds between which NOTIFY
+  messages are sent. Can be reloaded with SIGHUP. This also represents the
+  amount of time to check.
+
+Backends that want to listen to this worker need to connect to the database
+defined by hello_notify.database and LISTEN to the channel defined by
+hello_notify.channel_name.
