@@ -191,7 +191,10 @@ hello_notify_main(Datum main_arg)
 		PopActiveSnapshot();
 		CommitTransactionCommand();
 
-		/* Send out notifications if necessary */
+		/*
+		 * Send out notifications. This is mandatory after previous
+		 * transaction has committed.
+		 */
 		if (process_notifies)
 			ProcessCompletedNotifies();
 		pgstat_report_activity(STATE_IDLE, NULL);
