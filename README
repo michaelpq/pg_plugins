@@ -1,8 +1,8 @@
 Custom background workers for PostgreSQL
 ================================================================================
 Custom background workers have been introduced in PostgreSQL 9.3, and this
-repository has as goal to gather a bunch of bgworkers I developped as
-reference.
+repository has as goal to gather a bunch of bgworkers developped here and
+there as reference.
 
 ================================================================================
 LICENSE
