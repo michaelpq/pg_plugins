@@ -1,4 +1,4 @@
-pg_plugins, set of plug-in templates Custom for PostgreSQL
+pg_plugins, set of plug-in templates for PostgreSQL
 ================================================================================
 
 This repository contains a collection of plug-ins for PostgreSQL that can
