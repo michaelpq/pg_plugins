@@ -1,13 +1,17 @@
-Custom background workers for PostgreSQL
+pg_plugins, set of plug-in templates Custom for PostgreSQL
 ================================================================================
-Custom background workers have been introduced in PostgreSQL 9.3, and this
-repository has as goal to gather a bunch of bgworkers developped here and
-there as reference.
+
+This repository contains a collection of plug-ins for PostgreSQL that can
+be used as templates for more extensive work, like:
+
+- Custom background workers that have been introduced in PostgreSQL 9.3
+- Logical decoding plug-ins
+- etc.
 
 ================================================================================
 LICENSE
 ================================================================================
-pg_workers is free software distributed under the PostgreSQL Licence.
+pg_plugins is free software distributed under the PostgreSQL Licence.
 
 Copyright (c) 2013, PostgreSQL Global Development Group
 
