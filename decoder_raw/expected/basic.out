@@ -14,8 +14,8 @@ INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
-                       data                       
---------------------------------------------------
+                        data                        
+----------------------------------------------------
  BEGIN;
  COMMIT;
  BEGIN;
@@ -23,10 +23,10 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 1, b = 'cc';
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
  COMMIT;
  BEGIN;
- DELETE FROM public.aa WHERE a = 1 AND b = null ;
+ DELETE FROM public.aa WHERE a = 1 ;
  COMMIT;
 (12 rows)
 

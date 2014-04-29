@@ -13,6 +13,7 @@
  */
 #include "postgres.h"
 
+#include "access/genam.h"
 #include "access/sysattr.h"
 
 #include "catalog/pg_class.h"
@@ -253,6 +254,101 @@ print_value(StringInfo s, Datum origval, Oid typid, bool isnull)
 }
 
 /*
+ * Print a WHERE clause item
+ */
+static void
+print_where_clause_item(StringInfo s,
+						Relation relation,
+						HeapTuple tuple,
+						int natt,
+						bool *first_column)
+{
+	Form_pg_attribute	attr;
+	Datum				origval;
+	bool				isnull;
+	TupleDesc			tupdesc = RelationGetDescr(relation);
+
+	attr = tupdesc->attrs[natt];
+
+	/* Skip dropped columns and system columns */
+	if (attr->attisdropped || attr->attnum < 0)
+		return;
+
+	/* Skip comma for first colums */
+	if (!*first_column)
+		appendStringInfoString(s, "AND ");
+	else
+		*first_column = false;
+
+	/* Print attribute name */
+	appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
+
+	/* Get Datum from tuple */
+	origval = fastgetattr(tuple, natt + 1, tupdesc, &isnull);
+
+	/* Get output function */
+	print_value(s, origval, attr->atttypid, isnull);
+	appendStringInfoString(s, " ");
+}
+
+/*
+ * Generate a WHERE clause for UPDATE or DELETE.
+ */
+static void
+print_where_clause(StringInfo s,
+				   Relation relation,
+				   HeapTuple oldtuple,
+				   HeapTuple newtuple)
+{
+	TupleDesc		tupdesc = RelationGetDescr(relation);
+	int				natt;
+	bool			first_column = true;
+
+	/*
+	 * If there are no old values and no index that can be used for
+	 * tuple selectivity if the relation is using a DEFAULT REPLICA
+	 * IDENTITY with a primary key or an INDEX, we're basically done.
+	 * User should be aware that the selectivity of tuples can be
+	 * compromised severely if REPLICA IDENTITY is very laxist but this
+	 * is not the problem of this plugin.
+	 */
+	RelationGetIndexList(relation);
+	if (oldtuple == NULL && !OidIsValid(relation->rd_replidindex))
+	{
+		return;
+	}
+
+	/* Build the WHERE clause */
+	appendStringInfoString(s, " WHERE ");
+
+	/* Generate WHERE clause using new values of REPLICA IDENTITY */
+	if (OidIsValid(relation->rd_replidindex))
+	{
+		Relation    indexRel;
+		int			key;
+
+		/* Use all the values associated with the index */
+		indexRel = index_open(relation->rd_replidindex, ShareLock);
+		for (key = 0; key < indexRel->rd_index->indnatts; key++)
+		{
+			int	relattr = indexRel->rd_index->indkey.values[key - 1];
+			print_where_clause_item(s, relation, newtuple,
+									relattr, &first_column);
+		}
+		index_close(indexRel, NoLock);
+		return;
+	}
+
+	/* We need absolutely some values for tuple selectivity now */
+	Assert(oldtuple != NULL);
+
+	/* Fallback to default case, the use of old values */
+	for (natt = 0; natt < tupdesc->natts; natt++)
+		print_where_clause_item(s, relation, oldtuple,
+								natt, &first_column);
+}
+
+/*
  * Decode an INSERT entry
  */
 static void
@@ -314,62 +410,27 @@ decoder_raw_insert(StringInfo s,
 
 /*
  * Decode a DELETE entry
- * TODO: improve WHERE clause generation in the DEFAULT and INDEX case
- * as with such data rows can be uniquely identified.
  */
 static void
 decoder_raw_delete(StringInfo s,
 				   Relation relation,
 				   HeapTuple tuple)
 {
-	TupleDesc		tupdesc = RelationGetDescr(relation);
-	int				natt;
-	bool			first_column = true;
-
 	appendStringInfo(s, "DELETE FROM ");
 	print_relname(s, relation);
-	appendStringInfo(s, " WHERE ");
 
-	/* Append values and column names */
-	for (natt = 0; natt < tupdesc->natts; natt++)
-	{
-		Form_pg_attribute	attr;
-		Datum				origval;
-		bool				isnull;
-
-		attr = tupdesc->attrs[natt];
-
-		/* Skip dropped columns and system columns */
-		if (attr->attisdropped || attr->attnum < 0)
-			continue;
-
-		/* Skip comma for first colums */
-		if (!first_column)
-		{
-			appendStringInfoString(s, "AND ");
-		}
-		else
-			first_column = false;
-
-		/* Print attribute name */
-		appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
-
-		/* Get Datum from tuple */
-		origval = fastgetattr(tuple, natt + 1, tupdesc, &isnull);
-
-		/* Get output function */
-		print_value(s, origval, attr->atttypid, isnull);
-		appendStringInfoString(s, " ");
-	}
-
+	/*
+	 * Here the same tuple is used as old and new values, selectivity will
+	 * be properly reduced by relation uses DEFAULT or INDEX as REPLICA
+	 * IDENTITY.
+	 */
+	print_where_clause(s, relation, tuple, tuple);
 	appendStringInfoString(s, ";");
 }
 
 
 /*
  * Decode an UPDATE entry
- * TODO: improve WHERE clause generation in the DEFAULT and INDEX cases
- * as with such data rows can be uniquely identified.
  */
 static void
 decoder_raw_update(StringInfo s,
@@ -420,51 +481,9 @@ decoder_raw_update(StringInfo s,
 		print_value(s, origval, attr->atttypid, isnull);
 	}
 
-	/*
-	 * If there are no old value, we're basically done. User should
-	 * be aware that the selectivity of tuples can be compromised
-	 * severely if REPLICA IDENTITY is very laxist but this is not
-	 * the problem of this plugin.
-	 */
-	if (oldtuple == NULL)
-	{
-		appendStringInfoString(s, ";");
-		return;
-	}
+	/* Print WHERE clause */
+	print_where_clause(s, relation, oldtuple, newtuple);
 
-	/* Build the WHERE clause */
-	first_column = true;
-	appendStringInfoString(s, " WHERE ");
-	for (natt = 0; natt < tupdesc->natts; natt++)
-	{
-		Form_pg_attribute	attr;
-		Datum				origval;
-		bool				isnull;
-
-		attr = tupdesc->attrs[natt];
-
-		/* Skip dropped columns and system columns */
-		if (attr->attisdropped || attr->attnum < 0)
-			continue;
-
-		/* Skip comma for first colums */
-		if (!first_column)
-		{
-			appendStringInfoString(s, "AND ");
-		}
-		else
-			first_column = false;
-
-		/* Print attribute name */
-		appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
-
-		/* Get Datum from tuple */
-		origval = fastgetattr(oldtuple, natt + 1, tupdesc, &isnull);
-
-		/* Get output function */
-		print_value(s, origval, attr->atttypid, isnull);
-		appendStringInfoString(s, " ");
-	}
 	appendStringInfoString(s, ";");
 }
 
