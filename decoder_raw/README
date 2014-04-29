@@ -1,0 +1,10 @@
+decoder_raw, Output plugin for logical replication
+================================================================================
+
+This output plugin for logical replication generates raw queries based
+on the logical changes it finds. Those queries can be consumed as they
+are by any remote source.
+
+The following options can be used:
+- include-transaction, 'on' will print BEGIN and COMMIT messages, while
+'off' prints empty strings
