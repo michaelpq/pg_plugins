@@ -1,5 +1,3 @@
 # Generated subdirectories
-/log/
-/isolation_output/
-/regression_output/
+/results/
 /tmp_check/
