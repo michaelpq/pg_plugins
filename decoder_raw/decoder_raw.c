@@ -314,6 +314,8 @@ decoder_raw_insert(StringInfo s,
 
 /*
  * Decode a DELETE entry
+ * TODO: improve WHERE clause generation in the DEFAULT and INDEX case
+ * as with such data rows can be uniquely identified.
  */
 static void
 decoder_raw_delete(StringInfo s,
@@ -366,6 +368,8 @@ decoder_raw_delete(StringInfo s,
 
 /*
  * Decode an UPDATE entry
+ * TODO: improve WHERE clause generation in the DEFAULT and INDEX cases
+ * as with such data rows can be uniquely identified.
  */
 static void
 decoder_raw_update(StringInfo s,
