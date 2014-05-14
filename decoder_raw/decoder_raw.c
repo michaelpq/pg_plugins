@@ -143,10 +143,13 @@ decoder_raw_begin_txn(LogicalDecodingContext *ctx, ReorderBufferTXN *txn)
 {
 	TestDecodingData *data = ctx->output_plugin_private;
 
-	OutputPluginPrepareWrite(ctx, true);
+	/* Write to the plugin only if there is */
 	if (data->include_transaction)
+	{
+		OutputPluginPrepareWrite(ctx, true);
 		appendStringInfoString(ctx->out, "BEGIN;");
-	OutputPluginWrite(ctx, true);
+		OutputPluginWrite(ctx, true);
+	}
 }
 
 /* COMMIT callback */
@@ -156,10 +159,13 @@ decoder_raw_commit_txn(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 {
 	TestDecodingData *data = ctx->output_plugin_private;
 
-	OutputPluginPrepareWrite(ctx, true);
+	/* Write to the plugin only if there is */
 	if (data->include_transaction)
+	{
+		OutputPluginPrepareWrite(ctx, true);
 		appendStringInfoString(ctx->out, "COMMIT;");
-	OutputPluginWrite(ctx, true);
+		OutputPluginWrite(ctx, true);
+	}
 }
 
 /*
@@ -540,7 +546,7 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			break;
 	}
 
+	OutputPluginWrite(ctx, true);
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(data->context);
-	OutputPluginWrite(ctx, true);
 }
