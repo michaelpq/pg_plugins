@@ -508,16 +508,18 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 	/* Avoid leaking memory by using and resetting our own context */
 	old = MemoryContextSwitchTo(data->context);
 
-	OutputPluginPrepareWrite(ctx, true);
-
 	/* Decode entry depending on its type */
 	switch (change->action)
 	{
 		case REORDER_BUFFER_CHANGE_INSERT:
 			if (change->data.tp.newtuple != NULL)
+			{
+				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_insert(ctx->out,
 								   relation,
 								   &change->data.tp.newtuple->tuple);
+				OutputPluginWrite(ctx, true);
+			}
 			break;
 		case REORDER_BUFFER_CHANGE_UPDATE:
 			if (change->data.tp.newtuple != NULL ||
@@ -528,17 +530,23 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 				HeapTuple newtuple = change->data.tp.newtuple != NULL ?
 					&change->data.tp.newtuple->tuple : NULL;
 
+				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_update(ctx->out,
 								   relation,
 								   oldtuple,
 								   newtuple);
+				OutputPluginWrite(ctx, true);
 			}
 			break;
 		case REORDER_BUFFER_CHANGE_DELETE:
 			if (change->data.tp.oldtuple != NULL)
+			{
+				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_delete(ctx->out,
 								   relation,
 								   &change->data.tp.oldtuple->tuple);
+				OutputPluginWrite(ctx, true);
+			}
 			break;
 		default:
 			/* Should not come here */
@@ -546,7 +554,6 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			break;
 	}
 
-	OutputPluginWrite(ctx, true);
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(data->context);
 }

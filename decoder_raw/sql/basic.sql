@@ -10,6 +10,9 @@ CREATE TABLE aa (a int primary key, b text);
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
+-- Have a look at changes with different modes.
+-- In the second call changes are consumed to not impact the next cases.
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
 DROP TABLE aa;
 
@@ -19,6 +22,8 @@ ALTER TABLE aa REPLICA IDENTITY FULL;
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
+-- Have a look at changes with different modes
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
 DROP TABLE aa;
 
@@ -28,6 +33,8 @@ ALTER TABLE aa REPLICA IDENTITY NOTHING;
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
+-- Have a look at changes with different modes
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
 DROP TABLE aa;
 

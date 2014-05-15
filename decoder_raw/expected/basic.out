@@ -13,6 +13,17 @@ CREATE TABLE aa (a int primary key, b text);
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
+-- Have a look at changes with different modes.
+-- In the second call changes are consumed to not impact the next cases.
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
+                        data                        
+----------------------------------------------------
+ INSERT INTO public.aa (a, b) VALUES (1, 'aa');
+ INSERT INTO public.aa (a, b) VALUES (2, 'bb');
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
+ DELETE FROM public.aa WHERE a = 1 ;
+(4 rows)
+
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
                         data                        
 ----------------------------------------------------
@@ -37,6 +48,16 @@ ALTER TABLE aa REPLICA IDENTITY FULL;
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
+-- Have a look at changes with different modes
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
+                              data                               
+-----------------------------------------------------------------
+ INSERT INTO public.aa (a, b) VALUES (1, 'aa');
+ INSERT INTO public.aa (a, b) VALUES (2, 'bb');
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 AND b = 'aa' ;
+ DELETE FROM public.aa WHERE a = 1 AND b = 'cc' ;
+(4 rows)
+
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
                               data                               
 -----------------------------------------------------------------
@@ -65,6 +86,15 @@ ALTER TABLE aa REPLICA IDENTITY NOTHING;
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 DELETE FROM aa WHERE a = 1;
+-- Have a look at changes with different modes
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
+                      data                      
+------------------------------------------------
+ INSERT INTO public.aa (a, b) VALUES (1, 'aa');
+ INSERT INTO public.aa (a, b) VALUES (2, 'bb');
+ UPDATE public.aa SET a = 1, b = 'cc';
+(3 rows)
+
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
                       data                      
 ------------------------------------------------
@@ -82,9 +112,8 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  UPDATE public.aa SET a = 1, b = 'cc';
  COMMIT;
  BEGIN;
- 
  COMMIT;
-(16 rows)
+(15 rows)
 
 DROP TABLE aa;
 -- Drop replication slot
