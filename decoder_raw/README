@@ -14,8 +14,8 @@ primary key
 - USING INDEX, because the UNIQUE index on NOT NULL values ensures
 that tuples are uniquely identified.
 In those cases, for DEFAULT and USING INDEX, WHERE clause is generated
-with new tuple values if no columns managing used by the selectivity index
-are updated as server does not need to provide old tuple values. If at least
+with new tuple values if no columns mused by the selectivity index are
+updated as server does not need to provide old tuple values. If at least
 one column is updated, new tuple values are added, of course only on the
 columns managing tuple selectivity.
 Based on that, UPDATE and DELETE queries are not generated for the following
