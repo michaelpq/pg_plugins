@@ -17,7 +17,7 @@ UPDATE aa SET b = 'cc' WHERE a = 1;
 UPDATE aa SET a = 3 WHERE a = 1;
 -- Update of both columns
 UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
-DELETE FROM aa WHERE a = 2;
+DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes.
 -- In the second call changes are consumed to not impact the next cases.
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
@@ -28,7 +28,8 @@ SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'includ
  UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
  UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 ;
  UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
-(5 rows)
+ DELETE FROM public.aa WHERE a = 4 ;
+(6 rows)
 
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
                         data                        
@@ -48,7 +49,51 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  BEGIN;
  UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
  COMMIT;
-(15 rows)
+ BEGIN;
+ DELETE FROM public.aa WHERE a = 4 ;
+ COMMIT;
+(18 rows)
+
+DROP TABLE aa;
+-- DEFAULT case without PRIMARY KEY
+CREATE TABLE aa (a int, b text NOT NULL);
+INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
+-- Update of Non-selective column
+UPDATE aa SET b = 'cc' WHERE a = 1;
+-- Update of only selective column
+UPDATE aa SET a = 3 WHERE a = 1;
+-- Update of both columns
+UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
+DELETE FROM aa WHERE a = 4;
+-- Have a look at changes with different modes.
+-- In the second call changes are consumed to not impact the next cases.
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
+                      data                      
+------------------------------------------------
+ INSERT INTO public.aa (a, b) VALUES (1, 'aa');
+ INSERT INTO public.aa (a, b) VALUES (2, 'bb');
+(2 rows)
+
+SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
+                      data                      
+------------------------------------------------
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ INSERT INTO public.aa (a, b) VALUES (1, 'aa');
+ INSERT INTO public.aa (a, b) VALUES (2, 'bb');
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+(16 rows)
 
 DROP TABLE aa;
 -- INDEX case
@@ -62,7 +107,7 @@ UPDATE aa SET b = 'cc' WHERE a = 1;
 UPDATE aa SET a = 3 WHERE a = 1;
 -- Update of both columns
 UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
-DELETE FROM aa WHERE a = 2;
+DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
                         data                        
@@ -72,7 +117,8 @@ SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'includ
  UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
  UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 ;
  UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
-(5 rows)
+ DELETE FROM public.aa WHERE a = 4 ;
+(6 rows)
 
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
                         data                        
@@ -98,7 +144,10 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  BEGIN;
  UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
  COMMIT;
-(21 rows)
+ BEGIN;
+ DELETE FROM public.aa WHERE a = 4 ;
+ COMMIT;
+(24 rows)
 
 DROP TABLE aa;
 -- FULL case
@@ -111,7 +160,7 @@ UPDATE aa SET b = 'cc' WHERE a = 1;
 UPDATE aa SET a = 3 WHERE a = 1;
 -- Update of both columns
 UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
-DELETE FROM aa WHERE a = 2;
+DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
                               data                               
@@ -121,7 +170,8 @@ SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'includ
  UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 AND b = 'aa' ;
  UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 AND b = 'cc' ;
  UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 AND b = 'bb' ;
-(5 rows)
+ DELETE FROM public.aa WHERE a = 4 AND b = 'dd' ;
+(6 rows)
 
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
                               data                               
@@ -145,7 +195,10 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  BEGIN;
  UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 AND b = 'bb' ;
  COMMIT;
-(19 rows)
+ BEGIN;
+ DELETE FROM public.aa WHERE a = 4 AND b = 'dd' ;
+ COMMIT;
+(22 rows)
 
 DROP TABLE aa;
 -- NOTHING case
@@ -154,7 +207,7 @@ ALTER TABLE aa REPLICA IDENTITY NOTHING;
 INSERT INTO aa VALUES (1, 'aa'), (2, 'bb');
 UPDATE aa SET b = 'cc' WHERE a = 1;
 UPDATE aa SET a = 3 WHERE a = 1;
-DELETE FROM aa WHERE a = 2;
+DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
                       data                      
@@ -180,9 +233,7 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  COMMIT;
  BEGIN;
  COMMIT;
- BEGIN;
- COMMIT;
-(16 rows)
+(14 rows)
 
 DROP TABLE aa;
 -- Drop replication slot

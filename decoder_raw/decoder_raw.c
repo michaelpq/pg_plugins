@@ -347,11 +347,11 @@ print_where_clause(StringInfo s,
 
 	/* We need absolutely some values for tuple selectivity now */
 	Assert(oldtuple != NULL &&
-		relation->rd_rel->relreplident == REPLICA_IDENTITY_FULL);
+		   relation->rd_rel->relreplident == REPLICA_IDENTITY_FULL);
 
 	/*
 	 * Fallback to default case, use of old values and print WHERE clause
-	 * using all the columns. This is actually the code path for FULL
+	 * using all the columns. This is actually the code path for FULL.
 	 */
 	for (natt = 0; natt < tupdesc->natts; natt++)
 		print_where_clause_item(s, relation, oldtuple,
@@ -507,11 +507,23 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 	TestDecodingData *data;
 	MemoryContext	old;
 	char			replident = relation->rd_rel->relreplident;
+	bool			is_rel_non_selective;
 
 	data = ctx->output_plugin_private;
 
 	/* Avoid leaking memory by using and resetting our own context */
 	old = MemoryContextSwitchTo(data->context);
+
+	/*
+	 * Determine if relation is selective enough for WHERE clause generation
+	 * in UPDATE and DELETE cases. A non-selective relation uses REPLICA
+	 * IDENTITY set as NOTHING, or DEFAULT without an available replica
+	 * identity index.
+	 */
+	RelationGetIndexList(relation);
+	is_rel_non_selective = (replident == REPLICA_IDENTITY_NOTHING ||
+							(replident == REPLICA_IDENTITY_DEFAULT &&
+							 !OidIsValid(relation->rd_replidindex)));
 
 	/* Decode entry depending on its type */
 	switch (change->action)
@@ -527,11 +539,7 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			}
 			break;
 		case REORDER_BUFFER_CHANGE_UPDATE:
-			/*
-			 * If relation has no replica identity, nothing can be done
-			 * to have a good tuple selectivity, so do nothing for UPDATE.
-			 */
-			if (replident != REPLICA_IDENTITY_NOTHING)
+			if (!is_rel_non_selective)
 			{
 				HeapTuple oldtuple = change->data.tp.oldtuple != NULL ?
 					&change->data.tp.oldtuple->tuple : NULL;
@@ -547,11 +555,7 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			}
 			break;
 		case REORDER_BUFFER_CHANGE_DELETE:
-			/*
-			 * If relation has no replica identity, nothing can be done
-			 * to have a good tuple selectivity, so do nothing for DELETE.
-			 */
-			if (replident != REPLICA_IDENTITY_NOTHING)
+			if (!is_rel_non_selective)
 			{
 				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_delete(ctx->out,
