@@ -310,23 +310,14 @@ print_where_clause(StringInfo s,
 	int				natt;
 	bool			first_column = true;
 
-	/*
-	 * If there are no old values and no index that can be used for
-	 * tuple selectivity if the relation is using a DEFAULT REPLICA
-	 * IDENTITY with a primary key or an INDEX, we're basically done.
-	 * User should be aware that the selectivity of tuples can be
-	 * compromised severely if REPLICA IDENTITY is very laxist but this
-	 * is not the problem of this plugin.
-	 */
-	RelationGetIndexList(relation);
-	if (oldtuple == NULL && !OidIsValid(relation->rd_replidindex))
-	{
-		return;
-	}
+	Assert(relation->rd_rel->relreplident == REPLICA_IDENTITY_DEFAULT ||
+		   relation->rd_rel->relreplident == REPLICA_IDENTITY_FULL ||
+		   relation->rd_rel->relreplident == REPLICA_IDENTITY_INDEX);
 
 	/* Build the WHERE clause */
 	appendStringInfoString(s, " WHERE ");
 
+	RelationGetIndexList(relation);
 	/* Generate WHERE clause using new values of REPLICA IDENTITY */
 	if (OidIsValid(relation->rd_replidindex))
 	{
@@ -338,7 +329,16 @@ print_where_clause(StringInfo s,
 		for (key = 0; key < indexRel->rd_index->indnatts; key++)
 		{
 			int	relattr = indexRel->rd_index->indkey.values[key - 1];
-			print_where_clause_item(s, relation, newtuple,
+
+			/*
+			 * For a relation having REPLICA IDENTITY set at DEFAULT
+			 * or INDEX, if one of the columns used for tuple selectivity
+			 * is changed, the old tuple data is not NULL and need to
+			 * be used for tuple selectivity. If no such columns are
+			 * updated, old tuple data is NULL.
+			 */
+			print_where_clause_item(s, relation,
+									oldtuple ? oldtuple : newtuple,
 									relattr, &first_column);
 		}
 		index_close(indexRel, NoLock);
@@ -346,9 +346,13 @@ print_where_clause(StringInfo s,
 	}
 
 	/* We need absolutely some values for tuple selectivity now */
-	Assert(oldtuple != NULL);
+	Assert(oldtuple != NULL &&
+		relation->rd_rel->relreplident == REPLICA_IDENTITY_FULL);
 
-	/* Fallback to default case, the use of old values */
+	/*
+	 * Fallback to default case, use of old values and print WHERE clause
+	 * using all the columns. This is actually the code path for FULL
+	 */
 	for (natt = 0; natt < tupdesc->natts; natt++)
 		print_where_clause_item(s, relation, oldtuple,
 								natt, &first_column);
@@ -501,7 +505,8 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 				 Relation relation, ReorderBufferChange *change)
 {
 	TestDecodingData *data;
-	MemoryContext old;
+	MemoryContext	old;
+	char			replident = relation->rd_rel->relreplident;
 
 	data = ctx->output_plugin_private;
 
@@ -522,8 +527,11 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			}
 			break;
 		case REORDER_BUFFER_CHANGE_UPDATE:
-			if (change->data.tp.newtuple != NULL ||
-				change->data.tp.oldtuple != NULL)
+			/*
+			 * If relation has no replica identity, nothing can be done
+			 * to have a good tuple selectivity, so do nothing for UPDATE.
+			 */
+			if (replident != REPLICA_IDENTITY_NOTHING)
 			{
 				HeapTuple oldtuple = change->data.tp.oldtuple != NULL ?
 					&change->data.tp.oldtuple->tuple : NULL;
@@ -539,7 +547,11 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			}
 			break;
 		case REORDER_BUFFER_CHANGE_DELETE:
-			if (change->data.tp.oldtuple != NULL)
+			/*
+			 * If relation has no replica identity, nothing can be done
+			 * to have a good tuple selectivity, so do nothing for DELETE.
+			 */
+			if (replident != REPLICA_IDENTITY_NOTHING)
 			{
 				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_delete(ctx->out,
