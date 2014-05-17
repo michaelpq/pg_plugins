@@ -21,19 +21,19 @@ DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes.
 -- In the second call changes are consumed to not impact the next cases.
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
-                        data                        
-----------------------------------------------------
+                       data                        
+---------------------------------------------------
  INSERT INTO public.aa (a, b) VALUES (1, 'aa');
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
- UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
- UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 ;
- UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
- DELETE FROM public.aa WHERE a = 4 ;
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1;
+ UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1;
+ UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2;
+ DELETE FROM public.aa WHERE a = 4;
 (6 rows)
 
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
-                        data                        
-----------------------------------------------------
+                       data                        
+---------------------------------------------------
  BEGIN;
  COMMIT;
  BEGIN;
@@ -41,16 +41,16 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1;
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 ;
+ UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1;
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
+ UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2;
  COMMIT;
  BEGIN;
- DELETE FROM public.aa WHERE a = 4 ;
+ DELETE FROM public.aa WHERE a = 4;
  COMMIT;
 (18 rows)
 
@@ -110,19 +110,19 @@ UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
 DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
-                        data                        
-----------------------------------------------------
+                       data                        
+---------------------------------------------------
  INSERT INTO public.aa (a, b) VALUES (1, 'aa');
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
- UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
- UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 ;
- UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
- DELETE FROM public.aa WHERE a = 4 ;
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1;
+ UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1;
+ UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2;
+ DELETE FROM public.aa WHERE a = 4;
 (6 rows)
 
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
-                        data                        
-----------------------------------------------------
+                       data                        
+---------------------------------------------------
  BEGIN;
  COMMIT;
  BEGIN;
@@ -136,16 +136,16 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 ;
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1;
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 ;
+ UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1;
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 ;
+ UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2;
  COMMIT;
  BEGIN;
- DELETE FROM public.aa WHERE a = 4 ;
+ DELETE FROM public.aa WHERE a = 4;
  COMMIT;
 (24 rows)
 
@@ -163,19 +163,19 @@ UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
 DELETE FROM aa WHERE a = 4;
 -- Have a look at changes with different modes
 SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include-transaction', 'off');
-                              data                               
------------------------------------------------------------------
+                              data                              
+----------------------------------------------------------------
  INSERT INTO public.aa (a, b) VALUES (1, 'aa');
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
- UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 AND b = 'aa' ;
- UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 AND b = 'cc' ;
- UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 AND b = 'bb' ;
- DELETE FROM public.aa WHERE a = 4 AND b = 'dd' ;
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 AND b = 'aa';
+ UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 AND b = 'cc';
+ UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 AND b = 'bb';
+ DELETE FROM public.aa WHERE a = 4 AND b = 'dd';
 (6 rows)
 
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include-transaction', 'on');
-                              data                               
------------------------------------------------------------------
+                              data                              
+----------------------------------------------------------------
  BEGIN;
  COMMIT;
  BEGIN;
@@ -187,16 +187,16 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
  INSERT INTO public.aa (a, b) VALUES (2, 'bb');
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 AND b = 'aa' ;
+ UPDATE public.aa SET a = 1, b = 'cc' WHERE a = 1 AND b = 'aa';
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 AND b = 'cc' ;
+ UPDATE public.aa SET a = 3, b = 'cc' WHERE a = 1 AND b = 'cc';
  COMMIT;
  BEGIN;
- UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 AND b = 'bb' ;
+ UPDATE public.aa SET a = 4, b = 'dd' WHERE a = 2 AND b = 'bb';
  COMMIT;
  BEGIN;
- DELETE FROM public.aa WHERE a = 4 AND b = 'dd' ;
+ DELETE FROM public.aa WHERE a = 4 AND b = 'dd';
  COMMIT;
 (22 rows)
 

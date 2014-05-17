@@ -282,7 +282,7 @@ print_where_clause_item(StringInfo s,
 
 	/* Skip comma for first colums */
 	if (!*first_column)
-		appendStringInfoString(s, "AND ");
+		appendStringInfoString(s, " AND ");
 	else
 		*first_column = false;
 
@@ -294,7 +294,6 @@ print_where_clause_item(StringInfo s,
 
 	/* Get output function */
 	print_value(s, origval, attr->atttypid, isnull);
-	appendStringInfoString(s, " ");
 }
 
 /*
