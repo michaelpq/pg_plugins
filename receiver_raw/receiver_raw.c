@@ -264,6 +264,7 @@ receiver_raw_main(Datum main_arg)
 		 * Check message received from server:
 		 * - 'k', keepalive message, bypass
 		 * - 'w', check for streaming header
+		 * TODO: if server requested feedback, answer to it.
 		 */
 		if (copybuf[0] == 'k')
 			continue;
