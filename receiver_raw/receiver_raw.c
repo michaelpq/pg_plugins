@@ -41,6 +41,14 @@ static int receiver_idle_time = 5;
 /* Worker name */
 static char *worker_name = "receiver_raw";
 
+/* Lastly written positions */
+static XLogRecPtr output_written_lsn = InvalidXLogRecPtr;
+static XLogRecPtr output_fsync_lsn = InvalidXLogRecPtr;
+
+/* Stream functions */
+static void fe_sendint64(int64 i, char *buf);
+static int64 fe_recvint64(char *buf);
+
 static void
 receiver_raw_sigterm(SIGNAL_ARGS)
 {
@@ -61,34 +69,117 @@ receiver_raw_sighup(SIGNAL_ARGS)
 	errno = save_errno;
 }
 
+/*
+ * Send a Standby Status Update message to server.
+ */
+static bool
+sendFeedback(PGconn *conn, int64 now)
+{
+	char		replybuf[1 + 8 + 8 + 8 + 8 + 1];
+	int		 len = 0;
+
+	ereport(LOG, (errmsg("%s: confirming write up to %X/%X, "
+						 "flush to %X/%X (slot custom_slot)\n",
+						 worker_name,
+						 (uint32) (output_written_lsn >> 32),
+						 (uint32) output_written_lsn,
+						 (uint32) (output_fsync_lsn >> 32),
+						 (uint32) output_fsync_lsn)));
+
+	replybuf[len] = 'r';
+	len += 1;
+	fe_sendint64(output_written_lsn, &replybuf[len]);   /* write */
+	len += 8;
+	fe_sendint64(output_fsync_lsn, &replybuf[len]);	 /* flush */
+	len += 8;
+	fe_sendint64(InvalidXLogRecPtr, &replybuf[len]);	/* apply */
+	len += 8;
+	fe_sendint64(now, &replybuf[len]);  /* sendTime */
+	len += 8;
+
+	/* No reply requested from server */
+	replybuf[len] = 0;
+	len += 1;
+
+	if (PQputCopyData(conn, replybuf, len) <= 0 || PQflush(conn))
+	{
+		ereport(LOG, (errmsg("could not send feedback packet: %s",
+							 PQerrorMessage(conn))));
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ * Converts an int64 to network byte order.
+ */
+static void
+fe_sendint64(int64 i, char *buf)
+{
+	uint32	  n32;
+
+	/* High order half first, since we're doing MSB-first */
+	n32 = (uint32) (i >> 32);
+	n32 = htonl(n32);
+	memcpy(&buf[0], &n32, 4);
+
+	/* Now the low order half */
+	n32 = (uint32) i;
+	n32 = htonl(n32);
+	memcpy(&buf[4], &n32, 4);
+}
+
+/*
+ * Converts an int64 from network byte order to native format.
+ */
+static int64
+fe_recvint64(char *buf)
+{
+	int64	   result;
+	uint32	  h32;
+	uint32	  l32;
+
+	memcpy(&h32, buf, 4);
+	memcpy(&l32, buf + 4, 4);
+	h32 = ntohl(h32);
+	l32 = ntohl(l32);
+
+	result = h32;
+	result <<= 32;
+	result |= l32;
+
+	return result;
+}
+
 static int64
 feGetCurrentTimestamp(void)
 {
-    int64       result;
-    struct timeval tp;
+	int64	   result;
+	struct timeval tp;
 
-    gettimeofday(&tp, NULL);
+	gettimeofday(&tp, NULL);
 
-    result = (int64) tp.tv_sec -
-        ((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY);
+	result = (int64) tp.tv_sec -
+		((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY);
 
-    result = (result * USECS_PER_SEC) + tp.tv_usec;
+	result = (result * USECS_PER_SEC) + tp.tv_usec;
 
-    return result;
+	return result;
 }
 
 static void
 feTimestampDifference(int64 start_time, int64 stop_time,
-                      long *secs, int *microsecs)
+					  long *secs, int *microsecs)
 {
-    int64       diff = stop_time - start_time;
+	int64	   diff = stop_time - start_time;
 
-    if (diff <= 0)
+	if (diff <= 0)
 	{
 		*secs = 0;
 		*microsecs = 0;
 	}
-    else
+	else
 	{
 		*secs = (long) (diff / USECS_PER_SEC);
 		*microsecs = (int) (diff % USECS_PER_SEC);
@@ -129,14 +220,14 @@ receiver_raw_main(Datum main_arg)
 	/* Start logical replication at specified position */
 	appendPQExpBuffer(query, "START_REPLICATION SLOT \"custom_slot\" LOGICAL 0/0");
 	res = PQexec(conn, query->data);
-    if (PQresultStatus(res) != PGRES_COPY_BOTH)
+	if (PQresultStatus(res) != PGRES_COPY_BOTH)
 	{
 		PQclear(res);
 		ereport(LOG, (errmsg("Could not start logical replication")));
 		proc_exit(1);
 	}
 	PQclear(res);
-    resetPQExpBuffer(query);
+	resetPQExpBuffer(query);
 
 	while (!got_sigterm)
 	{
@@ -194,20 +285,20 @@ receiver_raw_main(Datum main_arg)
 			 * response back to the client.
 			 */
 			int			r;
-            fd_set      input_mask;
-            int64       message_target = 0;
-            int64       fsync_target = 0;
-            struct timeval timeout;
-            struct timeval *timeoutptr = NULL;
-			int64       targettime;
-			long        secs;
-			int         usecs;
+			fd_set	  input_mask;
+			int64	   message_target = 0;
+			int64	   fsync_target = 0;
+			struct timeval timeout;
+			struct timeval *timeoutptr = NULL;
+			int64	   targettime;
+			long		secs;
+			int		 usecs;
 			int64		now;
 
-            FD_ZERO(&input_mask);
-            FD_SET(PQsocket(conn), &input_mask);
+			FD_ZERO(&input_mask);
+			FD_SET(PQsocket(conn), &input_mask);
 
-            /* Now compute when to wakeup. */
+			/* Now compute when to wakeup. */
 			targettime = message_target;
 
 			if (fsync_target > 0 && fsync_target < targettime)
@@ -234,16 +325,16 @@ receiver_raw_main(Datum main_arg)
 				 */
 				continue;
 			}
-            else if (r < 0)
+			else if (r < 0)
 			{
-				//TODO error message here
+				ereport(LOG, (errmsg("Incorrect status received... Leaving.")));
 				proc_exit(1);
 			}
 
-            /* Else there is actually data on the socket */
-            if (PQconsumeInput(conn) == 0)
+			/* Else there is actually data on the socket */
+			if (PQconsumeInput(conn) == 0)
 			{
-				//TODO error message
+				ereport(LOG, (errmsg("Data remaining on the socket... Leaving.")));
 				proc_exit(1);
 			}
 			continue;
@@ -251,7 +342,10 @@ receiver_raw_main(Datum main_arg)
 
 		/* End of copy stream */
 		if (rc == -1)
+		{
+			ereport(LOG, (errmsg("COPY Stream has abruptly ended...")));
 			break;
+		}
 
 		/* Failure when reading copy stream, leave */
 		if (rc == -2)
@@ -264,10 +358,54 @@ receiver_raw_main(Datum main_arg)
 		 * Check message received from server:
 		 * - 'k', keepalive message, bypass
 		 * - 'w', check for streaming header
-		 * TODO: if server requested feedback, answer to it.
 		 */
 		if (copybuf[0] == 'k')
+		{
+			int		 pos;
+			bool		replyRequested;
+			XLogRecPtr  walEnd;
+
+			/*
+			 * Parse the keepalive message, enclosed in the CopyData message.
+			 * We just check if the server requested a reply, and ignore the
+			 * rest.
+			 */
+			pos = 1;	/* skip msgtype 'k' */
+			walEnd = fe_recvint64(&copybuf[pos]);
+
+			/*
+			 * We mark here that the LSN received has already been flushed
+			 * but this is actually incorrect. As a TODO item the feedback
+			 * message should be sent once changes are correctly applied to
+			 * the local database.
+			 */
+			output_written_lsn = Max(walEnd, output_written_lsn);
+			output_fsync_lsn = output_written_lsn;
+			pos += 8;	/* read walEnd */
+			pos += 8;	/* skip sendTime */
+			if (rc < pos + 1)
+			{
+				ereport(LOG, (errmsg("%s: streaming header too small: %d\n",
+									 worker_name, rc)));
+				proc_exit(1);
+			}
+			replyRequested = copybuf[pos];
+
+			/*
+			 * If the server requested an immediate reply, send one.
+			 * TODO: send this confirmation only once change has been
+			 * successfully written to the database here.
+			 */
+			if (replyRequested)
+			{
+				int64 now = feGetCurrentTimestamp();
+
+				/* Leave is feedback is not sent properly */
+				if (!sendFeedback(conn, now))
+					proc_exit(1);
+			}
 			continue;
+		}
 		else if (copybuf[0] != 'w')
 		{
 			ereport(LOG, (errmsg("Incorrect streaming header")));
@@ -285,8 +423,7 @@ receiver_raw_main(Datum main_arg)
 			proc_exit(1);
 		}
 
-		/* TODO: send feedback to server about written and flush positions */
-		/* TODO: apply change to database */
+		/* TODO: apply change to database correctly */
 
 		/* Process data */
 		ereport(LOG, (errmsg("Data received: %s", copybuf + hdr_len)));
