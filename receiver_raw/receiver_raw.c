@@ -36,7 +36,10 @@ static volatile sig_atomic_t got_sigterm = false;
 static volatile sig_atomic_t got_sighup = false;
 
 /* GUC variables */
-static int receiver_idle_time = 5;
+static char *receiver_database = "postgres";
+static char *receiver_slot = "slot";
+static char *receiver_conn_string = "replication=database dbname=postgres";
+static int receiver_idle_time = 100;
 
 /* Worker name */
 static char *worker_name = "receiver_raw";
@@ -79,7 +82,7 @@ sendFeedback(PGconn *conn, int64 now)
 	int		 len = 0;
 
 	ereport(LOG, (errmsg("%s: confirming write up to %X/%X, "
-						 "flush to %X/%X (slot custom_slot)\n",
+						 "flush to %X/%X (slot custom_slot)",
 						 worker_name,
 						 (uint32) (output_written_lsn >> 32),
 						 (uint32) output_written_lsn,
@@ -192,7 +195,6 @@ receiver_raw_main(Datum main_arg)
 	/* Variables for replication connection */
 	PQExpBuffer query;
 	PGconn *conn;
-	char connstring[256] = "replication=database dbname=postgres";
 	PGresult *res;
 
 	/* Register functions for SIGTERM/SIGHUP management */
@@ -203,10 +205,10 @@ receiver_raw_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 
 	/* Connect to a database */
-	BackgroundWorkerInitializeConnection("postgres", NULL);
+	BackgroundWorkerInitializeConnection(receiver_database, NULL);
 
 	/* Establish connection to remote server */
-	conn = PQconnectdb(connstring);
+	conn = PQconnectdb(receiver_conn_string);
 	if (PQstatus(conn) != CONNECTION_OK)
 	{
 		PQfinish(conn);
@@ -218,7 +220,8 @@ receiver_raw_main(Datum main_arg)
 	query = createPQExpBuffer();
 
 	/* Start logical replication at specified position */
-	appendPQExpBuffer(query, "START_REPLICATION SLOT \"custom_slot\" LOGICAL 0/0");
+	appendPQExpBuffer(query, "START_REPLICATION SLOT \"%s\" LOGICAL 0/0",
+					  receiver_slot);
 	res = PQexec(conn, query->data);
 	if (PQresultStatus(res) != PGRES_COPY_BOTH)
 	{
@@ -238,7 +241,7 @@ receiver_raw_main(Datum main_arg)
 		/* Wait necessary amount of time */
 		rc = WaitLatch(&MyProc->procLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   receiver_idle_time * 1000L);
+					   receiver_idle_time * 1L);
 		ResetLatch(&MyProc->procLatch);
 
 		/* Process signals */
@@ -385,7 +388,7 @@ receiver_raw_main(Datum main_arg)
 			pos += 8;	/* skip sendTime */
 			if (rc < pos + 1)
 			{
-				ereport(LOG, (errmsg("%s: streaming header too small: %d\n",
+				ereport(LOG, (errmsg("%s: streaming header too small: %d",
 									 worker_name, rc)));
 				proc_exit(1);
 			}
@@ -434,12 +437,63 @@ receiver_raw_main(Datum main_arg)
 }
 
 /*
+ * Entry point to load parameters
+ */
+static void
+receiver_raw_load_params(void)
+{
+	/*
+	 * Defines database where to connect and apply the changes.
+	 */
+	DefineCustomStringVariable("receiver_raw.database",
+							   "Database where changes are applied.",
+							   "Default value is \"postgres\".",
+							   &receiver_database,
+							   "postgres",
+							   PGC_POSTMASTER,
+							   0, NULL, NULL, NULL);
+
+	/* Slot used to get replication changes on remote */
+	DefineCustomStringVariable("receiver_raw.slot_name",
+							   "Replication slot used for logical changes.",
+							   "Default value is \"slot\".",
+							   &receiver_slot,
+							   "slot",
+							   PGC_POSTMASTER,
+							   0, NULL, NULL, NULL);
+
+	/*
+	 * Connection string used to connect to remote source.
+	 * Note: This could be made far better as if user does not set
+	 * replication START_REPLICATION will simply fail :)
+	 */
+	DefineCustomStringVariable("receiver_raw.conn_string",
+							   "Replication slot used for logical changes.",
+							   "Default value is \"slot\".",
+							   &receiver_conn_string,
+							   "replication=database dbname=postgres",
+							   PGC_POSTMASTER,
+							   0, NULL, NULL, NULL);
+
+	/* Nap time between two loops */
+	DefineCustomIntVariable("receiver.nap_time",
+							"Nap time between two successive loops (ms)",
+							"Default value set to 100 ms.",
+							&receiver_idle_time,
+							100, 1, 10000,
+							PGC_SIGHUP,
+							0, NULL, NULL, NULL);
+}
+
+/*
  * Entry point for worker loading
  */
 void
 _PG_init(void)
 {
 	BackgroundWorker worker;
+
+	receiver_raw_load_params();
 
 	/* Worker parameter and registration */
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
