@@ -35,4 +35,3 @@ TODO
 - Change main loop such as all changes are consumed until there is no
 more data in the COPY fetch. Now one tuple is fetched per loop cycle...
 - Add a check to be sure that decoder_raw is used upstream
-- Apply changes to the database locally

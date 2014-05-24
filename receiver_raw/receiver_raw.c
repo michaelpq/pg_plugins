@@ -427,10 +427,35 @@ receiver_raw_main(Datum main_arg)
 			proc_exit(1);
 		}
 
-		/* TODO: apply change to database correctly */
+		/* Apply change to database */
+		SetCurrentStatementStartTimestamp();
+		StartTransactionCommand();
+		SPI_connect();
+		PushActiveSnapshot(GetTransactionSnapshot());
+		pgstat_report_activity(STATE_RUNNING, copybuf + hdr_len);
+		SetCurrentStatementStartTimestamp();
 
-		/* Process data */
-		ereport(LOG, (errmsg("Data received: %s", copybuf + hdr_len)));
+		/* Execute query */
+		rc = SPI_execute(copybuf + hdr_len, false, 0);
+
+		if (rc == SPI_OK_INSERT)
+			ereport(LOG, (errmsg("INSERT received correctly: %s",
+									copybuf + hdr_len)));
+		else if (rc == SPI_OK_UPDATE)
+			ereport(LOG, (errmsg("UPDATE received correctly: %s",
+									copybuf + hdr_len)));
+		else if (rc == SPI_OK_DELETE)
+			ereport(LOG, (errmsg("DELETE received correctly: %s",
+									copybuf + hdr_len)));
+		else
+			ereport(LOG, (errmsg("Error when applying change: %s",
+									copybuf + hdr_len)));
+
+		/* Finish process */
+		SPI_finish();
+		PopActiveSnapshot();
+		CommitTransactionCommand();
+		pgstat_report_activity(STATE_IDLE, NULL);
 	}
 
 	/* No problems, so clean exit */
