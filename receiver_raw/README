@@ -20,7 +20,7 @@ remote. Default value is "slot".
 server from which logical changes are taken. Default is the following:
 replication=database dbname=postgres
 Note that if replication is not set this bgworker is easily broken...
-- receiver.nap_time, amount of time between two loops, time between which
+- receiver.idle_time, amount of time between two loops, time between which
 two successive changes are applied.
 
 Notes

@@ -476,7 +476,7 @@ receiver_raw_load_params(void)
 							   0, NULL, NULL, NULL);
 
 	/* Nap time between two loops */
-	DefineCustomIntVariable("receiver.nap_time",
+	DefineCustomIntVariable("receiver_raw.idle_time",
 							"Nap time between two successive loops (ms)",
 							"Default value set to 100 ms.",
 							&receiver_idle_time,
