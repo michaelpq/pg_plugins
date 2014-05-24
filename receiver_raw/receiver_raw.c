@@ -220,7 +220,8 @@ receiver_raw_main(Datum main_arg)
 	query = createPQExpBuffer();
 
 	/* Start logical replication at specified position */
-	appendPQExpBuffer(query, "START_REPLICATION SLOT \"%s\" LOGICAL 0/0",
+	appendPQExpBuffer(query, "START_REPLICATION SLOT \"%s\" LOGICAL 0/0 "
+					         "(\"include_transaction\" 'off')",
 					  receiver_slot);
 	res = PQexec(conn, query->data);
 	if (PQresultStatus(res) != PGRES_COPY_BOTH)
