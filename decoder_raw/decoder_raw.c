@@ -105,7 +105,7 @@ decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
 
 		Assert(elem->arg == NULL || IsA(elem->arg, String));
 
-		if (strcmp(elem->defname, "include-transaction") == 0)
+		if (strcmp(elem->defname, "include_transaction") == 0)
 		{
 			/* if option does not provide a value, it means its value is true */
 			if (elem->arg == NULL)

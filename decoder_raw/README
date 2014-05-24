@@ -27,7 +27,7 @@ INSERT queries are generated for all relations everytime using the new
 tuple values fetched from WAL.
 
 The following options can be used:
-- include-transaction, 'on' will print BEGIN and COMMIT messages, while
+- include_transaction, 'on' will print BEGIN and COMMIT messages, while
 'off' bypasses them and generates nothing.
 
 TODO
