@@ -29,6 +29,8 @@ Notes
 Before running this background worker, be sure that the schema between
 the two servers is consistent between the two databases that are linked.
 
+This worker is compatible with PostgreSQL 9.4 and newer versions.
+
 TODO
 ----
 

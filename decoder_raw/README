@@ -30,6 +30,8 @@ The following options can be used:
 - include_transaction, 'on' will print BEGIN and COMMIT messages, while
 'off' bypasses them and generates nothing.
 
+This worker is compatible with PostgreSQL 9.4 and newer versions.
+
 TODO
 ====
 
