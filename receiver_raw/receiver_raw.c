@@ -278,7 +278,111 @@ receiver_raw_main(Datum main_arg)
 		 * something to receive and do not limit process to one tuple per
 		 * loop.
 		 */
-		rc = PQgetCopyData(conn, &copybuf, 1);
+		while (true)
+		{
+			rc = PQgetCopyData(conn, &copybuf, 1);
+			if (rc <= 0)
+				break;
+
+			/*
+			 * Check message received from server:
+			 * - 'k', keepalive message, bypass
+			 * - 'w', check for streaming header
+			 */
+			if (copybuf[0] == 'k')
+			{
+				int		 pos;
+				bool		replyRequested;
+				XLogRecPtr  walEnd;
+
+				/*
+				 * Parse the keepalive message, enclosed in the CopyData message.
+				 * We just check if the server requested a reply, and ignore the
+				 * rest.
+				 */
+				pos = 1;	/* skip msgtype 'k' */
+				walEnd = fe_recvint64(&copybuf[pos]);
+
+				/*
+				 * We mark here that the LSN received has already been flushed
+				 * but this is actually incorrect. As a TODO item the feedback
+				 * message should be sent once changes are correctly applied to
+				 * the local database.
+				 */
+				output_written_lsn = Max(walEnd, output_written_lsn);
+				output_fsync_lsn = output_written_lsn;
+				pos += 8;	/* read walEnd */
+				pos += 8;	/* skip sendTime */
+				if (rc < pos + 1)
+				{
+					ereport(LOG, (errmsg("%s: streaming header too small: %d",
+										 worker_name, rc)));
+					proc_exit(1);
+				}
+				replyRequested = copybuf[pos];
+
+				/*
+				 * If the server requested an immediate reply, send one.
+				 * TODO: send this confirmation only once change has been
+				 * successfully written to the database here.
+				 */
+				if (replyRequested)
+				{
+					int64 now = feGetCurrentTimestamp();
+
+					/* Leave is feedback is not sent properly */
+					if (!sendFeedback(conn, now))
+						proc_exit(1);
+				}
+				continue;
+			}
+			else if (copybuf[0] != 'w')
+			{
+				ereport(LOG, (errmsg("Incorrect streaming header")));
+				proc_exit(1);
+			}
+
+			/* Now fetch the data */
+			hdr_len = 1;		/* msgtype 'w' */
+			hdr_len += 8;		/* dataStart */
+			hdr_len += 8;		/* walEnd */
+			hdr_len += 8;		/* sendTime */
+			if (rc < hdr_len + 1)
+			{
+				ereport(LOG, (errmsg("Streaming header too small")));
+				proc_exit(1);
+			}
+
+			/* Apply change to database */
+			SetCurrentStatementStartTimestamp();
+			StartTransactionCommand();
+			SPI_connect();
+			PushActiveSnapshot(GetTransactionSnapshot());
+			pgstat_report_activity(STATE_RUNNING, copybuf + hdr_len);
+			SetCurrentStatementStartTimestamp();
+
+			/* Execute query */
+			rc = SPI_execute(copybuf + hdr_len, false, 0);
+
+			if (rc == SPI_OK_INSERT)
+				ereport(LOG, (errmsg("INSERT received correctly: %s",
+										copybuf + hdr_len)));
+			else if (rc == SPI_OK_UPDATE)
+				ereport(LOG, (errmsg("UPDATE received correctly: %s",
+										copybuf + hdr_len)));
+			else if (rc == SPI_OK_DELETE)
+				ereport(LOG, (errmsg("DELETE received correctly: %s",
+										copybuf + hdr_len)));
+			else
+				ereport(LOG, (errmsg("Error when applying change: %s",
+										copybuf + hdr_len)));
+
+			/* Finish process */
+			SPI_finish();
+			PopActiveSnapshot();
+			CommitTransactionCommand();
+			pgstat_report_activity(STATE_IDLE, NULL);
+		}
 
 		/* No data, move to next loop */
 		if (rc == 0)
@@ -357,105 +461,6 @@ receiver_raw_main(Datum main_arg)
 			ereport(LOG, (errmsg("Failure while receiving changes...")));
 			proc_exit(1);
 		}
-
-		/*
-		 * Check message received from server:
-		 * - 'k', keepalive message, bypass
-		 * - 'w', check for streaming header
-		 */
-		if (copybuf[0] == 'k')
-		{
-			int		 pos;
-			bool		replyRequested;
-			XLogRecPtr  walEnd;
-
-			/*
-			 * Parse the keepalive message, enclosed in the CopyData message.
-			 * We just check if the server requested a reply, and ignore the
-			 * rest.
-			 */
-			pos = 1;	/* skip msgtype 'k' */
-			walEnd = fe_recvint64(&copybuf[pos]);
-
-			/*
-			 * We mark here that the LSN received has already been flushed
-			 * but this is actually incorrect. As a TODO item the feedback
-			 * message should be sent once changes are correctly applied to
-			 * the local database.
-			 */
-			output_written_lsn = Max(walEnd, output_written_lsn);
-			output_fsync_lsn = output_written_lsn;
-			pos += 8;	/* read walEnd */
-			pos += 8;	/* skip sendTime */
-			if (rc < pos + 1)
-			{
-				ereport(LOG, (errmsg("%s: streaming header too small: %d",
-									 worker_name, rc)));
-				proc_exit(1);
-			}
-			replyRequested = copybuf[pos];
-
-			/*
-			 * If the server requested an immediate reply, send one.
-			 * TODO: send this confirmation only once change has been
-			 * successfully written to the database here.
-			 */
-			if (replyRequested)
-			{
-				int64 now = feGetCurrentTimestamp();
-
-				/* Leave is feedback is not sent properly */
-				if (!sendFeedback(conn, now))
-					proc_exit(1);
-			}
-			continue;
-		}
-		else if (copybuf[0] != 'w')
-		{
-			ereport(LOG, (errmsg("Incorrect streaming header")));
-			proc_exit(1);
-		}
-
-		/* Now fetch the data */
-		hdr_len = 1;		/* msgtype 'w' */
-		hdr_len += 8;		/* dataStart */
-		hdr_len += 8;		/* walEnd */
-		hdr_len += 8;		/* sendTime */
-		if (rc < hdr_len + 1)
-		{
-			ereport(LOG, (errmsg("Streaming header too small")));
-			proc_exit(1);
-		}
-
-		/* Apply change to database */
-		SetCurrentStatementStartTimestamp();
-		StartTransactionCommand();
-		SPI_connect();
-		PushActiveSnapshot(GetTransactionSnapshot());
-		pgstat_report_activity(STATE_RUNNING, copybuf + hdr_len);
-		SetCurrentStatementStartTimestamp();
-
-		/* Execute query */
-		rc = SPI_execute(copybuf + hdr_len, false, 0);
-
-		if (rc == SPI_OK_INSERT)
-			ereport(LOG, (errmsg("INSERT received correctly: %s",
-									copybuf + hdr_len)));
-		else if (rc == SPI_OK_UPDATE)
-			ereport(LOG, (errmsg("UPDATE received correctly: %s",
-									copybuf + hdr_len)));
-		else if (rc == SPI_OK_DELETE)
-			ereport(LOG, (errmsg("DELETE received correctly: %s",
-									copybuf + hdr_len)));
-		else
-			ereport(LOG, (errmsg("Error when applying change: %s",
-									copybuf + hdr_len)));
-
-		/* Finish process */
-		SPI_finish();
-		PopActiveSnapshot();
-		CommitTransactionCommand();
-		pgstat_report_activity(STATE_IDLE, NULL);
 	}
 
 	/* No problems, so clean exit */

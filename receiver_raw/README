@@ -22,7 +22,7 @@ server from which logical changes are taken. Default is the following:
 replication=database dbname=postgres
 Note that if replication is not set this bgworker is easily broken...
 - receiver.idle_time, amount of time between two loops, time between which
-two successive changes are applied.
+two successive batches of changes are applied.
 
 Notes
 -----
@@ -35,8 +35,4 @@ This worker is compatible with PostgreSQL 9.4 and newer versions.
 TODO
 ----
 
-- Change main loop such as all changes are consumed until there is no
-more data in the COPY fetch. Now one tuple is fetched per loop cycle, we
-should apply as many changes as possible until the COPY is empty and that
-receiver sends feeback.
 - Add a check to be sure that decoder_raw is used upstream
