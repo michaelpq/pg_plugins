@@ -273,10 +273,16 @@ receiver_raw_main(Datum main_arg)
 		}
 
 		/*
+		 * Begin a transaction before applying any changes. All the changes
+		 * of the same batch are applied within the same transaction.
+		 */
+		SetCurrentStatementStartTimestamp();
+		StartTransactionCommand();
+		SPI_connect();
+		PushActiveSnapshot(GetTransactionSnapshot());
+
+		/*
 		 * Receive data.
-		 * TODO: improve that such as data is fetched as long as there is
-		 * something to receive and do not limit process to one tuple per
-		 * loop.
 		 */
 		while (true)
 		{
@@ -354,10 +360,6 @@ receiver_raw_main(Datum main_arg)
 			}
 
 			/* Apply change to database */
-			SetCurrentStatementStartTimestamp();
-			StartTransactionCommand();
-			SPI_connect();
-			PushActiveSnapshot(GetTransactionSnapshot());
 			pgstat_report_activity(STATE_RUNNING, copybuf + hdr_len);
 			SetCurrentStatementStartTimestamp();
 
@@ -377,12 +379,13 @@ receiver_raw_main(Datum main_arg)
 				ereport(LOG, (errmsg("Error when applying change: %s",
 										copybuf + hdr_len)));
 
-			/* Finish process */
-			SPI_finish();
-			PopActiveSnapshot();
-			CommitTransactionCommand();
-			pgstat_report_activity(STATE_IDLE, NULL);
 		}
+
+		/* Finish process */
+		SPI_finish();
+		PopActiveSnapshot();
+		CommitTransactionCommand();
+		pgstat_report_activity(STATE_IDLE, NULL);
 
 		/* No data, move to next loop */
 		if (rc == 0)
