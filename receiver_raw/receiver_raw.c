@@ -106,8 +106,8 @@ sendFeedback(PGconn *conn, int64 now)
 
 	if (PQputCopyData(conn, replybuf, len) <= 0 || PQflush(conn))
 	{
-		ereport(LOG, (errmsg("could not send feedback packet: %s",
-							 PQerrorMessage(conn))));
+		ereport(LOG, (errmsg("%s: could not send feedback packet: %s",
+							 worker_name, PQerrorMessage(conn))));
 		return false;
 	}
 
@@ -212,7 +212,8 @@ receiver_raw_main(Datum main_arg)
 	if (PQstatus(conn) != CONNECTION_OK)
 	{
 		PQfinish(conn);
-		ereport(LOG, (errmsg("Could not establish connection to remote server")));
+		ereport(LOG, (errmsg("%s: Could not establish connection to remote server",
+							 worker_name)));
 		proc_exit(1);
 	}
 
@@ -227,7 +228,8 @@ receiver_raw_main(Datum main_arg)
 	if (PQresultStatus(res) != PGRES_COPY_BOTH)
 	{
 		PQclear(res);
-		ereport(LOG, (errmsg("Could not start logical replication")));
+		ereport(LOG, (errmsg("%s: Could not start logical replication",
+							 worker_name)));
 		proc_exit(1);
 	}
 	PQclear(res);
@@ -251,13 +253,13 @@ receiver_raw_main(Datum main_arg)
 			/* Process config file */
 			ProcessConfigFile(PGC_SIGHUP);
 			got_sighup = false;
-			ereport(LOG, (errmsg("bgworker receiver_raw signal: processed SIGHUP")));
+			ereport(LOG, (errmsg("%s: processed SIGHUP", worker_name)));
 		}
 
 		if (got_sigterm)
 		{
 			/* Simply exit */
-			ereport(LOG, (errmsg("bgworker receiver_raw signal: processed SIGTERM")));
+			ereport(LOG, (errmsg("%s: processed SIGTERM", worker_name)));
 			proc_exit(0);
 		}
 
@@ -344,7 +346,8 @@ receiver_raw_main(Datum main_arg)
 			}
 			else if (copybuf[0] != 'w')
 			{
-				ereport(LOG, (errmsg("Incorrect streaming header")));
+				ereport(LOG, (errmsg("%s: Incorrect streaming header",
+									 worker_name)));
 				proc_exit(1);
 			}
 
@@ -355,7 +358,8 @@ receiver_raw_main(Datum main_arg)
 			hdr_len += 8;		/* sendTime */
 			if (rc < hdr_len + 1)
 			{
-				ereport(LOG, (errmsg("Streaming header too small")));
+				ereport(LOG, (errmsg("%s: Streaming header too small",
+									 worker_name)));
 				proc_exit(1);
 			}
 
@@ -367,17 +371,17 @@ receiver_raw_main(Datum main_arg)
 			rc = SPI_execute(copybuf + hdr_len, false, 0);
 
 			if (rc == SPI_OK_INSERT)
-				ereport(LOG, (errmsg("INSERT received correctly: %s",
-										copybuf + hdr_len)));
+				ereport(LOG, (errmsg("%s: INSERT received correctly: %s",
+									 worker_name, copybuf + hdr_len)));
 			else if (rc == SPI_OK_UPDATE)
-				ereport(LOG, (errmsg("UPDATE received correctly: %s",
-										copybuf + hdr_len)));
+				ereport(LOG, (errmsg("%s: UPDATE received correctly: %s",
+									 worker_name, copybuf + hdr_len)));
 			else if (rc == SPI_OK_DELETE)
-				ereport(LOG, (errmsg("DELETE received correctly: %s",
-										copybuf + hdr_len)));
+				ereport(LOG, (errmsg("%s: DELETE received correctly: %s",
+									 worker_name, copybuf + hdr_len)));
 			else
-				ereport(LOG, (errmsg("Error when applying change: %s",
-										copybuf + hdr_len)));
+				ereport(LOG, (errmsg("%s: Error when applying change: %s",
+									 worker_name, copybuf + hdr_len)));
 
 		}
 
@@ -438,14 +442,16 @@ receiver_raw_main(Datum main_arg)
 			}
 			else if (r < 0)
 			{
-				ereport(LOG, (errmsg("Incorrect status received... Leaving.")));
+				ereport(LOG, (errmsg("%s: Incorrect status received... Leaving.",
+									 worker_name)));
 				proc_exit(1);
 			}
 
 			/* Else there is actually data on the socket */
 			if (PQconsumeInput(conn) == 0)
 			{
-				ereport(LOG, (errmsg("Data remaining on the socket... Leaving.")));
+				ereport(LOG, (errmsg("%s: Data remaining on the socket... Leaving.",
+									 worker_name)));
 				proc_exit(1);
 			}
 			continue;
@@ -454,14 +460,16 @@ receiver_raw_main(Datum main_arg)
 		/* End of copy stream */
 		if (rc == -1)
 		{
-			ereport(LOG, (errmsg("COPY Stream has abruptly ended...")));
+			ereport(LOG, (errmsg("%s: COPY Stream has abruptly ended...",
+								 worker_name)));
 			break;
 		}
 
 		/* Failure when reading copy stream, leave */
 		if (rc == -2)
 		{
-			ereport(LOG, (errmsg("Failure while receiving changes...")));
+			ereport(LOG, (errmsg("%s: Failure while receiving changes...",
+								 worker_name)));
 			proc_exit(1);
 		}
 	}
