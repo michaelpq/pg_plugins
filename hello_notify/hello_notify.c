@@ -1,13 +1,18 @@
-/*
+/*-------------------------------------------------------------------------
+ *
  * hello_notify.c
  *		Notify backends running queries taking a too long amount of
- *		time to execute.
+ *		time to execute. This facility could be used as a base for
+ *		servers that want to notify queries taking a too long amount
+ *		of time to execute.
  *
- * Copyright (c) 1996-2013, PostgreSQL Global Development Group
+ * Copyright (c) 2013-2014, Michael Paquier
+ * Copyright (c) 1996-2014, PostgreSQL Global Development Group
  *
- * NOTES
- *		This facility could be used as a base for servers that want to notify
- *		queries taking a too long amount of time to execute.
+ * IDENTIFICATION
+ *		hello_notify/hello_notify.c
+ *
+ *-------------------------------------------------------------------------
  */
 #include "postgres.h"
 

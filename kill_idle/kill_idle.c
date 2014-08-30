@@ -1,12 +1,16 @@
-/*
+/*-------------------------------------------------------------------------
+ *
  * kill_idle.c
  *		Kill idle connections of a Postgres server inactive for a given
  *		amount of time.
  *
+ * Copyright (c) 2013-2014, Michael Paquier
  * Copyright (c) 1996-2013, PostgreSQL Global Development Group
  *
- * NOTES
- *		This facility might have some usefulness for some servers...
+ * IDENTIFICATION
+ *		kill_idle/kill_idle.c
+ *
+ *-------------------------------------------------------------------------
  */
 
 /* Some general headers for custom bgworker facility */

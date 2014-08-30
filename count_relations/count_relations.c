@@ -1,15 +1,16 @@
-/* -------------------------------------------------------------------------
+/*-------------------------------------------------------------------------
  *
  * count_relations.c
  *		Simple background worker code scanning the number of relations
  *		present in database.
  *
- * Copyright (c) 1996-2013, PostgreSQL Global Development Group
+ * Copyright (c) 2013-2014, Michael Paquier
+ * Copyright (c) 1996-2014, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
- *		count_relations.c
+ *		count_relations/count_relations.c
  *
- * -------------------------------------------------------------------------
+ *-------------------------------------------------------------------------
  */
 #include "postgres.h"
 

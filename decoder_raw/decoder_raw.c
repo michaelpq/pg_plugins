@@ -4,26 +4,24 @@
  *		Logical decoding output plugin generating SQL queries based
  *		on things decoded.
  *
- * Copyright (c) 2012-2014, PostgreSQL Global Development Group
+ * Copyright (c) 2013-2014, Michael Paquier
+ * Copyright (c) 1996-2014, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  decoder_raw/decoder_raw.c
  *
  *-------------------------------------------------------------------------
  */
+
 #include "postgres.h"
 
 #include "access/genam.h"
 #include "access/sysattr.h"
-
 #include "catalog/pg_class.h"
 #include "catalog/pg_type.h"
-
 #include "nodes/parsenodes.h"
-
 #include "replication/output_plugin.h"
 #include "replication/logical.h"
-
 #include "utils/builtins.h"
 #include "utils/lsyscache.h"
 #include "utils/memutils.h"

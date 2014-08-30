@@ -1,12 +1,14 @@
-/*
+/*-------------------------------------------------------------------------
  * hello_signal.c
- *		bgworker logging message when receiving SIGHUP or SIGTERM
+ *		bgworker logging message when receiving SIGHUP or SIGTERM.
  *
- * Copyright (c) 1996-2013, PostgreSQL Global Development Group
+ * Copyright (c) 2013-2014, Michael Paquier
+ * Copyright (c) 1996-2014, PostgreSQL Global Development Group
  *
- * NOTES
- *		The facility introduced here can be used to understand how to handle
- *		signals within a bgworker.
+ * IDENTIFICATION
+ *		hello_signal/hello_signal.c
+ *
+ *-------------------------------------------------------------------------
  */
 
 /* Some general headers for custom bgworker facility */
