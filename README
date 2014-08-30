@@ -1,5 +1,5 @@
-pg_plugins, set of plug-in templates for PostgreSQL
-================================================================================
+pg_plugins, set of plugin templates for PostgreSQL
+==================================================
 
 This repository contains a collection of plug-ins for PostgreSQL that can
 be used as templates for more extensive work, like:
@@ -8,15 +8,27 @@ be used as templates for more extensive work, like:
 - Logical decoding plug-ins
 - etc.
 
-================================================================================
+Installation
+------------
+
+Simply run the following command with pg_config in PATH:
+
+    make install
+
+All the subcommands of PGXS are available as well.
+
 LICENSE
-================================================================================
+-------
+
 pg_plugins is free software distributed under the PostgreSQL Licence.
 
-Copyright (c) 2013, PostgreSQL Global Development Group
+Copyright (c) 2013-2014, PostgreSQL Global Development Group
 
-================================================================================
-More about the maintainer
-================================================================================
+Developer
+---------
+
+This module has been written and is being maintained by Michael Paquier.
 Twitter: http://twitter.com/michaelpq
 Blog: http://michael.otacoo.com
+
+Bug Report: <https://github.com/michaelpq/pg_plugins/>.
