@@ -97,6 +97,7 @@ decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
 
 	ctx->output_plugin_private = data;
 
+	/* Default output format */
 	opt->output_type = OUTPUT_PLUGIN_TEXTUAL_OUTPUT;
 
 	foreach(option, ctx->output_plugin_options)
@@ -115,6 +116,28 @@ decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
 						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 						 errmsg("could not parse value \"%s\" for parameter \"%s\"",
 								strVal(elem->arg), elem->defname)));
+		}
+		else if (strcmp(elem->defname, "output_format") == 0)
+		{
+			char	   *format = NULL;
+
+			if (elem->arg == NULL)
+				ereport(ERROR,
+						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						 errmsg("No value specified for parameter \"%s\"",
+								elem->defname)));
+
+			format = strVal(elem->arg);
+
+			if (strcmp(format, "textual") == 0)
+				opt->output_type = OUTPUT_PLUGIN_TEXTUAL_OUTPUT;
+			else if (strcmp(format, "binary") == 0)
+				opt->output_type = OUTPUT_PLUGIN_BINARY_OUTPUT;
+			else
+				ereport(ERROR,
+						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						 errmsg("Incorrect value \"%s\" for parameter \"%s\"",
+								format, elem->defname)));
 		}
 		else
 		{
