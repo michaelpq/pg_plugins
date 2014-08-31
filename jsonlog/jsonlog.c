@@ -14,15 +14,19 @@
  */
 
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "postgres.h"
-
+#include "libpq/libpq.h"
 #include "fmgr.h"
 #include "miscadmin.h"
 #include "access/xact.h"
+#include "access/transam.h"
 #include "lib/stringinfo.h"
 #include "postmaster/syslogger.h"
+#include "storage/proc.h"
 #include "utils/elog.h"
+#include "utils/guc.h"
 #include "utils/json.h"
 
 /* Allow load of this module in shared libs */
@@ -31,7 +35,12 @@ PG_MODULE_MAGIC;
 void _PG_init(void);
 void _PG_fini(void);
 
+/* Hold previous logging hook */
 static emit_log_hook_type prev_log_hook = NULL;
+
+/* Log timestamp */
+#define LOG_TIMESTAMP_LEN 128
+static char log_time[LOG_TIMESTAMP_LEN];
 
 static const char *error_severity(int elevel);
 static void write_jsonlog(ErrorData *edata);
@@ -122,13 +131,38 @@ write_pipe_chunks(char *data, int len, int dest)
 	(void) rc;
 }
 
+static void
+setup_formatted_log_time(void)
+{
+	struct timeval tv;
+	pg_time_t   stamp_time;
+	char		msbuf[8];
+
+	gettimeofday(&tv, NULL);
+	stamp_time = (pg_time_t) tv.tv_sec;
+
+	/*
+	 * Note: we expect that guc.c will ensure that log_timezone is set up (at
+	 * least with a minimal GMT value) before Log_line_prefix can become
+	 * nonempty or CSV mode can be selected.
+	 */
+	pg_strftime(log_time, LOG_TIMESTAMP_LEN,
+				/* leave room for milliseconds... */
+				"%Y-%m-%d %H:%M:%S	 %Z",
+				pg_localtime(&stamp_time, log_timezone));
+
+	/* 'paste' milliseconds into place... */
+	sprintf(msbuf, ".%03d", (int) (tv.tv_usec / 1000));
+	strncpy(log_time + 19, msbuf, 4);
+}
+
 /*
  * appendJSONLiteral
  * Append to given StringInfo a JSON with a given key and a value
  * not yet made literal.
  */
 static void
-appendJSONLiteral(StringInfo buf, char *key, char *value)
+appendJSONLiteral(StringInfo buf, char *key, char *value, bool is_comma)
 {
 	StringInfoData literal_json;
 
@@ -144,6 +178,10 @@ appendJSONLiteral(StringInfo buf, char *key, char *value)
 	/* Now append the field */
 	appendStringInfo(buf, "\"%s\":%s", key, literal_json.data);
 
+	/* Add comma if necessary */
+	if (is_comma)
+		appendStringInfoChar(buf, ',');
+
 	/* Clean up */
 	pfree(literal_json.data);
 }
@@ -156,32 +194,108 @@ static void
 write_jsonlog(ErrorData *edata)
 {
 	StringInfoData	buf;
+	TransactionId	txid = GetTopTransactionIdIfAny();
 
 	initStringInfo(&buf);
 
 	/* Initialize string */
 	appendStringInfoChar(&buf, '{');
 
+	/* Timestamp */
+	if (log_time[0] == '\0')
+		setup_formatted_log_time();
+	appendJSONLiteral(&buf, "timestamp", log_time, true);
+
+	/* Username */
+	if (MyProcPort)
+		appendJSONLiteral(&buf, "user", MyProcPort->user_name, true);
+
+	/* Database name */
+	if (MyProcPort)
+		appendJSONLiteral(&buf, "dbname", MyProcPort->database_name, true);
+
 	/* Process ID */
 	if (MyProcPid != 0)
 		appendStringInfo(&buf, "\"pid\":%d,", MyProcPid);
 
+	/* Remote host and port */
+	if (MyProcPort && MyProcPort->remote_host)
+	{
+		appendJSONLiteral(&buf, "remote_host",
+						  MyProcPort->remote_host, true);
+		if (MyProcPort->remote_port && MyProcPort->remote_port[0] != '\0')
+			appendJSONLiteral(&buf, "remote_port",
+							  MyProcPort->remote_port, true);
+	}
+
+	/* Session id */
+	if (MyProcPid != 0)
+		appendStringInfo(&buf, "\"session_id\":\"%lx.%x\",",
+						 (long) MyStartTime, MyProcPid);
+
+	/* Virtual transaction id */
+	/* keep VXID format in sync with lockfuncs.c */
+	if (MyProc != NULL && MyProc->backendId != InvalidBackendId)
+		appendStringInfo(&buf, "\"vxid\":\"%d/%u\",",
+						 MyProc->backendId, MyProc->lxid);
+
 	/* Transaction id */
-	appendStringInfo(&buf, "\"txid\":%u", GetTopTransactionIdIfAny());
-	appendStringInfoChar(&buf, ',');
+	if (txid != InvalidTransactionId)
+		appendStringInfo(&buf, "\"txid\":%u,", GetTopTransactionIdIfAny());
 
 	/* Error severity */
 	appendJSONLiteral(&buf, "error_severity",
-					  (char *) error_severity(edata->elevel));
-	appendStringInfoChar(&buf, ',');
+					  (char *) error_severity(edata->elevel), true);
 
 	/* SQL state code */
-	appendJSONLiteral(&buf, "state_code",
-					 unpack_sql_state(edata->sqlerrcode));
-	appendStringInfoChar(&buf, ',');
+	if (edata->sqlerrcode != ERRCODE_SUCCESSFUL_COMPLETION)
+		appendJSONLiteral(&buf, "state_code",
+						  unpack_sql_state(edata->sqlerrcode), true);
 
-	/* errmessage */
-	appendJSONLiteral(&buf, "message", edata->message);
+	/* Error detail or Error detail log */
+	if (edata->detail_log)
+		appendJSONLiteral(&buf, "detail_log", edata->detail_log, true);
+	else if (edata->detail)
+		appendJSONLiteral(&buf, "detail", edata->detail, true);
+
+	/* Error hint */
+	if (edata->hint)
+		appendJSONLiteral(&buf, "hint", edata->hint, true);
+
+	/* Internal query */
+	if (edata->internalquery)
+		appendJSONLiteral(&buf, "internal_query",
+						  edata->internalquery, true);
+
+	/* Error context */
+	if (edata->context)
+		appendJSONLiteral(&buf, "context", edata->context, true);
+
+	/* File error location */
+	if (Log_error_verbosity >= PGERROR_VERBOSE)
+	{
+		StringInfoData msgbuf;
+
+		initStringInfo(&msgbuf);
+
+		if (edata->funcname && edata->filename)
+			appendStringInfo(&msgbuf, "%s, %s:%d",
+							 edata->funcname, edata->filename,
+							 edata->lineno);
+		else if (edata->filename)
+			appendStringInfo(&msgbuf, "%s:%d",
+							 edata->filename, edata->lineno);
+		appendJSONLiteral(&buf, "file_location", msgbuf.data, true);
+		pfree(msgbuf.data);
+	}
+
+	/* Application name */
+	if (application_name && application_name[0] != '\0')
+		appendJSONLiteral(&buf, "application_name",
+						  application_name, true);
+
+	/* Error message */
+	appendJSONLiteral(&buf, "message", edata->message, false);
 
 	/* Finish string */
 	appendStringInfoChar(&buf, '}');
