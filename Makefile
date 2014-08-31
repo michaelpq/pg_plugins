@@ -9,6 +9,7 @@ SUBDIRS = count_relations \
 	hello_notify \
 	hello_signal \
 	hello_world \
+	jsonlog \
 	kill_idle \
 	receiver_raw
 
