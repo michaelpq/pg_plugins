@@ -1,4 +1,5 @@
 /*-------------------------------------------------------------------------
+ *
  * hello_signal.c
  *		bgworker logging message when receiving SIGHUP or SIGTERM.
  *
