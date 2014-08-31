@@ -6,6 +6,7 @@ be used as templates for more extensive work, like:
 
 - Custom background workers that have been introduced in PostgreSQL 9.3
 - Logical decoding plug-ins
+- Custom logging formats
 - etc.
 
 Installation
