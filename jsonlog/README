@@ -1,0 +1,9 @@
+jsonlog, logs in JSON format for PostgreSQL
+===========================================
+
+This module is a logging facility using the hook present in elog.c to
+generate server logs in JSON format.
+
+Its installation can be done by adding this parameter in postgresql.conf:
+
+    shared_preload_libraries = 'jsonlog'
