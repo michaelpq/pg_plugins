@@ -97,10 +97,10 @@ error_severity(int elevel)
 /*
  * write_pipe_chunks
  * Send data to the syslogger using the chunked protocol. Taken from
- * elog.c.
+ * elog.c and simplified as in this case everything is sent to stderr.
  */
 static void
-write_pipe_chunks(char *data, int len, int dest)
+write_pipe_chunks(char *data, int len)
 {
 	PipeProtoChunk p;
 	int		 fd = fileno(stderr);
@@ -114,7 +114,7 @@ write_pipe_chunks(char *data, int len, int dest)
 	/* write all but the last chunk */
 	while (len > PIPE_MAX_PAYLOAD)
 	{
-		p.proto.is_last = (dest == LOG_DESTINATION_CSVLOG ? 'F' : 'f');
+		p.proto.is_last = 'f';
 		p.proto.len = PIPE_MAX_PAYLOAD;
 		memcpy(p.proto.data, data, PIPE_MAX_PAYLOAD);
 		rc = write(fd, &p, PIPE_HEADER_SIZE + PIPE_MAX_PAYLOAD);
@@ -124,7 +124,7 @@ write_pipe_chunks(char *data, int len, int dest)
 	}
 
 	/* write the last chunk */
-	p.proto.is_last = (dest == LOG_DESTINATION_CSVLOG ? 'T' : 't');
+	p.proto.is_last = 't';
 	p.proto.len = len;
 	memcpy(p.proto.data, data, len);
 	rc = write(fd, &p, PIPE_HEADER_SIZE + len);
@@ -308,7 +308,7 @@ write_jsonlog(ErrorData *edata)
 	if (am_syslogger)
 		write_syslogger_file(buf.data, buf.len, LOG_DESTINATION_STDERR);
 	else
-		write_pipe_chunks(buf.data, buf.len, LOG_DESTINATION_STDERR);
+		write_pipe_chunks(buf.data, buf.len);
 
 	/* Cleanup */
 	pfree(buf.data);
