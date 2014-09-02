@@ -45,6 +45,7 @@ static char *receiver_database = "postgres";
 static char *receiver_slot = "slot";
 static char *receiver_conn_string = "replication=database dbname=postgres application_name=receiver_raw";
 static int receiver_idle_time = 100;
+static bool receiver_sync_mode = true;
 
 /* Worker name */
 static char *worker_name = "receiver_raw";
@@ -345,8 +346,12 @@ receiver_raw_main(Datum main_arg)
 				output_fsync_lsn = output_written_lsn;
 				output_applied_lsn = output_written_lsn;
 
-				/* If the server requested an immediate reply, send one */
-				if (replyRequested)
+				/*
+				 * If the server requested an immediate reply, send one.
+				 * If sync mode is sent reply in all cases to ensure that
+				 * server knows how far replay has been done.
+				 */
+				if (replyRequested || receiver_sync_mode)
 				{
 					int64 now = feGetCurrentTimestamp();
 
@@ -546,12 +551,21 @@ receiver_raw_load_params(void)
 
 	/* Nap time between two loops */
 	DefineCustomIntVariable("receiver_raw.idle_time",
-							"Nap time between two successive loops (ms)",
+							"Nap time between two successive loops (ms).",
 							"Default value set to 100 ms.",
 							&receiver_idle_time,
 							100, 1, 10000,
 							PGC_SIGHUP,
 							0, NULL, NULL, NULL);
+
+	/* Synchronous mode */
+    DefineCustomBoolVariable("receiver.sync_mode",
+							 "Enforce feedback to server.",
+							 NULL,
+							 &receiver_sync_mode,
+							 true,
+							 PGC_SIGHUP,
+							 0, NULL, NULL, NULL);
 }
 
 /*

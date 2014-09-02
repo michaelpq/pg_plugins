@@ -23,6 +23,9 @@ replication=database dbname=postgres application_name=receiver_raw
 Note that if replication is not set this bgworker is easily broken...
 - receiver.idle_time, amount of time between two loops, time between which
 two successive batches of changes are applied.
+- receiver.sync_mode, to enforce sending feedback to server each time a
+keepalive message is received. Useful for synchronous replication with
+this logical receiver. Default is 'on'.
 
 Notes
 -----
