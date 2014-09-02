@@ -43,7 +43,7 @@ static volatile sig_atomic_t got_sighup = false;
 /* GUC variables */
 static char *receiver_database = "postgres";
 static char *receiver_slot = "slot";
-static char *receiver_conn_string = "replication=database dbname=postgres";
+static char *receiver_conn_string = "replication=database dbname=postgres application_name=receiver_raw";
 static int receiver_idle_time = 100;
 
 /* Worker name */
@@ -52,6 +52,7 @@ static char *worker_name = "receiver_raw";
 /* Lastly written positions */
 static XLogRecPtr output_written_lsn = InvalidXLogRecPtr;
 static XLogRecPtr output_fsync_lsn = InvalidXLogRecPtr;
+static XLogRecPtr output_applied_lsn = InvalidXLogRecPtr;
 
 /* Stream functions */
 static void fe_sendint64(int64 i, char *buf);
@@ -87,12 +88,15 @@ sendFeedback(PGconn *conn, int64 now)
 	int		 len = 0;
 
 	ereport(LOG, (errmsg("%s: confirming write up to %X/%X, "
-						 "flush to %X/%X (slot custom_slot)",
+						 "flush to %X/%X (slot custom_slot), "
+						 "applied to %X/%X",
 						 worker_name,
 						 (uint32) (output_written_lsn >> 32),
 						 (uint32) output_written_lsn,
 						 (uint32) (output_fsync_lsn >> 32),
-						 (uint32) output_fsync_lsn)));
+						 (uint32) output_fsync_lsn,
+						 (uint32) (output_applied_lsn >> 32),
+						 (uint32) output_applied_lsn)));
 
 	replybuf[len] = 'r';
 	len += 1;
@@ -100,7 +104,7 @@ sendFeedback(PGconn *conn, int64 now)
 	len += 8;
 	fe_sendint64(output_fsync_lsn, &replybuf[len]);	 /* flush */
 	len += 8;
-	fe_sendint64(InvalidXLogRecPtr, &replybuf[len]);	/* apply */
+	fe_sendint64(output_applied_lsn, &replybuf[len]);	/* apply */
 	len += 8;
 	fe_sendint64(now, &replybuf[len]);  /* sendTime */
 	len += 8;
@@ -293,20 +297,21 @@ receiver_raw_main(Datum main_arg)
 		 */
 		while (true)
 		{
+			XLogRecPtr  walEnd, walStart;
+
 			rc = PQgetCopyData(conn, &copybuf, 1);
 			if (rc <= 0)
 				break;
 
 			/*
 			 * Check message received from server:
-			 * - 'k', keepalive message, bypass
+			 * - 'k', keepalive message
 			 * - 'w', check for streaming header
 			 */
 			if (copybuf[0] == 'k')
 			{
-				int		 pos;
+				int			pos;
 				bool		replyRequested;
-				XLogRecPtr  walEnd;
 
 				/*
 				 * Parse the keepalive message, enclosed in the CopyData message.
@@ -314,16 +319,17 @@ receiver_raw_main(Datum main_arg)
 				 * rest.
 				 */
 				pos = 1;	/* skip msgtype 'k' */
-				walEnd = fe_recvint64(&copybuf[pos]);
 
 				/*
-				 * We mark here that the LSN received has already been flushed
-				 * but this is actually incorrect. As a TODO item the feedback
-				 * message should be sent once changes are correctly applied to
-				 * the local database.
+				 * In this message is the latest WAL position that server has
+				 * considered as sent to this receiver.
 				 */
-				output_written_lsn = Max(walEnd, output_written_lsn);
-				output_fsync_lsn = output_written_lsn;
+				walEnd = fe_recvint64(&copybuf[pos]);
+				ereport(LOG, (errmsg("%s: keepalive message from server, "
+									 "walEnd %X/%X, ",
+									 worker_name,
+									 (uint32) (walEnd >> 32),
+									 (uint32) walEnd)));
 				pos += 8;	/* read walEnd */
 				pos += 8;	/* skip sendTime */
 				if (rc < pos + 1)
@@ -334,11 +340,12 @@ receiver_raw_main(Datum main_arg)
 				}
 				replyRequested = copybuf[pos];
 
-				/*
-				 * If the server requested an immediate reply, send one.
-				 * TODO: send this confirmation only once change has been
-				 * successfully written to the database here.
-				 */
+				/* Update written position */
+				output_written_lsn = Max(walEnd, output_written_lsn);
+				output_fsync_lsn = output_written_lsn;
+				output_applied_lsn = output_written_lsn;
+
+				/* If the server requested an immediate reply, send one */
 				if (replyRequested)
 				{
 					int64 now = feGetCurrentTimestamp();
@@ -358,8 +365,10 @@ receiver_raw_main(Datum main_arg)
 
 			/* Now fetch the data */
 			hdr_len = 1;		/* msgtype 'w' */
+			walStart = fe_recvint64(&copybuf[hdr_len]);
 			hdr_len += 8;		/* dataStart */
-			hdr_len += 8;		/* walEnd */
+			walEnd = fe_recvint64(&copybuf[hdr_len]);
+			hdr_len += 8;		/* WALEnd */
 			hdr_len += 8;		/* sendTime */
 			if (rc < hdr_len + 1)
 			{
@@ -367,6 +376,15 @@ receiver_raw_main(Datum main_arg)
 									 worker_name)));
 				proc_exit(1);
 			}
+
+			/* Log some useful information */
+			ereport(LOG, (errmsg("%s: received from server, walStart %X/%X, "
+								 "and walEnd %X/%X",
+						 worker_name,
+						 (uint32) (walStart >> 32),
+						 (uint32) walStart,
+						 (uint32) (walEnd >> 32),
+						 (uint32) walEnd)));
 
 			/* Apply change to database */
 			pgstat_report_activity(STATE_RUNNING, copybuf + hdr_len);
@@ -388,6 +406,10 @@ receiver_raw_main(Datum main_arg)
 				ereport(LOG, (errmsg("%s: Error when applying change: %s",
 									 worker_name, copybuf + hdr_len)));
 
+			/* Update written position */
+			output_written_lsn = Max(walEnd, output_written_lsn);
+			output_fsync_lsn = output_written_lsn;
+			output_applied_lsn = output_written_lsn;
 		}
 
 		/* Finish process */

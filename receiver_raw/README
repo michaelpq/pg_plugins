@@ -19,7 +19,7 @@ Default value is "postgres".
 remote. Default value is "slot".
 - receiver_raw.conn_string, connection string used to connect to remote
 server from which logical changes are taken. Default is the following:
-replication=database dbname=postgres
+replication=database dbname=postgres application_name=receiver_raw
 Note that if replication is not set this bgworker is easily broken...
 - receiver.idle_time, amount of time between two loops, time between which
 two successive batches of changes are applied.
