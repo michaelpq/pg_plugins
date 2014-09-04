@@ -46,16 +46,18 @@ typedef struct
 	bool		include_transaction;
 } TestDecodingData;
 
-static void decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
-							  bool is_init);
+static void decoder_raw_startup(LogicalDecodingContext *ctx,
+								OutputPluginOptions *opt,
+								bool is_init);
 static void decoder_raw_shutdown(LogicalDecodingContext *ctx);
 static void decoder_raw_begin_txn(LogicalDecodingContext *ctx,
-					ReorderBufferTXN *txn);
+								  ReorderBufferTXN *txn);
 static void decoder_raw_commit_txn(LogicalDecodingContext *ctx,
-					 ReorderBufferTXN *txn, XLogRecPtr commit_lsn);
+								   ReorderBufferTXN *txn,
+								   XLogRecPtr commit_lsn);
 static void decoder_raw_change(LogicalDecodingContext *ctx,
-				 ReorderBufferTXN *txn, Relation rel,
-				 ReorderBufferChange *change);
+							   ReorderBufferTXN *txn, Relation rel,
+							   ReorderBufferChange *change);
 
 void
 _PG_init(void)
