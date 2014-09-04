@@ -44,7 +44,7 @@ typedef struct
 {
 	MemoryContext context;
 	bool		include_transaction;
-} TestDecodingData;
+} DecoderRawData;
 
 static void decoder_raw_startup(LogicalDecodingContext *ctx,
 								OutputPluginOptions *opt,
@@ -85,9 +85,9 @@ decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
 				  bool is_init)
 {
 	ListCell   *option;
-	TestDecodingData *data;
+	DecoderRawData *data;
 
-	data = palloc(sizeof(TestDecodingData));
+	data = palloc(sizeof(DecoderRawData));
 	data->context = AllocSetContextCreate(ctx->context,
 										  "Raw decoder context",
 										  ALLOCSET_DEFAULT_MINSIZE,
@@ -154,7 +154,7 @@ decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
 static void
 decoder_raw_shutdown(LogicalDecodingContext *ctx)
 {
-	TestDecodingData *data = ctx->output_plugin_private;
+	DecoderRawData *data = ctx->output_plugin_private;
 
 	/* cleanup our own resources via memory context reset */
 	MemoryContextDelete(data->context);
@@ -164,7 +164,7 @@ decoder_raw_shutdown(LogicalDecodingContext *ctx)
 static void
 decoder_raw_begin_txn(LogicalDecodingContext *ctx, ReorderBufferTXN *txn)
 {
-	TestDecodingData *data = ctx->output_plugin_private;
+	DecoderRawData *data = ctx->output_plugin_private;
 
 	/* Write to the plugin only if there is */
 	if (data->include_transaction)
@@ -180,7 +180,7 @@ static void
 decoder_raw_commit_txn(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 					 XLogRecPtr commit_lsn)
 {
-	TestDecodingData *data = ctx->output_plugin_private;
+	DecoderRawData *data = ctx->output_plugin_private;
 
 	/* Write to the plugin only if there is */
 	if (data->include_transaction)
@@ -526,7 +526,7 @@ static void
 decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 				 Relation relation, ReorderBufferChange *change)
 {
-	TestDecodingData *data;
+	DecoderRawData *data;
 	MemoryContext	old;
 	char			replident = relation->rd_rel->relreplident;
 	bool			is_rel_non_selective;
