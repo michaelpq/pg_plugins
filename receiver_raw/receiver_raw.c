@@ -559,7 +559,7 @@ receiver_raw_load_params(void)
 							0, NULL, NULL, NULL);
 
 	/* Synchronous mode */
-    DefineCustomBoolVariable("receiver.sync_mode",
+    DefineCustomBoolVariable("receiver_raw.sync_mode",
 							 "Enforce feedback to server.",
 							 NULL,
 							 &receiver_sync_mode,
