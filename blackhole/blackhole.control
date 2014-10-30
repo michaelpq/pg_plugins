@@ -1,0 +1,5 @@
+# blackhole extension
+comment = 'Minimal Extension Template'
+default_version = '1.0'
+module_pathname = '$libdir/blackhole'
+relocatable = true

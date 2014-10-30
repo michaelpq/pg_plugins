@@ -4,7 +4,8 @@ PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
-SUBDIRS = count_relations \
+SUBDIRS = blackhole \
+	count_relations \
 	decoder_raw \
 	hello_notify \
 	hello_signal \
