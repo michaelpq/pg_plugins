@@ -12,6 +12,7 @@ SUBDIRS = blackhole \
 	hello_world \
 	jsonlog \
 	kill_idle \
+	pgmpc \
 	receiver_raw
 
 $(recurse)
