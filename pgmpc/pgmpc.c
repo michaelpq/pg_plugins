@@ -28,7 +28,7 @@ PG_MODULE_MAGIC;
 
 /* MPD variables */
 static struct mpd_connection *mpd_conn = NULL;
-static struct mpd_status *status = NULL;
+static struct mpd_status *mpd_status = NULL;
 
 /* Connection parameters */
 static char *mpd_host = "localhost";
@@ -42,6 +42,10 @@ static void pgmpc_reset(void);
 
 /* List of interface functions */
 PG_FUNCTION_INFO_V1(pgmpc_current);
+PG_FUNCTION_INFO_V1(pgmpc_play);
+PG_FUNCTION_INFO_V1(pgmpc_pause);
+PG_FUNCTION_INFO_V1(pgmpc_next);
+PG_FUNCTION_INFO_V1(pgmpc_prev);
 
 /*
  * pgmpc_init
@@ -74,10 +78,12 @@ pgmpc_init(void)
 static void
 pgmpc_reset(void)
 {
-	mpd_connection_free(mpd_conn);
-	mpd_status_free(status);
+	if (mpd_conn)
+		mpd_connection_free(mpd_conn);
+	if (mpd_status)
+		mpd_status_free(mpd_status);
 	mpd_conn = NULL;
-	status = NULL;
+	mpd_status = NULL;
 }
 
 /*
@@ -141,13 +147,13 @@ pgmpc_current(PG_FUNCTION_ARGS)
 		pgmpc_print_error();
 
 	/* Obtain status from server and check it */
-	status = mpd_recv_status(mpd_conn);
-	if (status == NULL)
+	mpd_status = mpd_recv_status(mpd_conn);
+	if (mpd_status == NULL)
 		pgmpc_print_error();
 
 	/* Show current song if any */
-	if (mpd_status_get_state(status) == MPD_STATE_PLAY ||
-		mpd_status_get_state(status) == MPD_STATE_PAUSE)
+	if (mpd_status_get_state(mpd_status) == MPD_STATE_PLAY ||
+		mpd_status_get_state(mpd_status) == MPD_STATE_PAUSE)
 	{
 		struct mpd_song *song;
 
@@ -163,9 +169,9 @@ pgmpc_current(PG_FUNCTION_ARGS)
 			const char *title = mpd_song_get_tag(song, MPD_TAG_TITLE, 0);
 			const char *artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0);
 			const char *album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
-			unsigned int elapsed_time = mpd_status_get_elapsed_time(status);
-			unsigned int total_time = mpd_status_get_total_time(status);
-			int song_pos = mpd_status_get_song_pos(status) + 1;
+			unsigned int elapsed_time = mpd_status_get_elapsed_time(mpd_status);
+			unsigned int total_time = mpd_status_get_total_time(mpd_status);
+			int song_pos = mpd_status_get_song_pos(mpd_status) + 1;
 
 			/* Build tuple using this information */
 			if (title)
@@ -206,4 +212,80 @@ pgmpc_current(PG_FUNCTION_ARGS)
 	result = HeapTupleGetDatum(tuple);
 
 	PG_RETURN_DATUM(result);
+}
+
+/*
+ * pgmpc_play
+ * Play a song.
+ */
+Datum
+pgmpc_play(PG_FUNCTION_ARGS)
+{
+	pgmpc_init();
+	/*
+	 * Enforce disabling of pause. We could here check for the server
+	 * status before doing anything but is it worth the round trip?
+	 */
+	if (!mpd_run_pause(mpd_conn, false))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_NULL();
+}
+
+/*
+ * pgmpc_pause
+ * Pause current song
+ */
+Datum
+pgmpc_pause(PG_FUNCTION_ARGS)
+{
+	pgmpc_init();
+
+	/* Get first status of server to determine next action */
+	mpd_status = mpd_run_status(mpd_conn);
+	if (mpd_status == NULL)
+		pgmpc_print_error();
+
+	/* If song is being played, do a pause. If not disable pause. */
+	if (mpd_status_get_state(mpd_status) == MPD_STATE_PLAY)
+	{
+		if (!mpd_run_pause(mpd_conn, true))
+			pgmpc_print_error();
+	}
+	else if (mpd_status_get_state(mpd_status) == MPD_STATE_PAUSE)
+	{
+		if (!mpd_run_pause(mpd_conn, false))
+			pgmpc_print_error();
+	}
+
+	pgmpc_reset();
+	PG_RETURN_NULL();
+}
+
+/*
+ * pgmpc_next
+ * Play next song.
+ */
+Datum
+pgmpc_next(PG_FUNCTION_ARGS)
+{
+	pgmpc_init();
+	if (!mpd_run_next(mpd_conn))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_NULL();
+}
+
+/*
+ * pgmpc_prev
+ * Play previous song.
+ */
+Datum
+pgmpc_prev(PG_FUNCTION_ARGS)
+{
+	pgmpc_init();
+	if (!mpd_run_previous(mpd_conn))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_NULL();
 }
