@@ -26,26 +26,77 @@
 
 PG_MODULE_MAGIC;
 
+/* MPD variables */
+static struct mpd_connection *mpd_conn = NULL;
+static struct mpd_status *status = NULL;
+
+/* Connection parameters */
+static char *mpd_host = "localhost";
+static int mpd_port = 6600;
+static char *mpd_password = NULL; /* TODO use it as a parameter */
+
 /* Utility functions */
-static void pgmpc_print_error(struct mpd_connection *conn,
-							  struct mpd_status *status);
+static void pgmpc_init(void);
+static void pgmpc_print_error(void);
+static void pgmpc_reset(void);
 
 /* List of interface functions */
 PG_FUNCTION_INFO_V1(pgmpc_current);
 
+/*
+ * pgmpc_init
+ *
+ * Initialize connection to mpd server.
+ */
 static void
-pgmpc_print_error(struct mpd_connection *conn, struct mpd_status *status)
+pgmpc_init(void)
+{
+	Assert(mpd_conn == NULL);
+
+	/* Establish connection to mpd server */
+	mpd_conn = mpd_connection_new(mpd_host, mpd_port, 0);
+	if (mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS)
+		pgmpc_print_error();
+
+	/* Send password if any */
+	if (mpd_password)
+	{
+		if (!mpd_run_password(mpd_conn, mpd_password))
+			pgmpc_print_error();
+	}
+}
+
+/*
+ * pgmpc_reset
+ *
+ * Cleanup existing mpd context.
+ */
+static void
+pgmpc_reset(void)
+{
+	mpd_connection_free(mpd_conn);
+	mpd_status_free(status);
+	mpd_conn = NULL;
+	status = NULL;
+}
+
+/*
+ * pgmpc_print_error
+ *
+ * Relay an error from mpd to Postgres.
+ */
+static void
+pgmpc_print_error(void)
 {
 	const char *message;
 
-	Assert(mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS);
+	Assert(mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS);
 
 	/* Obtain error message */
-	message = mpd_connection_get_error_message(conn);
+	message = mpd_connection_get_error_message(mpd_conn);
 
 	/* Cleanup */
-	mpd_connection_free(conn);
-	mpd_status_free(status);
+	pgmpc_reset();
 
 	/* Report error */
 	ereport(ERROR,
@@ -54,11 +105,14 @@ pgmpc_print_error(struct mpd_connection *conn, struct mpd_status *status)
 					message)));
 }
 
+/*
+ * pgmpc_current
+ *
+ * Show current song and status.
+ */
 Datum
 pgmpc_current(PG_FUNCTION_ARGS)
 {
-	struct mpd_connection *conn = NULL;
-	struct mpd_status *status = NULL;
 	Datum		values[6];
 	bool		nulls[6];
 	TupleDesc	tupdesc;
@@ -68,12 +122,11 @@ pgmpc_current(PG_FUNCTION_ARGS)
 	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
 		elog(ERROR, "return type must be a row type");
 
+	pgmpc_init();
+
 	/* Initialize the values of return tuple */
 	memset(values, 0, sizeof(values));
 	memset(nulls, true, sizeof(nulls));
-
-	/* Establish connection to mpd server */
-	conn = mpd_connection_new("localhost", 6600, 0);
 
 	/*
 	 * Send all necessary commands at once to avoid unnecessary round
@@ -81,16 +134,16 @@ pgmpc_current(PG_FUNCTION_ARGS)
 	 * - current status of server
 	 * - current song run on server
 	 */
-	if (!mpd_command_list_begin(conn, true) ||
-		!mpd_send_status(conn) ||
-		!mpd_send_current_song(conn) ||
-		!mpd_command_list_end(conn))
-		pgmpc_print_error(conn, status);
+	if (!mpd_command_list_begin(mpd_conn, true) ||
+		!mpd_send_status(mpd_conn) ||
+		!mpd_send_current_song(mpd_conn) ||
+		!mpd_command_list_end(mpd_conn))
+		pgmpc_print_error();
 
 	/* Obtain status from server and check it */
-	status = mpd_recv_status(conn);
+	status = mpd_recv_status(mpd_conn);
 	if (status == NULL)
-		pgmpc_print_error(conn, status);
+		pgmpc_print_error();
 
 	/* Show current song if any */
 	if (mpd_status_get_state(status) == MPD_STATE_PLAY ||
@@ -99,11 +152,11 @@ pgmpc_current(PG_FUNCTION_ARGS)
 		struct mpd_song *song;
 
 		/* There should be a next response, in this case a song */
-		if (!mpd_response_next(conn))
-			pgmpc_print_error(conn, status);
+		if (!mpd_response_next(mpd_conn))
+			pgmpc_print_error();
 
 		/* And now get it */
-		song = mpd_recv_song(conn);
+		song = mpd_recv_song(mpd_conn);
 		if (song != NULL)
 		{
 			/* Get information about the current song */
@@ -141,12 +194,12 @@ pgmpc_current(PG_FUNCTION_ARGS)
 			mpd_song_free(song);
 		}
 
-		if (!mpd_response_finish(conn))
-			pgmpc_print_error(conn, status);
+		if (!mpd_response_finish(mpd_conn))
+			pgmpc_print_error();
 	}
 
-	mpd_status_free(status);
-	mpd_connection_free(conn);
+	/* Cleanup MPD status */
+	pgmpc_reset();
 
 	/* Form result and return it */
 	tuple = heap_form_tuple(tupdesc, values, nulls);
