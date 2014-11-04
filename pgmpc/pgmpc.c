@@ -43,7 +43,7 @@ static void pgmpc_print_error(void);
 static void pgmpc_reset(void);
 
 /* List of interface functions */
-PG_FUNCTION_INFO_V1(pgmpc_current);
+PG_FUNCTION_INFO_V1(pgmpc_status);
 PG_FUNCTION_INFO_V1(pgmpc_play);
 PG_FUNCTION_INFO_V1(pgmpc_pause);
 PG_FUNCTION_INFO_V1(pgmpc_next);
@@ -121,12 +121,12 @@ pgmpc_print_error(void)
 }
 
 /*
- * pgmpc_current
+ * pgmpc_status
  *
  * Show current song and status.
  */
 Datum
-pgmpc_current(PG_FUNCTION_ARGS)
+pgmpc_status(PG_FUNCTION_ARGS)
 {
 	Datum		values[7];
 	bool		nulls[7];

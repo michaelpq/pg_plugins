@@ -3,109 +3,109 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION pgmpc" to load this file. \quit
 
-CREATE FUNCTION pgmpc_current(OUT title text,
+CREATE FUNCTION mpd_status(OUT title text,
 	OUT artist text,
 	OUT album text,
 	OUT elapsed_time int,
 	OUT total_time int,
 	OUT song_pos int,
 	OUT volume int)
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_status'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_current()
+COMMENT ON FUNCTION mpd_status()
 IS 'Show status of mpd server';
 
-CREATE FUNCTION pgmpc_ls()
+CREATE FUNCTION mpd_ls()
 RETURNS SETOF text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_ls'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_ls()
+COMMENT ON FUNCTION mpd_ls()
 IS 'Get list of all songs on server';
 
-CREATE FUNCTION pgmpc_play()
+CREATE FUNCTION mpd_play()
 RETURNS text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_play'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_play()
+COMMENT ON FUNCTION mpd_play()
 IS 'Play current song again from beginning';
 
-CREATE FUNCTION pgmpc_prev()
+CREATE FUNCTION mpd_prev()
 RETURNS text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_prev'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_prev()
+COMMENT ON FUNCTION mpd_prev()
 IS 'Switch to previous song';
 
-CREATE FUNCTION pgmpc_update()
+CREATE FUNCTION mpd_update()
 RETURNS text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_update'
 LANGUAGE C;
-CREATE FUNCTION pgmpc_update(path text)
+CREATE FUNCTION mpd_update(path text)
 RETURNS text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_update'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_update()
+COMMENT ON FUNCTION mpd_update()
 IS 'Update remote database';
-COMMENT ON FUNCTION pgmpc_update(text)
+COMMENT ON FUNCTION mpd_update(text)
 IS 'Update remote database for given path';
 
-CREATE FUNCTION pgmpc_next()
+CREATE FUNCTION mpd_next()
 RETURNS text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_next'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_next()
+COMMENT ON FUNCTION mpd_next()
 IS 'Switch to next song';
 
-CREATE FUNCTION pgmpc_pause()
+CREATE FUNCTION mpd_pause()
 RETURNS bool
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_pause'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_pause()
+COMMENT ON FUNCTION mpd_pause()
 IS 'Toggle play and pause';
 
-CREATE FUNCTION pgmpc_random()
+CREATE FUNCTION mpd_random()
 RETURNS bool
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_random'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_random()
+COMMENT ON FUNCTION mpd_random()
 IS 'Switch random mode';
 
-CREATE FUNCTION pgmpc_repeat()
+CREATE FUNCTION mpd_repeat()
 RETURNS bool
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_repeat'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_repeat()
+COMMENT ON FUNCTION mpd_repeat()
 IS 'Switch repeat mode';
 
-CREATE FUNCTION pgmpc_single()
+CREATE FUNCTION mpd_single()
 RETURNS bool
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_single'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_single()
+COMMENT ON FUNCTION mpd_single()
 IS 'Switch single mode';
 
-CREATE FUNCTION pgmpc_consume()
+CREATE FUNCTION mpd_consume()
 RETURNS bool
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_consume'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_consume()
+COMMENT ON FUNCTION mpd_consume()
 IS 'Switch consume mode';
 
-CREATE FUNCTION pgmpc_set_volume(volume int)
+CREATE FUNCTION mpd_set_volume(volume int)
 RETURNS text
-AS 'MODULE_PATHNAME'
+AS 'MODULE_PATHNAME', 'pgmpc_set_volume'
 LANGUAGE C;
 
-COMMENT ON FUNCTION pgmpc_set_volume(int)
+COMMENT ON FUNCTION mpd_set_volume(int)
 IS 'Set volume between 0 and 100';
