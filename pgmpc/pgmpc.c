@@ -50,6 +50,7 @@ PG_FUNCTION_INFO_V1(pgmpc_random);
 PG_FUNCTION_INFO_V1(pgmpc_repeat);
 PG_FUNCTION_INFO_V1(pgmpc_single);
 PG_FUNCTION_INFO_V1(pgmpc_consume);
+PG_FUNCTION_INFO_V1(pgmpc_set_volume);
 
 /*
  * pgmpc_init
@@ -391,4 +392,27 @@ pgmpc_consume(PG_FUNCTION_ARGS)
 		pgmpc_print_error();
 	pgmpc_reset();
 	PG_RETURN_BOOL(!is_consume);
+}
+
+/*
+ * pgmpc_set_volume
+ * Set volume on server.
+ */
+Datum
+pgmpc_set_volume(PG_FUNCTION_ARGS)
+{
+	unsigned int volume = PG_GETARG_UINT32(0);
+
+	/* Check for incorrect values */
+	if (volume > 100)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("Volume value needs to be between 0 and 100")));
+
+	/* Run the command */
+	pgmpc_init();
+	if (!mpd_run_set_volume(mpd_conn, volume))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_NULL();
 }

@@ -79,3 +79,11 @@ LANGUAGE C;
 
 COMMENT ON FUNCTION pgmpc_consume()
 IS 'Switch consume mode';
+
+CREATE FUNCTION pgmpc_set_volume(volume int)
+RETURNS text
+AS 'MODULE_PATHNAME'
+LANGUAGE C;
+
+COMMENT ON FUNCTION pgmpc_set_volume(int)
+IS 'Set volume between 0 and 100';
