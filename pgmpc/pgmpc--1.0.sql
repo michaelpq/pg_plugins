@@ -16,6 +16,14 @@ LANGUAGE C;
 COMMENT ON FUNCTION pgmpc_current()
 IS 'Show status of mpd server';
 
+CREATE FUNCTION pgmpc_ls()
+RETURNS SETOF text
+AS 'MODULE_PATHNAME'
+LANGUAGE C;
+
+COMMENT ON FUNCTION pgmpc_ls()
+IS 'Get list of all songs on server';
+
 CREATE FUNCTION pgmpc_play()
 RETURNS text
 AS 'MODULE_PATHNAME'
