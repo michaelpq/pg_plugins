@@ -46,6 +46,10 @@ PG_FUNCTION_INFO_V1(pgmpc_play);
 PG_FUNCTION_INFO_V1(pgmpc_pause);
 PG_FUNCTION_INFO_V1(pgmpc_next);
 PG_FUNCTION_INFO_V1(pgmpc_prev);
+PG_FUNCTION_INFO_V1(pgmpc_random);
+PG_FUNCTION_INFO_V1(pgmpc_repeat);
+PG_FUNCTION_INFO_V1(pgmpc_single);
+PG_FUNCTION_INFO_V1(pgmpc_consume);
 
 /*
  * pgmpc_init
@@ -288,4 +292,100 @@ pgmpc_prev(PG_FUNCTION_ARGS)
 		pgmpc_print_error();
 	pgmpc_reset();
 	PG_RETURN_NULL();
+}
+
+/*
+ * pgmpc_random
+ * Switch random mode.
+ */
+Datum
+pgmpc_random(PG_FUNCTION_ARGS)
+{
+	bool is_random;
+
+	pgmpc_init();
+
+	/* Get first status of server to determine next action */
+	mpd_status = mpd_run_status(mpd_conn);
+	if (mpd_status == NULL)
+		pgmpc_print_error();
+
+	/* Reverse random mode */
+	is_random = mpd_status_get_random(mpd_status);
+	if (!mpd_run_random(mpd_conn, !is_random))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_BOOL(!is_random);
+}
+
+/*
+ * pgmpc_repeat
+ * Switch repeat mode.
+ */
+Datum
+pgmpc_repeat(PG_FUNCTION_ARGS)
+{
+	bool is_repeat;
+
+	pgmpc_init();
+
+	/* Get first status of server to determine next action */
+	mpd_status = mpd_run_status(mpd_conn);
+	if (mpd_status == NULL)
+		pgmpc_print_error();
+
+	/* Reverse repeat mode */
+	is_repeat = mpd_status_get_repeat(mpd_status);
+	if (!mpd_run_repeat(mpd_conn, !is_repeat))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_BOOL(!is_repeat);
+}
+
+/*
+ * pgmpc_single
+ * Switch single mode.
+ */
+Datum
+pgmpc_single(PG_FUNCTION_ARGS)
+{
+	bool is_single;
+
+	pgmpc_init();
+
+	/* Get first status of server to determine next action */
+	mpd_status = mpd_run_status(mpd_conn);
+	if (mpd_status == NULL)
+		pgmpc_print_error();
+
+	/* Reverse single mode */
+	is_single = mpd_status_get_single(mpd_status);
+	if (!mpd_run_single(mpd_conn, !is_single))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_BOOL(!is_single);
+}
+
+/*
+ * pgmpc_consume
+ * Switch consume mode.
+ */
+Datum
+pgmpc_consume(PG_FUNCTION_ARGS)
+{
+	bool is_consume;
+
+	pgmpc_init();
+
+	/* Get first status of server to determine next action */
+	mpd_status = mpd_run_status(mpd_conn);
+	if (mpd_status == NULL)
+		pgmpc_print_error();
+
+	/* Reverse consume mode */
+	is_consume = mpd_status_get_consume(mpd_status);
+	if (!mpd_run_consume(mpd_conn, !is_consume))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_BOOL(!is_consume);
 }
