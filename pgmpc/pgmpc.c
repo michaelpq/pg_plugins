@@ -123,8 +123,8 @@ pgmpc_print_error(void)
 Datum
 pgmpc_current(PG_FUNCTION_ARGS)
 {
-	Datum		values[6];
-	bool		nulls[6];
+	Datum		values[7];
+	bool		nulls[7];
 	TupleDesc	tupdesc;
 	HeapTuple	tuple;
 	Datum		result;
@@ -176,6 +176,7 @@ pgmpc_current(PG_FUNCTION_ARGS)
 			unsigned int elapsed_time = mpd_status_get_elapsed_time(mpd_status);
 			unsigned int total_time = mpd_status_get_total_time(mpd_status);
 			int song_pos = mpd_status_get_song_pos(mpd_status) + 1;
+			int volume = mpd_status_get_volume(mpd_status);
 
 			/* Build tuple using this information */
 			if (title)
@@ -199,6 +200,8 @@ pgmpc_current(PG_FUNCTION_ARGS)
 			values[4] = UInt32GetDatum(total_time);
 			nulls[5] = false;
 			values[5] = Int32GetDatum(song_pos);
+			nulls[6] = false;
+			values[6] = Int32GetDatum(volume);
 
 			/* Song data is no more needed */
 			mpd_song_free(song);

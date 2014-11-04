@@ -8,7 +8,8 @@ CREATE FUNCTION pgmpc_current(OUT title text,
 	OUT album text,
 	OUT elapsed_time int,
 	OUT total_time int,
-	OUT song_pos int)
+	OUT song_pos int,
+	OUT volume int)
 AS 'MODULE_PATHNAME'
 LANGUAGE C;
 
