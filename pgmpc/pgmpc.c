@@ -51,6 +51,7 @@ PG_FUNCTION_INFO_V1(pgmpc_repeat);
 PG_FUNCTION_INFO_V1(pgmpc_single);
 PG_FUNCTION_INFO_V1(pgmpc_consume);
 PG_FUNCTION_INFO_V1(pgmpc_set_volume);
+PG_FUNCTION_INFO_V1(pgmpc_update);
 
 /*
  * pgmpc_init
@@ -293,6 +294,27 @@ pgmpc_prev(PG_FUNCTION_ARGS)
 {
 	pgmpc_init();
 	if (!mpd_run_previous(mpd_conn))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_NULL();
+}
+
+/*
+ * pgmpc_update
+ * Update remote database.
+ */
+Datum
+pgmpc_update(PG_FUNCTION_ARGS)
+{
+	char *path = NULL;
+
+	/* Get optional path if defined */
+	if (PG_NARGS() == 1)
+		path = PG_GETARG_CSTRING(0);
+
+	/* Run the command */
+	pgmpc_init();
+	if (!mpd_run_update(mpd_conn, path))
 		pgmpc_print_error();
 	pgmpc_reset();
 	PG_RETURN_NULL();

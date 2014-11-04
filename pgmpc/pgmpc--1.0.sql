@@ -32,6 +32,20 @@ LANGUAGE C;
 COMMENT ON FUNCTION pgmpc_prev()
 IS 'Switch to previous song';
 
+CREATE FUNCTION pgmpc_update()
+RETURNS text
+AS 'MODULE_PATHNAME'
+LANGUAGE C;
+CREATE FUNCTION pgmpc_update(path text)
+RETURNS text
+AS 'MODULE_PATHNAME'
+LANGUAGE C;
+
+COMMENT ON FUNCTION pgmpc_update()
+IS 'Update remote database';
+COMMENT ON FUNCTION pgmpc_update(text)
+IS 'Update remote database for given path';
+
 CREATE FUNCTION pgmpc_next()
 RETURNS text
 AS 'MODULE_PATHNAME'
