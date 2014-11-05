@@ -1,5 +1,6 @@
 hello_notify, custom bgworker for PostgreSQL
 ============================================
+
 Small bgworker presenting how to manage send-out notifications for queries
 taking a too long time to run. This worker uses a simply method based on
 pg_notify to initialize a channel that can be listened by the other backends.

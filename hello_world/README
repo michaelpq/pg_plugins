@@ -1,5 +1,6 @@
 hello_world, custom bgworker for PostgreSQL
 ===========================================
+
 Simple bgworker example priting hello_world in logs.
 
 This worker is compatible with PostgreSQL 9.3 and newer versions.

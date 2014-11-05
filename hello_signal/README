@@ -1,5 +1,6 @@
 hello_signal, custom bgworker for PostgreSQL
 ============================================
+
 Small bgworker presenting how to handle properly signals.
 
 This worker is compatible with PostgreSQL 9.3 and newer versions.
