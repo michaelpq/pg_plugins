@@ -578,7 +578,7 @@ pgmpc_load_params(void)
 	/* Connection port */
 	DefineCustomIntVariable("pgmpc.mpd_timeout",
 							"Sets timeout for connection obtention in s.",
-							"Default value set to 10s.",
+							"Default value set to 10s. Max is 300s. 0 means inifinite wait.",
 							&mpd_timeout,
 							10, 0, 300,
 							PGC_USERSET,
