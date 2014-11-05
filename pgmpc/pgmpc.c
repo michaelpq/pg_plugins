@@ -65,6 +65,7 @@ PG_FUNCTION_INFO_V1(pgmpc_consume);
 PG_FUNCTION_INFO_V1(pgmpc_set_volume);
 PG_FUNCTION_INFO_V1(pgmpc_update);
 PG_FUNCTION_INFO_V1(pgmpc_ls);
+PG_FUNCTION_INFO_V1(pgmpc_add);
 
 /*
  * pgmpc_init
@@ -539,6 +540,29 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
+}
+
+/*
+ * pgmpc_add
+ * Add given song path to current playlist.
+ */
+Datum
+pgmpc_add(PG_FUNCTION_ARGS)
+{
+	char *path = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* User needs to specify a path */
+	if (path == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("Song path needs to be specified")));
+
+	/* Now run the command */
+	pgmpc_init();
+	if (!mpd_run_add(mpd_conn, path))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_VOID();
 }
 
 /*

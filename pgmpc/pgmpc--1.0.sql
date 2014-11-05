@@ -30,6 +30,14 @@ IS 'Get list of all songs on server';
 COMMENT ON FUNCTION mpd_ls(text)
 IS 'Get list of all songs on server with given path';
 
+CREATE FUNCTION mpd_add(path text)
+RETURNS void
+AS 'MODULE_PATHNAME', 'pgmpc_add'
+LANGUAGE C;
+
+COMMENT ON FUNCTION mpd_add(text)
+IS 'Add song path to current playlist';
+
 CREATE FUNCTION mpd_play()
 RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_play'
