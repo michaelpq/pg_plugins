@@ -65,6 +65,7 @@ PG_FUNCTION_INFO_V1(pgmpc_consume);
 PG_FUNCTION_INFO_V1(pgmpc_set_volume);
 PG_FUNCTION_INFO_V1(pgmpc_update);
 PG_FUNCTION_INFO_V1(pgmpc_ls);
+PG_FUNCTION_INFO_V1(pgmpc_playlist);
 PG_FUNCTION_INFO_V1(pgmpc_lsplaylists);
 PG_FUNCTION_INFO_V1(pgmpc_add);
 PG_FUNCTION_INFO_V1(pgmpc_load);
@@ -501,6 +502,103 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	 */
 	pgmpc_init();
 	if (!mpd_send_list_all(mpd_conn, path))
+		pgmpc_print_error();
+
+	/* Now get all the songs and send them back to caller */
+	while (true)
+	{
+		Datum       values[1];
+		bool		nulls[1];
+		struct mpd_song *song = mpd_recv_song(mpd_conn);
+
+		/* Leave if done */
+		if (song == NULL)
+			break;
+
+		/* Assign song name */
+		nulls[0] = false;
+		values[0] = CStringGetTextDatum(mpd_song_get_uri(song));
+
+		/* Save values */
+		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
+
+		/* Clean up for the next one */
+		mpd_song_free(song);
+	}
+
+	/* We may be in error state, so check for it */
+	if (mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS)
+	{
+		const char *message = mpd_connection_get_error_message(mpd_conn);
+		pgmpc_reset();
+		ereport(ERROR,
+				(errcode(ERRCODE_SYSTEM_ERROR),
+				 errmsg("mpd command failed: %s",
+						message)));
+	}
+
+	/* Clean up */
+	pgmpc_reset();
+
+	/* clean up and return the tuplestore */
+	tuplestore_donestoring(tupstore);
+
+	return (Datum) 0;
+}
+
+/*
+ * pgmpc_playlist
+ * List all songs in given playlist. If not playlist is specified list
+ * songs of current playlist.
+ */
+Datum
+pgmpc_playlist(PG_FUNCTION_ARGS)
+{
+	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	TupleDesc   tupdesc;
+	Tuplestorestate *tupstore;
+	MemoryContext per_query_ctx;
+	MemoryContext oldcontext;
+	char *playlist = NULL;
+	bool ret;
+
+	if (PG_NARGS() == 1)
+		playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+	if (!(rsinfo->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not " \
+						"allowed in this context")));
+
+	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
+	oldcontext = MemoryContextSwitchTo(per_query_ctx);
+
+	/* Build tuple descriptor */
+	tupdesc = CreateTemplateTupleDesc(1, false);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "uri",
+					   TEXTOID, -1, 0);
+
+	tupstore = tuplestore_begin_heap(true, false, work_mem);
+	rsinfo->returnMode = SFRM_Materialize;
+	rsinfo->setResult = tupstore;
+	rsinfo->setDesc = tupdesc;
+
+	MemoryContextSwitchTo(oldcontext);
+
+	/*
+	 * Run the command to get all the songs.
+	 */
+	pgmpc_init();
+	ret = playlist ?
+		mpd_send_list_playlist_meta(mpd_conn, playlist) :
+		mpd_send_list_queue_meta(mpd_conn);
+	if (!ret)
 		pgmpc_print_error();
 
 	/* Now get all the songs and send them back to caller */

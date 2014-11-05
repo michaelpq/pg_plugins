@@ -30,6 +30,20 @@ IS 'Get list of all songs on server';
 COMMENT ON FUNCTION mpd_ls(text)
 IS 'Get list of all songs on server with given path';
 
+CREATE FUNCTION mpd_playlist()
+RETURNS SETOF text
+AS 'MODULE_PATHNAME', 'pgmpc_playlist'
+LANGUAGE C;
+CREATE FUNCTION mpd_playlist(path text)
+RETURNS SETOF text
+AS 'MODULE_PATHNAME', 'pgmpc_playlist'
+LANGUAGE C;
+
+COMMENT ON FUNCTION mpd_playlist()
+IS 'List all songs of current playlist';
+COMMENT ON FUNCTION mpd_playlist(text)
+IS 'List all songs of given playlist';
+
 CREATE FUNCTION mpd_lsplaylists()
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_lsplaylists'
