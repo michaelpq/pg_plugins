@@ -250,7 +250,7 @@ pgmpc_play(PG_FUNCTION_ARGS)
 	if (!mpd_run_pause(mpd_conn, false))
 		pgmpc_print_error();
 	pgmpc_reset();
-	PG_RETURN_NULL();
+	PG_RETURN_VOID();
 }
 
 /*
@@ -294,7 +294,7 @@ pgmpc_next(PG_FUNCTION_ARGS)
 	if (!mpd_run_next(mpd_conn))
 		pgmpc_print_error();
 	pgmpc_reset();
-	PG_RETURN_NULL();
+	PG_RETURN_VOID();
 }
 
 /*
@@ -308,7 +308,7 @@ pgmpc_prev(PG_FUNCTION_ARGS)
 	if (!mpd_run_previous(mpd_conn))
 		pgmpc_print_error();
 	pgmpc_reset();
-	PG_RETURN_NULL();
+	PG_RETURN_VOID();
 }
 
 /*
@@ -329,7 +329,7 @@ pgmpc_update(PG_FUNCTION_ARGS)
 	if (!mpd_run_update(mpd_conn, path))
 		pgmpc_print_error();
 	pgmpc_reset();
-	PG_RETURN_NULL();
+	PG_RETURN_VOID();
 }
 
 /*
@@ -448,7 +448,7 @@ pgmpc_set_volume(PG_FUNCTION_ARGS)
 	if (!mpd_run_set_volume(mpd_conn, volume))
 		pgmpc_print_error();
 	pgmpc_reset();
-	PG_RETURN_NULL();
+	PG_RETURN_VOID();
 }
 
 /*

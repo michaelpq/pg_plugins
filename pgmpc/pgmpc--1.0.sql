@@ -25,7 +25,7 @@ COMMENT ON FUNCTION mpd_ls()
 IS 'Get list of all songs on server';
 
 CREATE FUNCTION mpd_play()
-RETURNS text
+RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_play'
 LANGUAGE C;
 
@@ -33,7 +33,7 @@ COMMENT ON FUNCTION mpd_play()
 IS 'Play current song again from beginning';
 
 CREATE FUNCTION mpd_prev()
-RETURNS text
+RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_prev'
 LANGUAGE C;
 
@@ -41,11 +41,11 @@ COMMENT ON FUNCTION mpd_prev()
 IS 'Switch to previous song';
 
 CREATE FUNCTION mpd_update()
-RETURNS text
+RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_update'
 LANGUAGE C;
 CREATE FUNCTION mpd_update(path text)
-RETURNS text
+RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_update'
 LANGUAGE C;
 
@@ -55,7 +55,7 @@ COMMENT ON FUNCTION mpd_update(text)
 IS 'Update remote database for given path';
 
 CREATE FUNCTION mpd_next()
-RETURNS text
+RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_next'
 LANGUAGE C;
 
@@ -103,7 +103,7 @@ COMMENT ON FUNCTION mpd_consume()
 IS 'Switch consume mode';
 
 CREATE FUNCTION mpd_set_volume(volume int)
-RETURNS text
+RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_set_volume'
 LANGUAGE C;
 
