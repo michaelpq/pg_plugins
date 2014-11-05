@@ -28,10 +28,7 @@ The following options can be used:
 This can be set as a local Unix socket.
 - pgmpc.mpd_port, port to connect to mpd instance. Default is 6600.
 - pgmpc.mpd_password, password to connect to mpd instance.
-All those parameters can be updated using SET within a single session.
-
-Note that as this module uses GIC parameters to control the connection
-to the remote mpd server, that the following setting need to be added
-in postgresql.conf:
-
-    shared_preload_libraries = 'pgmpc'
+- pgmpc.mpd_timeout, timeout for connection obtention. Default is 10s.
+Maximum value is 300s. 0 means an infinite wait.
+All those parameters can be updated using SET within a single session once the
+extension library is loaded into the server.

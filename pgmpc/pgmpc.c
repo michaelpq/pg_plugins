@@ -40,6 +40,8 @@ static struct mpd_status *mpd_status = NULL;
 static char *mpd_host = "localhost";
 static int mpd_port = 6600;
 static char *mpd_password;
+/* Timeout for connection obtention in seconds, 0 = infinite */
+static int mpd_timeout = 10;
 
 /* Entry point of library loading */
 void _PG_init(void);
@@ -75,7 +77,7 @@ pgmpc_init(void)
 	Assert(mpd_conn == NULL);
 
 	/* Establish connection to mpd server */
-	mpd_conn = mpd_connection_new(mpd_host, mpd_port, 0);
+	mpd_conn = mpd_connection_new(mpd_host, mpd_port, mpd_timeout * 1000);
 	if (mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS)
 		pgmpc_print_error();
 
@@ -570,6 +572,15 @@ pgmpc_load_params(void)
 							"Default value set to 6600.",
 							&mpd_port,
 							6600, 1, 65536,
+							PGC_USERSET,
+							0, NULL, NULL, NULL);
+
+	/* Connection port */
+	DefineCustomIntVariable("pgmpc.mpd_timeout",
+							"Sets timeout for connection obtention in s.",
+							"Default value set to 10s.",
+							&mpd_timeout,
+							10, 0, 300,
 							PGC_USERSET,
 							0, NULL, NULL, NULL);
 }
