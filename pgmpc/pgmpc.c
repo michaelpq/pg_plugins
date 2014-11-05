@@ -267,24 +267,12 @@ Datum
 pgmpc_pause(PG_FUNCTION_ARGS)
 {
 	pgmpc_init();
-
-	/* Get first status of server to determine next action */
-	mpd_status = mpd_run_status(mpd_conn);
-	if (mpd_status == NULL)
+	/*
+	 * Enforce pause to be set in all cases. Subsequent calls
+	 * to this function result still in a pause state.
+	 */
+	if (!mpd_run_pause(mpd_conn, true))
 		pgmpc_print_error();
-
-	/* If song is being played, do a pause. If not disable pause. */
-	if (mpd_status_get_state(mpd_status) == MPD_STATE_PLAY)
-	{
-		if (!mpd_run_pause(mpd_conn, true))
-			pgmpc_print_error();
-	}
-	else if (mpd_status_get_state(mpd_status) == MPD_STATE_PAUSE)
-	{
-		if (!mpd_run_pause(mpd_conn, false))
-			pgmpc_print_error();
-	}
-
 	pgmpc_reset();
 	PG_RETURN_NULL();
 }
