@@ -1,0 +1,37 @@
+pgmpc, mpd client for PostgreSQL
+================================================================================
+
+This module includes a full interface to interact with a remote mpd server
+from a PostgreSQL server.
+
+The features included in this module permit to do the following operations
+on an instance of mpd:
+- Control player modes
+- Control of volume
+- Query status
+- Query list of songs
+- etc.
+
+Installation
+============
+
+This module requires libmpdclient to be installed, then it can be compiled
+with the following command:
+
+    make install
+
+Options
+=======
+
+The following options can be used:
+- pgmpc.mpd_host, address to connect to mpd instance. Default is "localhost"
+This can be set as a local Unix socket.
+- pgmpc.mpd_port, port to connect to mpd instance. Default is 6600.
+- pgmpc.mpd_password, password to connect to mpd instance.
+All those parameters can be updated using SET within a single session.
+
+Note that as this module uses GIC parameters to control the connection
+to the remote mpd server, that the following setting need to be added
+in postgresql.conf:
+
+    shared_preload_libraries = 'pgmpc'

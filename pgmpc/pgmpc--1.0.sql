@@ -3,15 +3,6 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION pgmpc" to load this file. \quit
 
-CREATE FUNCTION mpd_set_connection_params(host text,
-	port int)
-RETURNS void
-AS 'MODULE_PATHNAME', 'pgmpc_set_connection_params'
-LANGUAGE C;
-
-COMMENT ON FUNCTION mpd_set_connection_params(text, int)
-IS 'Set connection parameters to MPD server';
-
 CREATE FUNCTION mpd_status(OUT title text,
 	OUT artist text,
 	OUT album text,

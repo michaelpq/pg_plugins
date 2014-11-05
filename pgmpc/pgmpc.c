@@ -27,6 +27,7 @@
 #include "access/tupdesc.h"
 #include "catalog/pg_type.h"
 #include "utils/builtins.h"
+#include "utils/guc.h"
 #include "utils/memutils.h"
 
 PG_MODULE_MAGIC;
@@ -36,17 +37,20 @@ static struct mpd_connection *mpd_conn = NULL;
 static struct mpd_status *mpd_status = NULL;
 
 /* Connection parameters */
-static char *mpd_host = NULL;
+static char *mpd_host = "localhost";
 static int mpd_port = 6600;
-static char *mpd_password = NULL;
+static char *mpd_password;
+
+/* Entry point of library loading */
+void _PG_init(void);
 
 /* Utility functions */
 static void pgmpc_init(void);
 static void pgmpc_print_error(void);
 static void pgmpc_reset(void);
+static void pgmpc_load_params(void);
 
 /* List of interface functions */
-PG_FUNCTION_INFO_V1(pgmpc_set_connection_params);
 PG_FUNCTION_INFO_V1(pgmpc_status);
 PG_FUNCTION_INFO_V1(pgmpc_play);
 PG_FUNCTION_INFO_V1(pgmpc_pause);
@@ -68,13 +72,6 @@ PG_FUNCTION_INFO_V1(pgmpc_ls);
 static void
 pgmpc_init(void)
 {
-	/* A host is necessary before doing any connections */
-	if (mpd_host == NULL)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("Host address to mpd server needed"),
-				 errhint("pgmpc_set_connection_params needs to be run first.")));
-
 	Assert(mpd_conn == NULL);
 
 	/* Establish connection to mpd server */
@@ -83,7 +80,7 @@ pgmpc_init(void)
 		pgmpc_print_error();
 
 	/* Send password if any */
-	if (mpd_password)
+	if (mpd_password[0])
 	{
 		if (!mpd_run_password(mpd_conn, mpd_password))
 			pgmpc_print_error();
@@ -129,40 +126,6 @@ pgmpc_print_error(void)
 			(errcode(ERRCODE_SYSTEM_ERROR),
 			 errmsg("mpd command failed: %s",
 					message)));
-}
-
-/*
- *
- */
-Datum
-pgmpc_set_connection_params(PG_FUNCTION_ARGS)
-{
-	char   *host = text_to_cstring(PG_GETARG_TEXT_PP(0));
-	int		port = PG_GETARG_INT32(1);
-
-	/* Sanity checks */
-	if (host == NULL)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("Host address cannot be NULL")));
-
-	if (port < 0 && port > 65535)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("Invalid port value"),
-				 errhint("Port value needs to be between 0 and 65535.")));
-
-	/* Clean up any existing value */
-	if (mpd_host)
-		pfree(mpd_host);
-
-	/* Now Set up host value, keep a copy of it at top-level */
-	mpd_host = (char *) MemoryContextAlloc(TopMemoryContext, strlen(host) + 1);
-	memcpy(mpd_host, host,  strlen(host) + 1);
-
-	/* Get port as well */
-	mpd_port = port;
-	PG_RETURN_VOID();
 }
 
 /*
@@ -586,4 +549,50 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
+}
+
+/*
+ * pgmpc_load_params
+ * Load GUC parameters
+ */
+static void
+pgmpc_load_params(void)
+{
+	/* Connection host */
+	DefineCustomStringVariable("pgmpc.mpd_host",
+							   "Sets the IP to connect to mpd server.",
+							   "Default value is \"localhost\".",
+							   &mpd_host,
+							   "localhost",
+							   PGC_USERSET,
+							   0, NULL, NULL, NULL);
+
+	/* Connection password */
+	DefineCustomStringVariable("pgmpc.mpd_password",
+							   "Sets the password to connect to mpd server.",
+							   "Default value is \"\".",
+							   &mpd_password,
+							   "",
+							   PGC_USERSET,
+							   0, NULL, NULL, NULL);
+
+	/* Connection port */
+	DefineCustomIntVariable("pgmpc.mpd_port",
+							"Sets the port to connect to mpd server.",
+							"Default value set to 6600.",
+							&mpd_port,
+							6600, 1, 65536,
+							PGC_USERSET,
+							0, NULL, NULL, NULL);
+}
+
+/*
+ * _PG_init
+ * Entry point for library loading
+ */
+void
+_PG_init(void)
+{
+	/* Load dedicated GUC parameters */
+	pgmpc_load_params();
 }
