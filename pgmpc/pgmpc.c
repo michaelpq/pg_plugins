@@ -12,6 +12,11 @@
  *-------------------------------------------------------------------------
  */
 
+/* mpd stuff */
+#include "mpd/client.h"
+/* Calm down compiler as boolean type is defined on libmpdclient side too */
+#undef bool
+
 #include "postgres.h"
 #include "fmgr.h"
 #include "funcapi.h"
@@ -22,9 +27,6 @@
 #include "access/tupdesc.h"
 #include "catalog/pg_type.h"
 #include "utils/builtins.h"
-
-/* mpd stuff */
-#include "mpd/client.h"
 
 PG_MODULE_MAGIC;
 
@@ -128,8 +130,9 @@ pgmpc_print_error(void)
 Datum
 pgmpc_status(PG_FUNCTION_ARGS)
 {
-	Datum		values[7];
-	bool		nulls[7];
+#define PGMPC_STATUS_COLUMNS 7
+	Datum		values[PGMPC_STATUS_COLUMNS];
+	bool		nulls[PGMPC_STATUS_COLUMNS];
 	TupleDesc	tupdesc;
 	HeapTuple	tuple;
 	Datum		result;
@@ -140,8 +143,8 @@ pgmpc_status(PG_FUNCTION_ARGS)
 	pgmpc_init();
 
 	/* Initialize the values of return tuple */
-	memset(values, 0, sizeof(values));
-	memset(nulls, true, sizeof(nulls));
+	MemSet(values, 0, sizeof(values));
+	MemSet(nulls, 0, sizeof(nulls));
 
 	/*
 	 * Send all necessary commands at once to avoid unnecessary round
@@ -189,16 +192,22 @@ pgmpc_status(PG_FUNCTION_ARGS)
 				nulls[0] = false;
 				values[0] =  CStringGetTextDatum(title);
 			}
+			else
+				nulls[0] = true;
 			if (artist)
 			{
 				nulls[1] = false;
 				values[1] =  CStringGetTextDatum(artist);
 			}
+			else
+				nulls[1] = true;
 			if (album)
 			{
 				nulls[2] = false;
 				values[2] =  CStringGetTextDatum(album);
 			}
+			else
+				nulls[2] = true;
 			nulls[3] = false;
 			values[3] = UInt32GetDatum(elapsed_time);
 			nulls[4] = false;
