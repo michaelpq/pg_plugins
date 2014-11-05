@@ -29,9 +29,15 @@ CREATE FUNCTION mpd_ls()
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_ls'
 LANGUAGE C;
+CREATE FUNCTION mpd_ls(path text)
+RETURNS SETOF text
+AS 'MODULE_PATHNAME', 'pgmpc_ls'
+LANGUAGE C;
 
 COMMENT ON FUNCTION mpd_ls()
 IS 'Get list of all songs on server';
+COMMENT ON FUNCTION mpd_ls(text)
+IS 'Get list of all songs on server with given path';
 
 CREATE FUNCTION mpd_play()
 RETURNS void

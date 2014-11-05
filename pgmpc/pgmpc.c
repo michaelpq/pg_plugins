@@ -501,12 +501,16 @@ pgmpc_set_volume(PG_FUNCTION_ARGS)
 Datum
 pgmpc_ls(PG_FUNCTION_ARGS)
 {
-	#define PG_GET_REPLICATION_SLOTS_COLS 8
+#define PG_GET_REPLICATION_SLOTS_COLS 8
 	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc   tupdesc;
 	Tuplestorestate *tupstore;
 	MemoryContext per_query_ctx;
 	MemoryContext oldcontext;
+	char *path = NULL;
+
+	if (PG_NARGS() == 1)
+		path = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -539,7 +543,7 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	 * TODO: pass an optional path to filter selection.
 	 */
 	pgmpc_init();
-	if (!mpd_send_list_all(mpd_conn, NULL))
+	if (!mpd_send_list_all(mpd_conn, path))
 		pgmpc_print_error();
 
 	/* Now get all the songs and send them back to caller */
