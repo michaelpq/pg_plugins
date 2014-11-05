@@ -65,6 +65,7 @@ PG_FUNCTION_INFO_V1(pgmpc_consume);
 PG_FUNCTION_INFO_V1(pgmpc_set_volume);
 PG_FUNCTION_INFO_V1(pgmpc_update);
 PG_FUNCTION_INFO_V1(pgmpc_ls);
+PG_FUNCTION_INFO_V1(pgmpc_lsplaylists);
 PG_FUNCTION_INFO_V1(pgmpc_add);
 PG_FUNCTION_INFO_V1(pgmpc_load);
 PG_FUNCTION_INFO_V1(pgmpc_save);
@@ -459,7 +460,6 @@ pgmpc_set_volume(PG_FUNCTION_ARGS)
 Datum
 pgmpc_ls(PG_FUNCTION_ARGS)
 {
-#define PG_GET_REPLICATION_SLOTS_COLS 8
 	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc   tupdesc;
 	Tuplestorestate *tupstore;
