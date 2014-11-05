@@ -1,5 +1,5 @@
 decoder_raw, Output plugin for logical replication
-================================================================================
+==================================================
 
 This output plugin for logical replication generates raw queries based
 on the logical changes it finds. Those queries can be consumed as they
@@ -27,7 +27,7 @@ INSERT queries are generated for all relations everytime using the new
 tuple values fetched from WAL.
 
 Options
-=======
+-------
 
 The following options can be used:
 - include_transaction, 'on' will print BEGIN and COMMIT messages, while
@@ -38,7 +38,7 @@ format. Default is 'textual'.
 This worker is compatible with PostgreSQL 9.4 and newer versions.
 
 TODO
-====
+----
 
 - Implement options filtering INSERT generation depending on REPLICA
 IDENTITY level of relation involved

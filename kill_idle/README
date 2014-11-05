@@ -1,5 +1,5 @@
 kill_idle, custom bgworker for PostgreSQL
-================================================================================
+=========================================
 Background worker able to kill connections that are idle for a certain
 amount of time.
 

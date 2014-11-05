@@ -1,5 +1,5 @@
 pgmpc, mpd client for PostgreSQL
-================================================================================
+================================
 
 This module includes a full interface to interact with a remote mpd server
 from a PostgreSQL server.
@@ -13,7 +13,7 @@ on an instance of mpd:
 - etc.
 
 Installation
-============
+------------
 
 This module requires libmpdclient to be installed, then it can be compiled
 with the following command:
@@ -21,7 +21,7 @@ with the following command:
     make install
 
 Options
-=======
+-------
 
 The following options can be used:
 - pgmpc.mpd_host, address to connect to mpd instance. Default is "localhost"
