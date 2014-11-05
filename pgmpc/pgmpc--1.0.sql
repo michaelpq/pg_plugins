@@ -38,6 +38,38 @@ LANGUAGE C;
 COMMENT ON FUNCTION mpd_add(text)
 IS 'Add song path to current playlist';
 
+CREATE FUNCTION mpd_load(path text)
+RETURNS void
+AS 'MODULE_PATHNAME', 'pgmpc_load'
+LANGUAGE C;
+
+COMMENT ON FUNCTION mpd_load(text)
+IS 'Load playlist';
+
+CREATE FUNCTION mpd_save(path text)
+RETURNS void
+AS 'MODULE_PATHNAME', 'pgmpc_save'
+LANGUAGE C;
+
+COMMENT ON FUNCTION mpd_save(text)
+IS 'Save current playlist to file with given name';
+
+CREATE FUNCTION mpd_rm(path text)
+RETURNS void
+AS 'MODULE_PATHNAME', 'pgmpc_rm'
+LANGUAGE C;
+
+COMMENT ON FUNCTION mpd_rm(text)
+IS 'Delete given playlist';
+
+CREATE FUNCTION mpd_clear()
+RETURNS void
+AS 'MODULE_PATHNAME', 'pgmpc_clear'
+LANGUAGE C;
+
+COMMENT ON FUNCTION mpd_clear()
+IS 'Empty current playlist completely';
+
 CREATE FUNCTION mpd_play()
 RETURNS void
 AS 'MODULE_PATHNAME', 'pgmpc_play'

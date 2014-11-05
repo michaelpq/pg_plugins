@@ -66,6 +66,10 @@ PG_FUNCTION_INFO_V1(pgmpc_set_volume);
 PG_FUNCTION_INFO_V1(pgmpc_update);
 PG_FUNCTION_INFO_V1(pgmpc_ls);
 PG_FUNCTION_INFO_V1(pgmpc_add);
+PG_FUNCTION_INFO_V1(pgmpc_load);
+PG_FUNCTION_INFO_V1(pgmpc_save);
+PG_FUNCTION_INFO_V1(pgmpc_rm);
+PG_FUNCTION_INFO_V1(pgmpc_clear);
 
 /*
  * pgmpc_init
@@ -560,6 +564,90 @@ pgmpc_add(PG_FUNCTION_ARGS)
 	/* Now run the command */
 	pgmpc_init();
 	if (!mpd_run_add(mpd_conn, path))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_VOID();
+}
+
+/*
+ * pgmpc_load
+ * Load given playlist.
+ */
+Datum
+pgmpc_load(PG_FUNCTION_ARGS)
+{
+	char *playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* User needs to specify a playlist */
+	if (playlist == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("Playlist needs to be specified")));
+
+	/* Now run the command */
+	pgmpc_init();
+	if (!mpd_run_load(mpd_conn, playlist))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_VOID();
+}
+
+/*
+ * pgmpc_save
+ * Save current playlist to file with given name.
+ */
+Datum
+pgmpc_save(PG_FUNCTION_ARGS)
+{
+	char *playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* User needs to specify a playlist */
+	if (playlist == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("Playlist needs to be specified")));
+
+	/* Now run the command */
+	pgmpc_init();
+	if (!mpd_run_save(mpd_conn, playlist))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_VOID();
+}
+
+/*
+ * pgmpc_rm
+ * Delete given playlist.
+ */
+Datum
+pgmpc_rm(PG_FUNCTION_ARGS)
+{
+	char *playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* User needs to specify a playlist */
+	if (playlist == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("Playlist needs to be specified")));
+
+	/* Now run the command */
+	pgmpc_init();
+	if (!mpd_run_rm(mpd_conn, playlist))
+		pgmpc_print_error();
+	pgmpc_reset();
+	PG_RETURN_VOID();
+}
+
+/*
+ * pgmpc_clear
+ * Clear current playlist.
+ */
+Datum
+pgmpc_clear(PG_FUNCTION_ARGS)
+{
+	/* Now run the command */
+	pgmpc_init();
+	if (!mpd_run_clear(mpd_conn))
 		pgmpc_print_error();
 	pgmpc_reset();
 	PG_RETURN_VOID();
