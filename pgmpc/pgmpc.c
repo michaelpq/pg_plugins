@@ -51,6 +51,17 @@ static void pgmpc_init(void);
 static void pgmpc_print_error(void);
 static void pgmpc_reset(void);
 static void pgmpc_load_params(void);
+static void pgmpc_init_setof_single(FunctionCallInfo fcinfo,
+									Oid argtype,
+									char *argname,
+									TupleDesc *tupdesc,
+									Tuplestorestate **tupstore);
+static void pgmpc_init_setof(FunctionCallInfo fcinfo,
+							 int argnum,
+							 Oid *argtypes,
+							 char **argnames,
+							 TupleDesc *tupdesc,
+							 Tuplestorestate **tupstore);
 
 /* List of interface functions */
 PG_FUNCTION_INFO_V1(pgmpc_status);
@@ -135,6 +146,75 @@ pgmpc_print_error(void)
 			(errcode(ERRCODE_SYSTEM_ERROR),
 			 errmsg("mpd command failed: %s",
 					message)));
+}
+
+/*
+ * pgmpc_init_setof_single
+ * Similar to pgmpc_init_setof, for one argument only.
+ */
+static void
+pgmpc_init_setof_single(FunctionCallInfo fcinfo,
+						Oid argtype,
+						char *argname,
+						TupleDesc *tupdesc,
+						Tuplestorestate **tupstore)
+{
+	char **argnames;
+	Oid	argtypes[1];
+
+	/* Initialize content and do the work */
+	argtypes[0] = argtype;
+	argnames = (char **) palloc(sizeof(char *));
+	argnames[0] = pstrdup(argname);
+	pgmpc_init_setof(fcinfo, 1, argtypes, argnames, tupdesc, tupstore);
+	pfree(argnames[0]);
+	pfree(argnames);
+}
+
+/*
+ * pgmpc_init_setof
+ * Intilialize properly a function returning multiple tuples with a
+ * tuplestore and a TupDesc.
+ */
+static void
+pgmpc_init_setof(FunctionCallInfo fcinfo,
+				 int argnum,
+				 Oid *argtypes,
+				 char **argnames,
+				 TupleDesc *tupdesc,
+				 Tuplestorestate **tupstore)
+{
+	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	MemoryContext per_query_ctx;
+	MemoryContext oldcontext;
+	int i;
+
+	/* check to see if caller supports us returning a tuplestore */
+	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("set-valued function called in context that cannot accept a set")));
+	if (!(rsinfo->allowedModes & SFRM_Materialize))
+		ereport(ERROR,
+				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+				 errmsg("materialize mode required, but it is not " \
+						"allowed in this context")));
+
+	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
+	oldcontext = MemoryContextSwitchTo(per_query_ctx);
+
+	/* Build tuple descriptor */
+	*tupdesc = CreateTemplateTupleDesc(argnum, false);
+	for (i = 0; i < argnum; i++)
+		TupleDescInitEntry(*tupdesc, (AttrNumber) i + 1, argnames[i],
+						   argtypes[i], -1, 0);
+
+	*tupstore = tuplestore_begin_heap(true, false, work_mem);
+	rsinfo->returnMode = SFRM_Materialize;
+	rsinfo->setResult = *tupstore;
+	rsinfo->setDesc = *tupdesc;
+
+	MemoryContextSwitchTo(oldcontext);
 }
 
 /*
@@ -461,41 +541,15 @@ pgmpc_set_volume(PG_FUNCTION_ARGS)
 Datum
 pgmpc_ls(PG_FUNCTION_ARGS)
 {
-	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc   tupdesc;
 	Tuplestorestate *tupstore;
-	MemoryContext per_query_ctx;
-	MemoryContext oldcontext;
 	char *path = NULL;
 
 	if (PG_NARGS() == 1)
 		path = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
-	/* check to see if caller supports us returning a tuplestore */
-	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("set-valued function called in context that cannot accept a set")));
-	if (!(rsinfo->allowedModes & SFRM_Materialize))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("materialize mode required, but it is not " \
-						"allowed in this context")));
-
-	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
-	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-
-	/* Build tuple descriptor */
-	tupdesc = CreateTemplateTupleDesc(1, false);
-	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "uri",
-					   TEXTOID, -1, 0);
-
-	tupstore = tuplestore_begin_heap(true, false, work_mem);
-	rsinfo->returnMode = SFRM_Materialize;
-	rsinfo->setResult = tupstore;
-	rsinfo->setDesc = tupdesc;
-
-	MemoryContextSwitchTo(oldcontext);
+	/* Initialize function context */
+	pgmpc_init_setof_single(fcinfo, TEXTOID, "uri", &tupdesc, &tupstore);
 
 	/*
 	 * Run the command to get all the songs.
@@ -554,42 +608,16 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 Datum
 pgmpc_playlist(PG_FUNCTION_ARGS)
 {
-	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc   tupdesc;
 	Tuplestorestate *tupstore;
-	MemoryContext per_query_ctx;
-	MemoryContext oldcontext;
 	char *playlist = NULL;
 	bool ret;
 
 	if (PG_NARGS() == 1)
 		playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
-	/* check to see if caller supports us returning a tuplestore */
-	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("set-valued function called in context that cannot accept a set")));
-	if (!(rsinfo->allowedModes & SFRM_Materialize))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("materialize mode required, but it is not " \
-						"allowed in this context")));
-
-	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
-	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-
-	/* Build tuple descriptor */
-	tupdesc = CreateTemplateTupleDesc(1, false);
-	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "uri",
-					   TEXTOID, -1, 0);
-
-	tupstore = tuplestore_begin_heap(true, false, work_mem);
-	rsinfo->returnMode = SFRM_Materialize;
-	rsinfo->setResult = tupstore;
-	rsinfo->setDesc = tupdesc;
-
-	MemoryContextSwitchTo(oldcontext);
+	/* Initialize function context */
+	pgmpc_init_setof_single(fcinfo, TEXTOID, "playlist", &tupdesc, &tupstore);
 
 	/*
 	 * Run the command to get all the songs.
@@ -650,37 +678,11 @@ pgmpc_playlist(PG_FUNCTION_ARGS)
 Datum
 pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 {
-	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc   tupdesc;
 	Tuplestorestate *tupstore;
-	MemoryContext per_query_ctx;
-	MemoryContext oldcontext;
 
-	/* check to see if caller supports us returning a tuplestore */
-	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("set-valued function called in context that cannot accept a set")));
-	if (!(rsinfo->allowedModes & SFRM_Materialize))
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("materialize mode required, but it is not " \
-						"allowed in this context")));
-
-	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
-	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-
-	/* Build tuple descriptor */
-	tupdesc = CreateTemplateTupleDesc(1, false);
-	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "playlists",
-					   TEXTOID, -1, 0);
-
-	tupstore = tuplestore_begin_heap(true, false, work_mem);
-	rsinfo->returnMode = SFRM_Materialize;
-	rsinfo->setResult = tupstore;
-	rsinfo->setDesc = tupdesc;
-
-	MemoryContextSwitchTo(oldcontext);
+	/* Initialize function context */
+	pgmpc_init_setof_single(fcinfo, TEXTOID, "playlist", &tupdesc, &tupstore);
 
 	/*
 	 * Run the command to get all the songs.
