@@ -239,7 +239,7 @@ pgmpc_status(PG_FUNCTION_ARGS)
 
 	/* Initialize the values of return tuple */
 	MemSet(values, 0, sizeof(values));
-	MemSet(nulls, 0, sizeof(nulls));
+	MemSet(nulls, true, sizeof(nulls));
 
 	/*
 	 * Send all necessary commands at once to avoid unnecessary round
