@@ -404,7 +404,7 @@ pgmpc_update(PG_FUNCTION_ARGS)
 	char *path = NULL;
 
 	/* Get optional path if defined */
-	if (PG_NARGS() == 1)
+	if (PG_NARGS() == 1 && !PG_ARGISNULL(0))
 		path = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* Run the command */
@@ -545,7 +545,7 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	Tuplestorestate *tupstore;
 	char *path = NULL;
 
-	if (PG_NARGS() == 1)
+	if (PG_NARGS() == 1 && !PG_ARGISNULL(0))
 		path = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* Initialize function context */
@@ -613,7 +613,7 @@ pgmpc_playlist(PG_FUNCTION_ARGS)
 	char *playlist = NULL;
 	bool ret;
 
-	if (PG_NARGS() == 1)
+	if (PG_NARGS() == 1 && !PG_ARGISNULL(0))
 		playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* Initialize function context */
@@ -740,13 +740,18 @@ pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 Datum
 pgmpc_add(PG_FUNCTION_ARGS)
 {
-	char *path = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char *path;
 
-	/* User needs to specify a path */
-	if (path == NULL)
+	if (PG_ARGISNULL(0))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("Song path needs to be specified")));
+
+	/* Get path value */
+	path = text_to_cstring(PG_GETARG_TEXT_PP(0));
+
+	/* User needs to specify a path */
+	if (path == NULL)
 
 	/* Now run the command */
 	pgmpc_init();
@@ -763,13 +768,15 @@ pgmpc_add(PG_FUNCTION_ARGS)
 Datum
 pgmpc_load(PG_FUNCTION_ARGS)
 {
-	char *playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char *playlist;
 
 	/* User needs to specify a playlist */
-	if (playlist == NULL)
+	if (PG_ARGISNULL(0))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("Playlist needs to be specified")));
+
+	playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* Now run the command */
 	pgmpc_init();
@@ -786,13 +793,16 @@ pgmpc_load(PG_FUNCTION_ARGS)
 Datum
 pgmpc_save(PG_FUNCTION_ARGS)
 {
-	char *playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char *playlist;
 
 	/* User needs to specify a playlist */
-	if (playlist == NULL)
+	if (PG_ARGISNULL(0))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("Playlist needs to be specified")));
+
+	/* Get playlist value */
+	playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* Now run the command */
 	pgmpc_init();
@@ -809,13 +819,16 @@ pgmpc_save(PG_FUNCTION_ARGS)
 Datum
 pgmpc_rm(PG_FUNCTION_ARGS)
 {
-	char *playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char *playlist;
 
 	/* User needs to specify a playlist */
-	if (playlist == NULL)
+	if (PG_ARGISNULL(0))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("Playlist needs to be specified")));
+
+	/* get playlist value */
+	playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
 
 	/* Now run the command */
 	pgmpc_init();
