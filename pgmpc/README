@@ -20,6 +20,10 @@ with the following command:
 
     make install
 
+Then it can be enabled using this command after connecting to a database:
+
+    =# CREATE EXTENSION pgmpc;
+
 Options
 -------
 
