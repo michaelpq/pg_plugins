@@ -16,11 +16,12 @@ LANGUAGE C;
 COMMENT ON FUNCTION mpd_status()
 IS 'Show status of mpd server';
 
-CREATE FUNCTION mpd_ls()
+CREATE FUNCTION mpd_ls(OUT song text)
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_ls'
 LANGUAGE C;
-CREATE FUNCTION mpd_ls(path text)
+CREATE FUNCTION mpd_ls(path text,
+	OUT song text)
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_ls'
 LANGUAGE C;
@@ -30,11 +31,12 @@ IS 'Get list of all songs on server';
 COMMENT ON FUNCTION mpd_ls(text)
 IS 'Get list of all songs on server with given path';
 
-CREATE FUNCTION mpd_playlist()
+CREATE FUNCTION mpd_playlist(OUT song text)
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_playlist'
 LANGUAGE C;
-CREATE FUNCTION mpd_playlist(path text)
+CREATE FUNCTION mpd_playlist(path text,
+	OUT song text)
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_playlist'
 LANGUAGE C;
@@ -44,7 +46,7 @@ IS 'List all songs of current playlist';
 COMMENT ON FUNCTION mpd_playlist(text)
 IS 'List all songs of given playlist';
 
-CREATE FUNCTION mpd_lsplaylists()
+CREATE FUNCTION mpd_lsplaylists(OUT playlist text)
 RETURNS SETOF text
 AS 'MODULE_PATHNAME', 'pgmpc_lsplaylists'
 LANGUAGE C;
