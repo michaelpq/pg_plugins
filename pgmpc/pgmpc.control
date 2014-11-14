@@ -1,5 +1,5 @@
 # pgmpc extension
 comment = 'pgmpc - mpd client for PostgreSQL'
-default_version = '1.0'
+default_version = '0.1'
 module_pathname = '$libdir/pgmpc'
 relocatable = true

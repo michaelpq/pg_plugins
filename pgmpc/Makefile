@@ -2,7 +2,7 @@ MODULE_big = pgmpc
 OBJS    = pgmpc.o $(WIN32RES)
 
 EXTENSION = pgmpc
-DATA = pgmpc--1.0.sql
+DATA = pgmpc--0.1.sql
 PGFILEDESC = "pgmpc - mpd client for PostgreSQL"
 SHLIB_LINK = -lmpdclient
 
