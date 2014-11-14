@@ -1,0 +1,40 @@
+{
+    "name": "pgmpc",
+    "abstract": "mpd client for PostgreSQL",
+    "description": "Set of functions to control and interact with mpd instance",
+    "version": "0.1",
+    "release_status": "stable",
+
+    "maintainer": "Michael Paquier <michael@otacoo.com>",
+    "generated_by": "Michael Paquier <michael@otacoo.com>",
+    "provides": {
+	"pgmpc": {
+	    "abstract": "mpd client for PostgreSQL",
+	    "file": "pgmpc--0.1.sql",
+	    "docfile": "README",
+	    "version": "0.1"
+	}
+    },
+    "license": {
+	"PostgreSQL": "http://www.postgresql.org/about/licence/"
+    },
+    "tags": [
+	"music", "player", "daemon", "mpd", "control",
+	"playlist", "song", "list"
+    ],
+    "resources": {
+	"bugtracker": {
+	    "web": "https://github.com/michaelpq/pg_plugins/issues"
+	},
+	"repository": {
+	    "url": "https://github.com/michaelpq/pg_plugins.git",
+	    "web": "https://github.com/michaelpq/pg_plugins",
+	    "type": "git"
+	}
+    },
+
+    "meta-spec": {
+	"version": "1.0.0",
+	"url": "http://pgxn.org/meta/spec.txt"
+    }
+}
