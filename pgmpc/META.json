@@ -2,7 +2,7 @@
     "name": "pgmpc",
     "abstract": "mpd client for PostgreSQL",
     "description": "Set of functions to control and interact with mpd instance",
-    "version": "0.1",
+    "version": "0.1.0",
     "release_status": "stable",
 
     "maintainer": "Michael Paquier <michael@otacoo.com>",
@@ -10,9 +10,9 @@
     "provides": {
 	"pgmpc": {
 	    "abstract": "mpd client for PostgreSQL",
-	    "file": "pgmpc--0.1.sql",
+	    "file": "pgmpc--0.1.0.sql",
 	    "docfile": "README",
-	    "version": "0.1"
+	    "version": "0.1.0"
 	}
     },
     "license": {

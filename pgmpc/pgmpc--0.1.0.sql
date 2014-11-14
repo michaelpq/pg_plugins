@@ -1,4 +1,4 @@
-/* pgmpc/pgmpc--0.1.sql */
+/* pgmpc/pgmpc--0.1.0.sql */
 
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION pgmpc" to load this file. \quit
