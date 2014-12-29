@@ -6,8 +6,8 @@
  *		servers that want to notify queries taking a too long amount
  *		of time to execute.
  *
- * Copyright (c) 2013-2014, Michael Paquier
- * Copyright (c) 1996-2014, PostgreSQL Global Development Group
+ * Copyright (c) 2013-2015, Michael Paquier
+ * Copyright (c) 1996-2015, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		hello_notify/hello_notify.c

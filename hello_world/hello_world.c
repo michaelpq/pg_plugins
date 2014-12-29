@@ -3,7 +3,7 @@
  * hello_world.c
  *		bgworker logging hello world on server
  *
- * Copyright (c) 2013-2014, Michael Paquier
+ * Copyright (c) 2013-2015, Michael Paquier
  * Copyright (c) 1996-2013, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
