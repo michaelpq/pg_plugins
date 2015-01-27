@@ -206,6 +206,12 @@ print_literal(StringInfo s, Oid typid, char *outputstr)
 	switch (typid)
 	{
 		case BOOLOID:
+			if (outputstr[0] == 't')
+				appendStringInfoString(s, "true");
+			else
+				appendStringInfoString(s, "false");
+			break;
+
 		case INT2OID:
 		case INT4OID:
 		case INT8OID:
