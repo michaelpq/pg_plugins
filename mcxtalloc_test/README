@@ -1,0 +1,12 @@
+mcxtalloc_test
+==============
+
+This module is a PostgreSQL extension aimed to be a test module for
+memory allocation routines of mcxt.c:
+- MemoryContextAlloc
+- MemoryContextAllocHuge
+- MemoryContextAllocZero
+- MemoryContextAllocExtended
+
+MemoryContextAllocExtended has been introduced in PostgreSQL 9.5, hence
+this module is not compatible with 9.4 or older versions.

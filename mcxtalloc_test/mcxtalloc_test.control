@@ -1,0 +1,5 @@
+# mcxtalloc_test extension
+comment = 'Minimal Extension Template'
+default_version = '1.0'
+module_pathname = '$libdir/mcxtalloc_test'
+relocatable = true
