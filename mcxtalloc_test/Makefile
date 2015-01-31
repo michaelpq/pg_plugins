@@ -1,6 +1,7 @@
 MODULES = mcxtalloc_test
 
 EXTENSION = mcxtalloc_test
+DATA = mcxtalloc_test--1.0.sql
 PGFILEDESC = "mcxtalloc_test - Test low-level allocation functions"
 REGRESS = mcxtalloc_test
 
