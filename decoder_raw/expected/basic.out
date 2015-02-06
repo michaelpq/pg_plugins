@@ -150,6 +150,60 @@ SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include
 (24 rows)
 
 DROP TABLE aa;
+-- INDEX case using a second column
+CREATE TABLE aa (b text, a int NOT NULL);
+CREATE UNIQUE INDEX aai ON aa(a);
+ALTER TABLE aa REPLICA IDENTITY USING INDEX aai;
+INSERT INTO aa VALUES ('aa', 1), ('bb', 2);
+-- Update of Non-selective column
+UPDATE aa SET b = 'cc' WHERE a = 1;
+-- Update of only selective column
+UPDATE aa SET a = 3 WHERE a = 1;
+-- Update of both columns
+UPDATE aa SET a = 4, b = 'dd' WHERE a = 2;
+DELETE FROM aa WHERE a = 4;
+-- Have a look at changes with different modes
+SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
+                       data                        
+---------------------------------------------------
+ INSERT INTO public.aa (b, a) VALUES ('aa', 1);
+ INSERT INTO public.aa (b, a) VALUES ('bb', 2);
+ UPDATE public.aa SET b = 'cc', a = 1 WHERE a = 1;
+ UPDATE public.aa SET b = 'cc', a = 3 WHERE a = 1;
+ UPDATE public.aa SET b = 'dd', a = 4 WHERE a = 2;
+ DELETE FROM public.aa WHERE a = 4;
+(6 rows)
+
+SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'on');
+                       data                        
+---------------------------------------------------
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ COMMIT;
+ BEGIN;
+ INSERT INTO public.aa (b, a) VALUES ('aa', 1);
+ INSERT INTO public.aa (b, a) VALUES ('bb', 2);
+ COMMIT;
+ BEGIN;
+ UPDATE public.aa SET b = 'cc', a = 1 WHERE a = 1;
+ COMMIT;
+ BEGIN;
+ UPDATE public.aa SET b = 'cc', a = 3 WHERE a = 1;
+ COMMIT;
+ BEGIN;
+ UPDATE public.aa SET b = 'dd', a = 4 WHERE a = 2;
+ COMMIT;
+ BEGIN;
+ DELETE FROM public.aa WHERE a = 4;
+ COMMIT;
+(24 rows)
+
+DROP TABLE aa;
 -- FULL case
 CREATE TABLE aa (a int primary key, b text NOT NULL);
 ALTER TABLE aa REPLICA IDENTITY FULL;

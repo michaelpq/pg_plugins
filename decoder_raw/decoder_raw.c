@@ -303,7 +303,7 @@ print_where_clause_item(StringInfo s,
 	bool				isnull;
 	TupleDesc			tupdesc = RelationGetDescr(relation);
 
-	attr = tupdesc->attrs[natt];
+	attr = tupdesc->attrs[natt - 1];
 
 	/* Skip dropped columns and system columns */
 	if (attr->attisdropped || attr->attnum < 0)
@@ -319,7 +319,7 @@ print_where_clause_item(StringInfo s,
 	appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
 
 	/* Get Datum from tuple */
-	origval = fastgetattr(tuple, natt + 1, tupdesc, &isnull);
+	origval = fastgetattr(tuple, natt, tupdesc, &isnull);
 
 	/* Get output function */
 	print_value(s, origval, attr->atttypid, isnull);
@@ -356,7 +356,7 @@ print_where_clause(StringInfo s,
 		indexRel = index_open(relation->rd_replidindex, ShareLock);
 		for (key = 0; key < indexRel->rd_index->indnatts; key++)
 		{
-			int	relattr = indexRel->rd_index->indkey.values[key - 1];
+			int	relattr = indexRel->rd_index->indkey.values[key];
 
 			/*
 			 * For a relation having REPLICA IDENTITY set at DEFAULT
@@ -383,7 +383,7 @@ print_where_clause(StringInfo s,
 	 */
 	for (natt = 0; natt < tupdesc->natts; natt++)
 		print_where_clause_item(s, relation, oldtuple,
-								natt, &first_column);
+								natt + 1, &first_column);
 }
 
 /*
