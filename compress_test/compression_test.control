@@ -1,0 +1,5 @@
+# compression_test extension
+comment = 'Utilities for various compression algorithms'
+default_version = '1.0'
+module_pathname = '$libdir/compression_test'
+relocatable = true

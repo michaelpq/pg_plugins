@@ -1,0 +1,8 @@
+compression_test
+================
+
+This module is a PostgreSQL extension containing a set of utilities
+to test compression in a PostgreSQL backend, primarily pglz.
+
+This is compatible with PostgreSQL 9.5 and onwards, where pglz has been
+split as an independent facility in libpqcommon.
