@@ -33,6 +33,7 @@ PG_MODULE_MAGIC;
 PG_FUNCTION_INFO_V1(get_raw_page);
 PG_FUNCTION_INFO_V1(compress_data);
 PG_FUNCTION_INFO_V1(decompress_data);
+PG_FUNCTION_INFO_V1(bytea_size);
 
 /*
  * get_raw_page
@@ -207,4 +208,17 @@ decompress_data(PG_FUNCTION_ARGS)
 	memcpy(VARDATA(res), uncompress_buffer, raw_len);
 	pfree(uncompress_buffer);
 	PG_RETURN_BYTEA_P(res);
+}
+
+/*
+ * bytea_size
+ *
+ * Return the size of a bytea field, data useful to pass for decompression.
+ */
+Datum
+bytea_size(PG_FUNCTION_ARGS)
+{
+	bytea  *data = PG_GETARG_BYTEA_P(0);
+
+	PG_RETURN_INT32(VARSIZE(data) - VARHDRSZ);
 }

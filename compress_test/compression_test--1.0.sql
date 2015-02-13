@@ -12,6 +12,12 @@ CREATE FUNCTION get_raw_page(IN relid oid,
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 
+-- Routine useful for decompression to get size of a bytea field
+CREATE FUNCTION bytea_size(bytea)
+RETURNS int
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;
+
 -- Compression routine
 CREATE FUNCTION compress_data(bytea)
 RETURNS bytea
