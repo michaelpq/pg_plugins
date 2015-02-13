@@ -170,7 +170,6 @@ compress_data(PG_FUNCTION_ARGS)
 								   VARSIZE(raw_data) - VARHDRSZ,
 								   compressed_data,
 								   PGLZ_strategy_always);
-	elog(LOG, "error %d, size %d", compressed_len, VARSIZE(raw_data) - VARHDRSZ);
 	if (compressed_len < 0)
 		ereport(ERROR,
 				(errmsg("Compression failed...")));
