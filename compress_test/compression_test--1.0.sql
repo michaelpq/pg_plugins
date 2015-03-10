@@ -18,8 +18,19 @@ RETURNS int
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
 
--- Compression routine
+-- Compression routines
 CREATE FUNCTION compress_data(bytea)
+RETURNS bytea
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;
+
+CREATE FUNCTION compress_data(bytea,
+	min_input_size int,
+	max_input_size int,
+	min_comp_rate int,
+	first_success_by int,
+	match_size_good int,
+	match_size_drop int)
 RETURNS bytea
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;

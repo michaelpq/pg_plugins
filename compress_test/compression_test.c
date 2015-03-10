@@ -163,16 +163,32 @@ compress_data(PG_FUNCTION_ARGS)
 	bytea   *res;
 	int32	compressed_len;
 	char	*compressed_data;
+	PGLZ_Strategy strategy;
+
+	memcpy(&strategy, (PGLZ_Strategy *) PGLZ_strategy_always,
+		   sizeof(PGLZ_Strategy));
+
+	/* Get custom values if specified by user */
+	if (PG_NARGS() == 7)
+	{
+		strategy.min_input_size = PG_GETARG_INT32(1);
+		strategy.max_input_size = PG_GETARG_INT32(2);
+		strategy.min_comp_rate = PG_GETARG_INT32(3);
+		strategy.first_success_by = PG_GETARG_INT32(4);
+		strategy.match_size_good = PG_GETARG_INT32(5);
+		strategy.match_size_drop = PG_GETARG_INT32(6);
+	}
 
 	/* Compress data in build */
 	compressed_data = palloc(PGLZ_MAX_OUTPUT(VARSIZE(raw_data) - VARHDRSZ));
 	compressed_len = pglz_compress(VARDATA(raw_data),
 								   VARSIZE(raw_data) - VARHDRSZ,
 								   compressed_data,
-								   PGLZ_strategy_always);
+								   &strategy);
+
+	/* if compression failed return the original data */
 	if (compressed_len < 0)
-		ereport(ERROR,
-				(errmsg("Compression failed...")));
+		PG_RETURN_BYTEA_P(raw_data);
 
 	/* Build result */
 	res = (bytea *) palloc(VARHDRSZ + compressed_len);
