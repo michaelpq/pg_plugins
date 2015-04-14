@@ -3,7 +3,7 @@ hook_utility
 
 This module uses a hook on utility commands to put restrictions on them.
 In the particular case of this module, DROP DATABASE can only be executed
-on a given database by a certain user. In order to enable this modile in a
+on a given database by a certain user. In order to enable this module in a
 PostgreSQL instance, the following parameter needs to be set in
 postgresql.conf after installing this module:
 
