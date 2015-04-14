@@ -1,0 +1,26 @@
+hook_utility
+============
+
+This module uses a hook on utility commands to put restrictions on them.
+In the particular case of this module, DROP DATABASE can only be executed
+on a given database by a certain user. In order to enable this modile in a
+PostgreSQL instance, the following parameter needs to be set in
+postgresql.conf after installing this module:
+
+    shared_preload_libraries = 'hook_utility'
+
+Options
+-------
+
+The following options are available:
+
+- hook_utility.dbname, name of the database that can only be dropped by
+a certain user, defined by hook_utility.username.
+- hook_utility.username, name of the user that can drop the database defined
+by hook_utility.dbname.
+
+Notes
+-----
+
+More restrictions and more extensible options could be put in this small
+utility that should be used only as a base of work.
