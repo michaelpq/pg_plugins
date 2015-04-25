@@ -301,9 +301,6 @@ write_jsonlog(ErrorData *edata)
 	appendStringInfoChar(&buf, '}');
 	appendStringInfoChar(&buf, '\n');
 
-	/* Block logging on server, priority is given to JSON format */
-	edata->output_to_server = false;
-
 	/* If in the syslogger process, try to write messages direct to file */
 	if (am_syslogger)
 		write_syslogger_file(buf.data, buf.len, LOG_DESTINATION_STDERR);
