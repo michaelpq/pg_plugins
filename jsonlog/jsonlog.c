@@ -309,6 +309,10 @@ write_jsonlog(ErrorData *edata)
 
 	/* Cleanup */
 	pfree(buf.data);
+
+	/* Continue chain to previous hook */
+	if (prev_log_hook)
+		(*prev_log_hook) (edata);
 }
 
 /*
