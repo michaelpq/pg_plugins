@@ -4,7 +4,6 @@
  *		Set of functions to test low-level routines in change of doing
  *		memory allocation in a given memory context.
  *
- * Copyright (c) 2013-2015, Michael Paquier
  * Copyright (c) 1996-2015, PostgreSQL Global Development Group
  *
  * IDENTIFICATION

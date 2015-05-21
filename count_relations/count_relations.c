@@ -4,7 +4,6 @@
  *		Simple background worker code scanning the number of relations
  *		present in database.
  *
- * Copyright (c) 2013-2015, Michael Paquier
  * Copyright (c) 1996-2015, PostgreSQL Global Development Group
  *
  * IDENTIFICATION

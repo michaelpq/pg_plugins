@@ -3,7 +3,6 @@
  * pgmpc.c
  *		mpd client for PostgreSQL
  *
- * Copyright (c) 2013-2015, Michael Paquier
  * Copyright (c) 1996-2015, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
