@@ -1,4 +1,3 @@
-
 /*-------------------------------------------------------------------------
  *
  * compression_test.c
@@ -40,7 +39,8 @@ PG_FUNCTION_INFO_V1(bytea_size);
  *
  * Returns a copy of a page from shared buffers as a bytea, with hole
  * filled with zeros or simply without hole, with the length of the page
- * offset to be able to reconstitute the page entirely.
+ * offset to be able to reconstitute the page entirely using the data
+ * returned by this function.
  */
 Datum
 get_raw_page(PG_FUNCTION_ARGS)
@@ -154,7 +154,7 @@ get_raw_page(PG_FUNCTION_ARGS)
 /*
  * compress_data
  *
- * Compress the bytea buffer and return the result as bytea as well.
+ * Compress the bytea buffer and return the result as bytea.
  */
 Datum
 compress_data(PG_FUNCTION_ARGS)
@@ -201,7 +201,8 @@ compress_data(PG_FUNCTION_ARGS)
 /*
  * decompress_data
  *
- * Decompress the bytea buffer and return result as bytea as well.
+ * Decompress the bytea buffer and return result as bytea, this may be a page
+ * with its hole filled with zeros or a page without a hole.
  */
 Datum
 decompress_data(PG_FUNCTION_ARGS)
@@ -228,7 +229,8 @@ decompress_data(PG_FUNCTION_ARGS)
 /*
  * bytea_size
  *
- * Return the size of a bytea field, data useful to pass for decompression.
+ * Return the size of a bytea field, this data is useful to pass for
+ * to a function doing decompression like decompress_data() above.
  */
 Datum
 bytea_size(PG_FUNCTION_ARGS)
