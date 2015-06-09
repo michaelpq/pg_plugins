@@ -21,13 +21,28 @@
 
 const char *progname;
 
-/* Mode parameters */
+/* Global parameters */
 static bool verbose = false;
+static char *full_path = NULL;
 
 /* Data regarding input WAL to parse */
 static XLogSegNo segno = 0;
 static XLogRecPtr startptr = InvalidXLogRecPtr;
+static XLogSegNo xlogreadsegno = -1;
 static TimeLineID timeline_id = 1;
+
+/* Parsing status */
+static int xlogreadfd = -1; /* File descriptor of opened WAL segment */
+
+/* Structures for XLOG reader callback */
+typedef struct XLogReadBlockPrivate
+{
+	const char	   *full_path;
+} XLogReadBlockPrivate;
+static int XLogReadPageBlock(XLogReaderState *xlogreader,
+							 XLogRecPtr targetPagePtr,
+							 int reqLen, XLogRecPtr targetRecPtr,
+							 char *readBuf, TimeLineID *pageTLI);
 
 static void
 usage(const char *progname)
@@ -69,6 +84,137 @@ split_path(const char *path, char **dir, char **fname)
 	{
 		*dir = NULL;
 		*fname = pg_strdup(path);
+	}
+}
+
+/* XLogreader callback function, to read a WAL page */
+static int
+XLogReadPageBlock(XLogReaderState *xlogreader, XLogRecPtr targetPagePtr,
+				  int reqLen, XLogRecPtr targetRecPtr, char *readBuf,
+				  TimeLineID *pageTLI)
+{
+	XLogReadBlockPrivate *private =
+		(XLogReadBlockPrivate *) xlogreader->private_data;
+	uint32      targetPageOff;
+	XLogSegNo   targetSegNo PG_USED_FOR_ASSERTS_ONLY;
+
+	XLByteToSeg(targetPagePtr, targetSegNo);
+	targetPageOff = targetPagePtr % XLogSegSize;
+
+	XLByteToSeg(targetPagePtr, xlogreadsegno);
+
+	if (xlogreadfd < 0)
+	{
+		xlogreadfd = open(private->full_path, O_RDONLY | PG_BINARY, 0);
+
+		if (xlogreadfd < 0)
+		{
+			fprintf(stderr, "could not open file \"%s\": %s\n",
+					private->full_path,
+					strerror(errno));
+			return -1;
+		}
+	}
+
+    /*
+     * At this point, we have the right segment open.
+     */
+	Assert(xlogreadfd != -1);
+
+	/* Read the requested page */
+	if (lseek(xlogreadfd, (off_t) targetPageOff, SEEK_SET) < 0)
+	{
+		fprintf(stderr, "could not seek in file \"%s\": %s\n",
+				private->full_path,
+				strerror(errno));
+		return -1;
+	}
+
+	if (read(xlogreadfd, readBuf, XLOG_BLCKSZ) != XLOG_BLCKSZ)
+	{
+		fprintf(stderr, "could not read from file \"%s\": %s\n",
+				private->full_path,
+				strerror(errno));
+		return -1;
+	}
+
+	Assert(targetSegNo == xlogreadsegno);
+
+	return XLOG_BLCKSZ;
+}
+
+/*
+ * extract_block_info
+ * Extract block information for given record.
+ */
+static void
+extract_block_info(XLogReaderState *record)
+{
+	int block_id;
+
+	for (block_id = 0; block_id <= record->max_block_id; block_id++)
+	{
+		RelFileNode rnode;
+		ForkNumber forknum;
+		BlockNumber blkno;
+
+		if (!XLogRecGetBlockTag(record, block_id, &rnode, &forknum, &blkno))
+			continue;
+
+		/* We only care about the main fork */
+		if (forknum != MAIN_FORKNUM)
+			continue;
+
+		/* Print information of block touched */
+		fprintf(stderr, "Block touched: dboid = %u, relid = %u, block = %u",
+				rnode.dbNode, rnode.relNode, blkno);
+	}
+}
+
+/*
+ * do_wal_parsing
+ * Central part where the actual parsing work happens.
+ */
+static void
+do_wal_parsing(void)
+{
+	XLogReadBlockPrivate private;
+	XLogRecord *record;
+	XLogReaderState *xlogreader;
+	char *errormsg;
+
+	private.full_path = full_path;
+
+	xlogreader = XLogReaderAllocate(XLogReadPageBlock, &private);
+	record = XLogReadRecord(xlogreader, startptr, &errormsg);
+	if (record == NULL)
+	{
+		fprintf(stderr, "could not read WAL starting at %X/%X",
+				(uint32) (startptr >> 32),
+				(uint32) (startptr));
+		if (errormsg)
+			fprintf(stderr, ": %s", errormsg);
+		fprintf(stderr, "\n");
+		exit(1);
+	}
+
+	/* Loop through all the records */
+	do
+	{
+		/* extract block information for this record */
+		extract_block_info(xlogreader);
+
+		/* Move on to next record */
+		record = XLogReadRecord(xlogreader, InvalidXLogRecPtr, &errormsg);
+		if (errormsg)
+			fprintf(stderr, "error reading xlog record: %s\n", errormsg);
+	} while(record != NULL);
+
+	XLogReaderFree(xlogreader);
+	if (xlogreadfd != -1)
+	{
+		close(xlogreadfd);
+		xlogreadfd = -1;
 	}
 }
 
@@ -133,8 +279,9 @@ main(int argc, char **argv)
 	{
         char       *directory = NULL;
 		char       *fname = NULL;
-		char	   *full_path = pg_strdup(argv[optind]);
 		int         fd;
+
+		full_path = pg_strdup(argv[optind]);
 
 		split_path(full_path, &directory, &fname);
 
@@ -161,13 +308,13 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* File and start position are here, begin the parsing */
-	//xlogreader_state = XLogReaderAllocate(XLogDumpReadPage, &private);
-
-	for (;;)
+	if (full_path == NULL)
 	{
-		//XLogReadRecord stuff
+		fprintf(stderr, "%s: no input file defined.\n", progname);
+		exit(1);
 	}
 
+	/* File and start position are here, begin the parsing */
+	do_wal_parsing();
 	exit(0);
 }
