@@ -64,7 +64,7 @@ usage(const char *progname)
 static void
 split_path(const char *path, char **dir, char **fname)
 {
-	char       *sep;
+	char	   *sep;
 
 	/* split filepath into directory & filename */
 	sep = strrchr(path, '/');
@@ -109,9 +109,9 @@ XLogReadPageBlock(XLogReaderState *xlogreader, XLogRecPtr targetPagePtr,
 		}
 	}
 
-    /*
-     * At this point, we have the right segment open.
-     */
+	/*
+	 * At this point, we have the right segment open.
+	 */
 	Assert(xlogreadfd != -1);
 
 	/* Read the requested page */
@@ -277,9 +277,9 @@ main(int argc, char **argv)
 	/* parse files as start/end boundaries, extract path if not specified */
 	if (optind < argc)
 	{
-        char       *directory = NULL;
-		char       *fname = NULL;
-		int         fd;
+        char	   *directory = NULL;
+		char	   *fname = NULL;
+		int			fd;
 		TimeLineID	timeline_id;
 
 		full_path = pg_strdup(argv[optind]);
