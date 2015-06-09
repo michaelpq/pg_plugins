@@ -1,0 +1,30 @@
+pg_wal_blocks, tracker for relation blocks in WAL
+=================================================
+
+pg_wal_blocks is a binary utility aimed at parsing WAL records to tell
+to users what is the list of blocks touched by WAL.
+
+This module takes advantage of the refactoring of WAL that happened in
+Postgres 9.5, and is compatible with this version and newer versions.
+
+Installation
+------------
+
+Compiling pg_wal_blocks requires the PostgreSQL source tree to be available.
+Pass the path to the PostgreSQL source tree to make, in the top_srcdir
+variable:
+
+    make top_srcdir=<path to PostgreSQL source tree>
+
+In addition, pg_config must be in $PATH.
+
+Usage
+-----
+
+pg_wal_blocks is rather simple to use, requiring only a WAL segment file
+in input for simplicity:
+
+    pg_wal_blocks <WAL segment>
+
+This module could be extended with a bunch of fancy options, but for
+the sake of simplicity this code is kept as-is.
