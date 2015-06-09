@@ -27,9 +27,6 @@ static char *full_path = NULL;
 
 /* Data regarding input WAL to parse */
 static XLogSegNo segno = 0;
-static XLogRecPtr startptr = InvalidXLogRecPtr;
-static XLogSegNo xlogreadsegno = -1;
-static TimeLineID timeline_id = 1;
 
 /* Parsing status */
 static int xlogreadfd = -1; /* File descriptor of opened WAL segment */
@@ -96,12 +93,8 @@ XLogReadPageBlock(XLogReaderState *xlogreader, XLogRecPtr targetPagePtr,
 	XLogReadBlockPrivate *private =
 		(XLogReadBlockPrivate *) xlogreader->private_data;
 	uint32      targetPageOff;
-	XLogSegNo   targetSegNo PG_USED_FOR_ASSERTS_ONLY;
 
-	XLByteToSeg(targetPagePtr, targetSegNo);
 	targetPageOff = targetPagePtr % XLogSegSize;
-
-	XLByteToSeg(targetPagePtr, xlogreadsegno);
 
 	if (xlogreadfd < 0)
 	{
@@ -138,8 +131,6 @@ XLogReadPageBlock(XLogReaderState *xlogreader, XLogRecPtr targetPagePtr,
 		return -1;
 	}
 
-	Assert(targetSegNo == xlogreadsegno);
-
 	return XLOG_BLCKSZ;
 }
 
@@ -165,8 +156,11 @@ extract_block_info(XLogReaderState *record)
 		if (forknum != MAIN_FORKNUM)
 			continue;
 
-		/* Print information of block touched */
-		fprintf(stderr, "Block touched: dboid = %u, relid = %u, block = %u",
+		/*
+		 * Print information of block touched.
+		 * TODO: more advanced logic (really needed?)
+		 */
+		fprintf(stderr, "Block touched: dboid = %u, relid = %u, block = %u\n",
 				rnode.dbNode, rnode.relNode, blkno);
 	}
 }
@@ -182,16 +176,22 @@ do_wal_parsing(void)
 	XLogRecord *record;
 	XLogReaderState *xlogreader;
 	char *errormsg;
+	XLogRecPtr first_record;
 
 	private.full_path = full_path;
 
+	/* Set the first record to look at */
+	XLogSegNoOffsetToRecPtr(segno, 0, first_record);
 	xlogreader = XLogReaderAllocate(XLogReadPageBlock, &private);
-	record = XLogReadRecord(xlogreader, startptr, &errormsg);
+	first_record = XLogFindNextRecord(xlogreader, first_record);
+
+	/* first record to look at */
+	record = XLogReadRecord(xlogreader, first_record, &errormsg);
 	if (record == NULL)
 	{
 		fprintf(stderr, "could not read WAL starting at %X/%X",
-				(uint32) (startptr >> 32),
-				(uint32) (startptr));
+				(uint32) (first_record >> 32),
+				(uint32) (first_record));
 		if (errormsg)
 			fprintf(stderr, ": %s", errormsg);
 		fprintf(stderr, "\n");
@@ -280,6 +280,7 @@ main(int argc, char **argv)
         char       *directory = NULL;
 		char       *fname = NULL;
 		int         fd;
+		TimeLineID	timeline_id;
 
 		full_path = pg_strdup(argv[optind]);
 
@@ -292,20 +293,9 @@ main(int argc, char **argv)
 			exit(1);
 		}
 		close(fd);
-		pg_free(full_path);
 
 		/* parse timeline and segment number from file name */
 		XLogFromFileName(fname, &timeline_id, &segno);
-
-		/* Set start position to begin from */
-		XLogSegNoOffsetToRecPtr(segno, 0, startptr);
-	}
-
-	/* we don't know what to print */
-	if (XLogRecPtrIsInvalid(startptr))
-	{
-		fprintf(stderr, "%s: no start log position given.\n", progname);
-		exit(1);
 	}
 
 	if (full_path == NULL)
@@ -314,7 +304,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* File and start position are here, begin the parsing */
+	/* File to parse is here, so begin */
 	do_wal_parsing();
 	exit(0);
 }

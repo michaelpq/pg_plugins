@@ -11,7 +11,7 @@ override CPPFLAGS := -DFRONTEND $(CPPFLAGS)
 
 EXTRA_CLEAN = $(RMGRDESCSOURCES) xlogreader.c
 
-all: pg_wal_blocks checksrcdir
+all: checksrcdir pg_wal_blocks
 
 # This rule's only purpose is to give the user instructions on how to pass
 # the path to PostgreSQL source tree to the makefile.
