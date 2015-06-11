@@ -16,7 +16,10 @@ Simply run the following command with pg_config in PATH:
 
     make install
 
-All the subcommands of PGXS are available as well.
+All the subcommands of PGXS are available as well. Note that some modules
+may fail to compile because of missing dependencies or a version of
+PostgreSQL code incompatible with the module. You may want to compile
+individually modules if that is the case.
 
 LICENSE
 -------
