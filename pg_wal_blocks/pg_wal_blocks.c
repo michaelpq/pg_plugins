@@ -277,7 +277,7 @@ main(int argc, char **argv)
 	/* parse files as start/end boundaries, extract path if not specified */
 	if (optind < argc)
 	{
-        char	   *directory = NULL;
+		char	   *directory = NULL;
 		char	   *fname = NULL;
 		int			fd;
 		TimeLineID	timeline_id;
