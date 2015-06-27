@@ -318,7 +318,7 @@ print_where_clause_item(StringInfo s,
 	appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
 
 	/* Get Datum from tuple */
-	origval = fastgetattr(tuple, natt, tupdesc, &isnull);
+	origval = heap_getattr(tuple, natt, tupdesc, &isnull);
 
 	/* Get output function */
 	print_value(s, origval, attr->atttypid, isnull);
@@ -432,7 +432,7 @@ decoder_raw_insert(StringInfo s,
 		appendStringInfo(s, "%s", quote_identifier(NameStr(attr->attname)));
 
 		/* Get Datum from tuple */
-		origval = fastgetattr(tuple, natt + 1, tupdesc, &isnull);
+		origval = heap_getattr(tuple, natt + 1, tupdesc, &isnull);
 
 		/* Get output function */
 		print_value(values, origval, attr->atttypid, isnull);
@@ -512,7 +512,7 @@ decoder_raw_update(StringInfo s,
 		appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
 
 		/* Get Datum from tuple */
-		origval = fastgetattr(newtuple, natt + 1, tupdesc, &isnull);
+		origval = heap_getattr(newtuple, natt + 1, tupdesc, &isnull);
 
 		/* Get output function */
 		print_value(s, origval, attr->atttypid, isnull);
