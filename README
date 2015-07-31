@@ -7,6 +7,7 @@ be used as templates for more extensive work, like:
 - Custom background workers that have been introduced in PostgreSQL 9.3
 - Logical decoding plug-ins
 - Custom logging formats
+- Containers
 - etc.
 
 Installation
@@ -19,7 +20,8 @@ Simply run the following command with pg_config in PATH:
 All the subcommands of PGXS are available as well. Note that some modules
 may fail to compile because of missing dependencies or a version of
 PostgreSQL code incompatible with the module. You may want to compile
-individually modules if that is the case.
+individually modules if that is the case. In all cases each plugin is
+maintained to be compatible with the latest version of PostgreSQL.
 
 LICENSE
 -------
