@@ -86,6 +86,7 @@ _PG_init(void)
 	BackgroundWorker worker;
 
 	/* Register the worker processes */
+	MemSet(&worker, 0, sizeof(BackgroundWorker));
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
 

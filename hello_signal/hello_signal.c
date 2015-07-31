@@ -111,6 +111,7 @@ _PG_init(void)
 {
 	BackgroundWorker worker;
 
+	MemSet(&worker, 0, sizeof(BackgroundWorker));
 	worker.bgw_flags = 0;
 	worker.bgw_start_time = BgWorkerStart_PostmasterStart;
 	worker.bgw_main = hello_main;

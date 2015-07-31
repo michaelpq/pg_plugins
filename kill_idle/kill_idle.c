@@ -224,6 +224,7 @@ _PG_init(void)
 	kill_idle_load_params();
 
 	/* Worker parameter and registration */
+	MemSet(&worker, 0, sizeof(BackgroundWorker));
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;

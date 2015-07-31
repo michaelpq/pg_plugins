@@ -254,6 +254,7 @@ _PG_init(void)
 	hello_notify_load_params();
 
 	/* Register this worker */
+	MemSet(&worker, 0, sizeof(BackgroundWorker));
 	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", hello_notify_name);
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
