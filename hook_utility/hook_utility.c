@@ -46,7 +46,7 @@ void dbrestrict_utility(Node *parsetree,
 		case T_DropdbStmt:
 		{
 			DropdbStmt *stmt = (DropdbStmt *) parsetree;
-			char *username = GetUserNameFromId(GetUserId());
+			char *username = GetUserNameFromId(GetUserId(), false);
 
 			/*
 			 * Check that only the authorized superuser foo can
