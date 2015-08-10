@@ -185,30 +185,20 @@ do_wal_parsing(void)
 	xlogreader = XLogReaderAllocate(XLogReadPageBlock, &private);
 	first_record = XLogFindNextRecord(xlogreader, first_record);
 
-	/* first record to look at */
-	record = XLogReadRecord(xlogreader, first_record, &errormsg);
-	if (record == NULL)
-	{
-		fprintf(stderr, "could not read WAL starting at %X/%X",
-				(uint32) (first_record >> 32),
-				(uint32) (first_record));
-		if (errormsg)
-			fprintf(stderr, ": %s", errormsg);
-		fprintf(stderr, "\n");
-		exit(1);
-	}
-
 	/* Loop through all the records */
 	do
 	{
-		/* extract block information for this record */
-		extract_block_info(xlogreader);
-
 		/* Move on to next record */
-		record = XLogReadRecord(xlogreader, InvalidXLogRecPtr, &errormsg);
+		record = XLogReadRecord(xlogreader, first_record, &errormsg);
 		if (errormsg)
 			fprintf(stderr, "error reading xlog record: %s\n", errormsg);
-	} while(record != NULL);
+
+		/* after reading the first record, continue at next one */
+		first_record = InvalidXLogRecPtr;
+
+		/* extract block information for this record */
+		extract_block_info(xlogreader);
+	} while (record != NULL);
 
 	XLogReaderFree(xlogreader);
 	if (xlogreadfd != -1)
