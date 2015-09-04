@@ -1,5 +1,5 @@
 # pg_statvfs extension
-comment = 'Minimal Extension Template'
+comment = 'Wrapper for system call statvfs()'
 default_version = '1.0'
 module_pathname = '$libdir/pg_statvfs'
 relocatable = true
