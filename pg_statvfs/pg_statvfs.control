@@ -1,0 +1,5 @@
+# pg_statvfs extension
+comment = 'Minimal Extension Template'
+default_version = '1.0'
+module_pathname = '$libdir/pg_statvfs'
+relocatable = true
