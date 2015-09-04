@@ -79,7 +79,7 @@ pg_statvfs(PG_FUNCTION_ARGS)
 	if (statvfs(path, &statvfs_data) < 0)
 		ereport(ERROR,
 				(errcode_for_file_access(),
-				 errmsg("could not stat file \"%s\": %m", path)));
+				 errmsg("could not stat filesystem path \"%s\": %m", path)));
 
 	/* Fill in values */
 	values[0] = Int64GetDatum(statvfs_data.f_bsize);
