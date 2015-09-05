@@ -12,7 +12,12 @@ CREATE FUNCTION pg_statvfs(
     OUT f_blocks bigint,
     OUT f_bfree bigint,
     OUT f_bavail bigint,
-    OUT f_fsid bigint
+    OUT f_files bigint,
+    OUT f_ffree bigint,
+    OUT f_favail bigint,
+    OUT f_fsid bigint,
+    OUT f_namemax bigint,
+    OUT flags text[]
 )
 RETURNS record
 AS 'MODULE_PATHNAME'
