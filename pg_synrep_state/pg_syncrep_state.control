@@ -1,0 +1,5 @@
+# pg_syncrep_state extension
+comment = 'Fetch backend status for synchronous replication'
+default_version = '1.0'
+module_pathname = '$libdir/pg_syncrep_state'
+relocatable = true
