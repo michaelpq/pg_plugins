@@ -33,7 +33,7 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 {
 	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;
-    ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext per_query_ctx;
 	MemoryContext oldcontext;
 	int i;
@@ -74,6 +74,10 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 		bool		nulls[3];
 		volatile PGPROC *proc = &ProcGlobal->allProcs[i];
 
+		/* Ignore deleted entries */
+		if (proc->pgprocno == -1 || proc->pgprocno == INVALID_PGPROCNO)
+			continue;
+
 		/* Ignore inactive entries */
 		if (proc->backendId == InvalidBackendId)
 			continue;
@@ -83,11 +87,15 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 			continue;
 
 		/* Ignore backends not connected to a database, like walsender */
-		if (proc->databaseId == 0)
+		if (!OidIsValid(proc->databaseId))
 			continue;
 
 		/* Ignore backends with unassigned role */
 		if (proc->roleId == InvalidOid)
+			continue;
+
+		/* Check if process really exists */
+		if (kill(proc->pid, 0) != 0)
 			continue;
 
 		/* Initialize values and NULL flags arrays */
