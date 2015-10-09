@@ -75,7 +75,11 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 		volatile PGPROC *proc = &ProcGlobal->allProcs[i];
 
 		/* Ignore deleted entries */
+#if PG_VERSION_NUM >= 90600
 		if (proc->pgprocno == -1 || proc->pgprocno == INVALID_PGPROCNO)
+#else
+		if (proc->pgprocno == -1)
+#endif
 			continue;
 
 		/* Ignore inactive entries */
