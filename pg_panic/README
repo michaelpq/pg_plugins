@@ -1,0 +1,19 @@
+pg_panic
+========
+
+Generate PANIC in a non-deterministic way based on a luck factor for
+queries going through the planner (so as utility commands are out of
+scope), meaning that OLTP applications are more likely to execute
+a failure in a timely manner than data-warehouse type of applications
+holding long transactions.
+
+This is useful to test the robustness of an installation to somewhat
+emulate failures that could happen at FS-level or OS-level as Postgres
+is known to be a robust piece of software.
+
+This module uses the following parameter:
+- pg_panic.luck_factor, float with [0..1] as possible values, giving
+the percentage of chance to execute a PANIC when executing one query.
+When this factor is set to 1, all the queries will execute a failure.
+When set to 0, no failures will happen. To emulate random failures it
+is recommended to set it to a low value like 0.001 or similar.
