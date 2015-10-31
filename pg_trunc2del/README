@@ -1,0 +1,15 @@
+pg_trunc2del
+============
+
+This extension replaces any TRUNCATE statement by an equivalent DELETE
+statement on-the-fly and executes it. This extension has some caveats
+though but for the purpose of the demonstration that is thought as
+acceptable:
+- TRUNCATE triggers are not fired.
+- DELETE triggers defined on the relation would be fired.
+- Nothing is done to emulate an equivalent of TRUNCATE CASCADE.
+
+Not really recommended for production purposes, this is aimed at
+demonstrating how to dynamically switch SQL queries sent to PostgreSQL
+transparently.
+
