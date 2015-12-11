@@ -1,0 +1,9 @@
+pg_rep_state
+============
+
+Utility for monitoring status of backends regarding synchronous replication
+by looking at the memory state of each backend and WAL receiver status.
+
+The function in charge of reporting each backend status needs to hold
+SyncRepLock while scanning all the existing backend entries so it may be
+risky on a large array of backend entries.

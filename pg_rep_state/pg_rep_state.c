@@ -1,12 +1,12 @@
 /*-------------------------------------------------------------------------
  *
- * pg_syncrep_state.c
+ * pg_rep_state.c
  *		Fetch backend status regarding synchronous replication.
  *
  * Copyright (c) 1996-2015, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
- *		  pg_syncrep_state/pg_syncrep_state.c
+ *		  pg_rep_state/pg_rep_state.c
  *
  *-------------------------------------------------------------------------
  */
@@ -26,7 +26,7 @@
 
 PG_MODULE_MAGIC;
 
-PG_FUNCTION_INFO_V1(pg_syncrep_state);
+PG_FUNCTION_INFO_V1(pg_rep_state);
 PG_FUNCTION_INFO_V1(pg_wal_receiver_state);
 
 
@@ -34,7 +34,7 @@ PG_FUNCTION_INFO_V1(pg_wal_receiver_state);
  * List backend status regarding synchronous replication
  */
 Datum
-pg_syncrep_state(PG_FUNCTION_ARGS)
+pg_rep_state(PG_FUNCTION_ARGS)
 {
 	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;

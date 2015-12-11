@@ -1,7 +1,0 @@
-pg_syncrep_state
-================
-
-Utility for monitoring status of backends regarding synchronous replication
-by looking at the memory state of each backend. This needs to hold SyncRepLock
-while scanning all the existing backend entries so it may be risky on a large
-array of backend entries.
