@@ -148,6 +148,11 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	bool		nulls[12];
 	WalRcvData *walrcv = WalRcv;
 
+	if (!superuser())
+		ereport(ERROR,
+				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+				 (errmsg("must be superuser to fetch WAL receiver state"))));
+
 	SpinLockAcquire(&walrcv->mutex);
 
 	if (walrcv->pid == 0)
