@@ -15,14 +15,19 @@
 #include "funcapi.h"
 #include "miscadmin.h"
 
+#include "access/htup_details.h"
+#include "catalog/pg_type.h"
 #include "replication/syncrep.h"
+#include "replication/walreceiver.h"
 #include "storage/proc.h"
 #include "utils/builtins.h"
 #include "utils/pg_lsn.h"
+#include "utils/timestamp.h"
 
 PG_MODULE_MAGIC;
 
 PG_FUNCTION_INFO_V1(pg_syncrep_state);
+PG_FUNCTION_INFO_V1(pg_wal_receiver_state);
 
 
 /*
@@ -130,4 +135,125 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
+}
+
+/*
+ * Fetch WAL receiver state if any present.
+ */
+Datum
+pg_wal_receiver_state(PG_FUNCTION_ARGS)
+{
+	TupleDesc	tupdesc;
+	Datum		values[12];
+	bool		nulls[12];
+	WalRcvData *walrcv = WalRcv;
+
+	SpinLockAcquire(&walrcv->mutex);
+
+	if (walrcv->pid == 0)
+	{
+		SpinLockRelease(&walrcv->mutex);
+		PG_RETURN_NULL();
+	}
+
+    /* Initialise values and NULL flags arrays */
+	MemSet(values, 0, sizeof(values));
+	MemSet(nulls, 0, sizeof(nulls));
+
+	/* Initialise attributes information in the tuple descriptor */
+	tupdesc = CreateTemplateTupleDesc(7, false);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "pid",
+					   INT4OID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 2, "status",
+					   TEXTOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 3, "receive_start_lsn",
+					   LSNOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 4, "receive_start_tli",
+					   INT4OID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 5, "received_up_to_lsn",
+					   LSNOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 6, "received_tli",
+					   INT4OID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 7, "latest_chunk_start_lsn",
+					   LSNOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 8, "last_msg_send_time",
+					   TIMESTAMPTZOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 9, "last_msg_receipt_time",
+					   TIMESTAMPTZOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 10, "latest_end_lsn",
+					   LSNOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 11, "latest_end_time",
+					   TIMESTAMPTZOID, -1, 0);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 12, "slot_name",
+					   TEXTOID, -1, 0);
+
+	BlessTupleDesc(tupdesc);
+
+	/* Fetch values */
+	values[0] = Int32GetDatum(walrcv->pid);
+
+	switch (walrcv->walRcvState)
+	{
+		case WALRCV_STOPPING:
+			values[1] = CStringGetTextDatum("stopping");
+			break;
+		case WALRCV_STOPPED:
+			values[1] = CStringGetTextDatum("stopped");
+			break;
+		case WALRCV_STARTING:
+			values[1] = CStringGetTextDatum("starting");
+			break;
+		case WALRCV_WAITING:
+			values[1] = CStringGetTextDatum("waiting");
+			break;
+		case WALRCV_STREAMING:
+			values[1] = CStringGetTextDatum("streaming");
+			break;
+		case WALRCV_RESTARTING:
+			values[1] = CStringGetTextDatum("restarting");
+			break;
+		default:
+			Assert(0);
+	}
+
+	if (XLogRecPtrIsInvalid(walrcv->receiveStart))
+		nulls[2] = true;
+	else
+		values[2] = LSNGetDatum(walrcv->receiveStart);
+	values[3] = Int32GetDatum(walrcv->receiveStartTLI);
+	if (XLogRecPtrIsInvalid(walrcv->receivedUpto))
+		nulls[4] = true;
+	else
+		values[4] = LSNGetDatum(walrcv->receivedUpto);
+	values[5] = Int32GetDatum(walrcv->receivedTLI);
+	if (XLogRecPtrIsInvalid(walrcv->latestChunkStart))
+		nulls[6] = true;
+	else
+		values[6] = LSNGetDatum(walrcv->latestChunkStart);
+	if (walrcv->lastMsgSendTime == 0)
+		nulls[7] = true;
+	else
+		values[7] = TimestampTzGetDatum(walrcv->lastMsgSendTime);
+	if (walrcv->lastMsgReceiptTime == 0)
+		nulls[8] = true;
+	else
+		values[8] = TimestampTzGetDatum(walrcv->lastMsgReceiptTime);
+	if (XLogRecPtrIsInvalid(walrcv->latestWalEnd))
+		nulls[9] = true;
+	else
+		values[9] = LSNGetDatum(walrcv->latestWalEnd);
+	if (walrcv->latestWalEndTime == 0)
+		nulls[10] = true;
+	else
+		values[10] = TimestampTzGetDatum(walrcv->latestWalEndTime);
+	if (*(walrcv->slotname) == '\0')
+		nulls[11] = true;
+	else
+		values[11] = CStringGetTextDatum(walrcv->slotname);
+
+	SpinLockRelease(&walrcv->mutex);
+
+	/* Returns the record as Datum */
+	PG_RETURN_DATUM(HeapTupleGetDatum(
+						  heap_form_tuple(tupdesc, values, nulls)));
 }

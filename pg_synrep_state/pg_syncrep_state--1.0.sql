@@ -20,3 +20,37 @@ CREATE VIEW pg_syncrep_state AS
 	   wait_state,
            wait_lsn
     FROM pg_syncrep_state();
+
+-- WAL receiver status
+CREATE OR REPLACE FUNCTION pg_wal_receiver_state(
+    OUT pid int,
+    OUT status text,
+    OUT receive_start_lsn pg_lsn,
+    OUT receive_start_tli int,
+    OUT received_up_to_lsn pg_lsn,
+    OUT received_tli int,
+    OUT latest_chunk_start_lsn pg_lsn,
+    OUT last_msg_send_time timestamptz,
+    OUT last_msg_receipt_time timestamptz,
+    OUT latest_end_lsn pg_lsn,
+    OUT latest_end_time timestamptz,
+    OUT slot_name text
+)
+RETURNS record
+AS 'MODULE_PATHNAME'
+LANGUAGE C STABLE;
+
+CREATE VIEW pg_wal_receiver_state AS
+    SELECT pid,
+           status,
+	   receive_start_lsn,
+	   receive_start_tli,
+	   received_up_to_lsn,
+	   received_tli,
+	   latest_chunk_start_lsn,
+	   last_msg_send_time,
+	   last_msg_receipt_time,
+	   latest_end_lsn,
+	   latest_end_time,
+	   slot_name
+    FROM pg_wal_receiver_state();
