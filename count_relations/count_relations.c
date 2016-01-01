@@ -4,7 +4,7 @@
  *		Simple background worker code scanning the number of relations
  *		present in database.
  *
- * Copyright (c) 1996-2015, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2016, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		count_relations/count_relations.c

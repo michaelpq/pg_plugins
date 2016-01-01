@@ -4,7 +4,7 @@
  *		Facility using hook controlling logging output of a Postgres
  *		able to generate JSON logs
  *
- * Copyright (c) 1996-2015, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2016, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		jsonlog.c/jsonlog.c
