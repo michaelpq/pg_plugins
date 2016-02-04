@@ -26,8 +26,8 @@ PG_MODULE_MAGIC;
 void _PG_init(void);
 
 /* SIGTERM handling */
-static bool got_sigterm = false;
-static bool got_sighup = false;
+static volatile sig_atomic_t got_sigterm = false;
+static volatile sig_atomic_t got_sighup = false;
 
 /* The latch used for this worker to manage sleep correctly */
 static Latch signalLatch;

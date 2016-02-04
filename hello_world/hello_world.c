@@ -26,7 +26,7 @@ PG_MODULE_MAGIC;
 void _PG_init(void);
 
 /* Signal handling */
-static bool got_sigterm = false;
+static volatile sig_atomic_t got_sigterm = false;
 
 /*
  * hello_sigterm
@@ -38,6 +38,7 @@ hello_sigterm(SIGNAL_ARGS)
 {
 	int save_errno = errno;
 	got_sigterm = true;
+	elog(LOG, "SIGTERM called");
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
 	errno = save_errno;

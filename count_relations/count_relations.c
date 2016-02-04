@@ -34,7 +34,7 @@ PG_MODULE_MAGIC;
 
 void _PG_init(void);
 
-static bool	got_sigterm = false;
+static volatile sig_atomic_t got_sigterm = false;
 
 static void
 worker_spi_sigterm(SIGNAL_ARGS)
