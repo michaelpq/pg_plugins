@@ -38,7 +38,6 @@ hello_sigterm(SIGNAL_ARGS)
 {
 	int save_errno = errno;
 	got_sigterm = true;
-	elog(LOG, "SIGTERM called");
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
 	errno = save_errno;
