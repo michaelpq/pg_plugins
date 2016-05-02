@@ -1,0 +1,5 @@
+# pg_swap_pages extension
+comment = 'Swap relation pages at WAL replay -- can corrupt system'
+default_version = '1.0'
+module_pathname = '$libdir/pg_swap_pages'
+relocatable = true

@@ -1,0 +1,12 @@
+pg_swap_pages
+=============
+
+This module is a PostgreSQL extension providing a basic set of features
+using the generic WAL interface that has been generated in PostgreSQL
+9.6.
+
+As claims the name of this module, this can be used to register WAL
+records that swap pages of a relation by generating WAL records doing
+so, causing the target database to finish in a corrupted state. Hence
+it is advised to refer to this module only as an example on how to use
+the general WAL interface, and not in production.
