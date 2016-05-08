@@ -221,11 +221,11 @@ write_jsonlog(ErrorData *edata)
 	appendJSONLiteral(&buf, "timestamp", log_time, true);
 
 	/* Username */
-	if (MyProcPort)
+	if (MyProcPort && MyProcPort->user_name)
 		appendJSONLiteral(&buf, "user", MyProcPort->user_name, true);
 
 	/* Database name */
-	if (MyProcPort)
+	if (MyProcPort && MyProcPort->database_name)
 		appendJSONLiteral(&buf, "dbname", MyProcPort->database_name, true);
 
 	/* Process ID */
