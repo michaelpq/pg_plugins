@@ -188,7 +188,7 @@ hello_notify_main(Datum main_arg)
 		if (ret != SPI_OK_SELECT)
 			elog(FATAL, "hello_notify: SPI_execute failed with error code %d", ret);
 		process_notifies = SPI_processed > 0;
-		elog(LOG, "hello_notify: executed %d", SPI_processed);
+		elog(LOG, "hello_notify: executed " UINT64_FORMAT, SPI_processed);
 
 		/* Terminate transaction */
 		SPI_finish();
