@@ -215,13 +215,23 @@ print_literal(StringInfo s, Oid typid, char *outputstr)
 		case INT4OID:
 		case INT8OID:
 		case OIDOID:
-		case FLOAT4OID:
-		case FLOAT8OID:
-		case NUMERICOID:
 			/* NB: We don't care about Inf, NaN et al. */
 			appendStringInfoString(s, outputstr);
 			break;
-
+		case FLOAT4OID:
+		case FLOAT8OID:
+		case NUMERICOID:
+			/*
+			 * Numeric can have NaN. Float can have Nan, Infinity and
+			 * -Infinity. These need to be quoted.
+			 */
+			if (strcmp(outputstr, "NaN") == 0 ||
+				strcmp(outputstr, "Infinity") == 0 ||
+				strcmp(outputstr, "-Infinity") == 0)
+				appendStringInfo(s, "'%s'", outputstr);
+			else
+				appendStringInfoString(s, outputstr);
+			break;
 		case BITOID:
 		case VARBITOID:
 			appendStringInfo(s, "B'%s'", outputstr);

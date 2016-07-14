@@ -99,5 +99,21 @@ SELECT data FROM pg_logical_slot_peek_changes('custom_slot', NULL, NULL, 'includ
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'on');
 DROP TABLE aa;
 
+-- Special value handling for various data types
+-- boolean, with true and false values correctly shaped
+CREATE TABLE aa (a boolean);
+INSERT INTO aa VALUES (true);
+INSERT INTO aa VALUES (false);
+SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
+DROP TABLE aa;
+-- numeric and flost with Nan and infinity - quotes should be correctly placed
+CREATE TABLE aa (a numeric, b float4, c float8);
+INSERT INTO aa VALUES ('Nan'::numeric, 'Nan'::float4, 'Nan'::float8);
+INSERT INTO aa VALUES (1.0, '+Infinity'::float4, '+Infinity'::float8);
+INSERT INTO aa VALUES (2.0, '-Infinity'::float4, '-Infinity'::float8);
+INSERT INTO aa VALUES (3.0, 4.0, 5.0);
+SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
+DROP TABLE aa;
+
 -- Drop replication slot
 SELECT pg_drop_replication_slot('custom_slot');
