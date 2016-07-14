@@ -503,11 +503,27 @@ decoder_raw_update(StringInfo s,
 		Form_pg_attribute	attr;
 		Datum				origval;
 		bool				isnull;
+		Oid					typoutput;
+		bool				typisvarlena;
 
 		attr = tupdesc->attrs[natt];
 
 		/* Skip dropped columns and system columns */
 		if (attr->attisdropped || attr->attnum < 0)
+			continue;
+
+		/* Get Datum from tuple */
+		origval = heap_getattr(newtuple, natt + 1, tupdesc, &isnull);
+
+		/* Get output type so we can know if it's varlena */
+		getTypeOutputInfo(attr->atttypid,
+						  &typoutput, &typisvarlena);
+
+		/*
+		 * TOASTed datum, but it's not changed. So we can skip this in
+		 * the UPDATE.
+		 */
+		if (!isnull && typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval))
 			continue;
 
 		/* Skip comma for first colums */
@@ -520,9 +536,6 @@ decoder_raw_update(StringInfo s,
 
 		/* Print attribute name */
 		appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
-
-		/* Get Datum from tuple */
-		origval = heap_getattr(newtuple, natt + 1, tupdesc, &isnull);
 
 		/* Get output function */
 		print_value(s, origval, attr->atttypid, isnull);
