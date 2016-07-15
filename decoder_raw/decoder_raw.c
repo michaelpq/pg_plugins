@@ -529,7 +529,7 @@ decoder_raw_update(StringInfo s,
 						  &typoutput, &typisvarlena);
 
 		/*
-		 * TOASTed datum, but itis not changed so it can be skipped this in
+		 * TOASTed datum, but it is not changed so it can be skipped this in
 		 * the SET clause of this UPDATE query.
 		 */
 		if (!isnull && typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval))
