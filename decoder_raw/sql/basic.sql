@@ -114,6 +114,14 @@ INSERT INTO aa VALUES (2.0, '-Infinity'::float4, '-Infinity'::float8);
 INSERT INTO aa VALUES (3.0, 4.0, 5.0);
 SELECT data FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
 DROP TABLE aa;
-
+-- Unchanged toast datum
+CREATE TABLE tt (a int primary key, t text);
+ALTER TABLE tt ALTER COLUMN t SET STORAGE EXTERNAL;
+INSERT INTO tt VALUES (1, 'foo');
+INSERT INTO tt VALUES (2, repeat('x', 3000));
+UPDATE tt SET t=t WHERE a=1;
+UPDATE tt SET t=t WHERE a=2;
+SELECT substr(data, 1, 50) FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
+DROP TABLE tt;
 -- Drop replication slot
 SELECT pg_drop_replication_slot('custom_slot');

@@ -284,7 +284,16 @@ print_value(StringInfo s, Datum origval, Oid typid, bool isnull)
 	if (isnull)
 		appendStringInfoString(s, "null");
 	else if (typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval))
+	{
+		/*
+		 * This should not happen, the column and its value can be skipped
+		 * properly. This code is let on purpose to avoid any traps in this
+		 * area in the future, generating useless queries in non-assert
+		 * builds.
+		 */
+		Assert(0);
 		appendStringInfoString(s, "unchanged-toast-datum");
+	}
 	else if (!typisvarlena)
 		print_literal(s, typid,
 					  OidOutputFunctionCall(typoutput, origval));
@@ -503,11 +512,27 @@ decoder_raw_update(StringInfo s,
 		Form_pg_attribute	attr;
 		Datum				origval;
 		bool				isnull;
+		Oid					typoutput;
+		bool				typisvarlena;
 
 		attr = tupdesc->attrs[natt];
 
 		/* Skip dropped columns and system columns */
 		if (attr->attisdropped || attr->attnum < 0)
+			continue;
+
+		/* Get Datum from tuple */
+		origval = heap_getattr(newtuple, natt + 1, tupdesc, &isnull);
+
+		/* Get output type so we can know if it's varlena */
+		getTypeOutputInfo(attr->atttypid,
+						  &typoutput, &typisvarlena);
+
+		/*
+		 * TOASTed datum, but itis not changed so it can be skipped this in
+		 * the SET clause of this UPDATE query.
+		 */
+		if (!isnull && typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval))
 			continue;
 
 		/* Skip comma for first colums */
@@ -520,9 +545,6 @@ decoder_raw_update(StringInfo s,
 
 		/* Print attribute name */
 		appendStringInfo(s, "%s = ", quote_identifier(NameStr(attr->attname)));
-
-		/* Get Datum from tuple */
-		origval = heap_getattr(newtuple, natt + 1, tupdesc, &isnull);
 
 		/* Get output function */
 		print_value(s, origval, attr->atttypid, isnull);
