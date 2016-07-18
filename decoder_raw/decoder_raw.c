@@ -371,7 +371,7 @@ print_where_clause(StringInfo s,
 		int			key;
 
 		/* Use all the values associated with the index */
-		indexRel = index_open(relation->rd_replidindex, ShareLock);
+		indexRel = index_open(relation->rd_replidindex, AccessShareLock);
 		for (key = 0; key < indexRel->rd_index->indnatts; key++)
 		{
 			int	relattr = indexRel->rd_index->indkey.values[key];
