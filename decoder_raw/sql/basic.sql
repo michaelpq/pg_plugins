@@ -121,7 +121,8 @@ INSERT INTO tt VALUES (1, 'foo');
 INSERT INTO tt VALUES (2, repeat('x', 3000));
 UPDATE tt SET t=t WHERE a=1;
 UPDATE tt SET t=t WHERE a=2;
-SELECT substr(data, 1, 50) FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
+SELECT substr(data, 1, 50), substr(data, 3000, 45)
+  FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
 DROP TABLE tt;
 -- Drop replication slot
 SELECT pg_drop_replication_slot('custom_slot');
