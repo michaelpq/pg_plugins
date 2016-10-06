@@ -99,7 +99,8 @@ kill_idle_main(Datum main_arg)
 		/* Wait necessary amount of time */
 		rc = WaitLatch(&MyProc->procLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   kill_max_idle_time * 1000L);
+					   kill_max_idle_time * 1000L,
+					   PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
 
 		/* Emergency bailout if postmaster has died */

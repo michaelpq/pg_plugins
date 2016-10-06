@@ -14,6 +14,7 @@
 /* Some general headers for custom bgworker facility */
 #include "postgres.h"
 #include "fmgr.h"
+#include "pgstat.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
 #include "storage/latch.h"
@@ -77,7 +78,8 @@ hello_main(Datum main_arg)
 		/* Wait 1s */
 		rc = WaitLatch(&signalLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   1000L);
+					   1000L,
+					   PG_WAIT_EXTENSION);
 		ResetLatch(&signalLatch);
 
 		/* Emergency bailout if postmaster has died */

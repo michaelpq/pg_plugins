@@ -15,6 +15,7 @@
 
 /* These are always necessary for a bgworker */
 #include "miscadmin.h"
+#include "pgstat.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
 #include "storage/latch.h"
@@ -83,7 +84,8 @@ worker_spi_main(Datum main_arg)
 		 */
 		rc = WaitLatch(&MyProc->procLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   1000L);
+					   1000L,
+					   PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
 
 		/* emergency bailout if postmaster has died */

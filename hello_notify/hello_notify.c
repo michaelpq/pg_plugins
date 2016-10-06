@@ -142,7 +142,8 @@ hello_notify_main(Datum main_arg)
 		/* Take a nap... */
 		rc = WaitLatch(&MyProc->procLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   notify_nap_time * 1000);
+					   notify_nap_time * 1000,
+					   PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
 
 		/* Emergency bailout if postmaster has died */

@@ -13,6 +13,7 @@
 
 /* Minimum set of headers */
 #include "postgres.h"
+#include "pgstat.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
 #include "storage/latch.h"
@@ -63,7 +64,8 @@ hello_main(Datum main_arg)
 		/* Wait 10s */
 		rc = WaitLatch(&MyProc->procLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   10000L);
+					   10000L,
+					   PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
 
 		/* Emergency bailout if postmaster has died */
