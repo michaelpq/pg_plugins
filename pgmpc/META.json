@@ -5,8 +5,8 @@
     "version": "0.1.0",
     "release_status": "stable",
 
-    "maintainer": "Michael Paquier <michael@otacoo.com>",
-    "generated_by": "Michael Paquier <michael@otacoo.com>",
+    "maintainer": "Michael Paquier <michael@paquier.xyz>",
+    "generated_by": "Michael Paquier <michael@paquier.xyz>",
     "provides": {
 	"pgmpc": {
 	    "abstract": "mpd client for PostgreSQL",
