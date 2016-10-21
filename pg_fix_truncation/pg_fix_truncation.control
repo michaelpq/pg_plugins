@@ -1,0 +1,5 @@
+# pg_fix_truncation extension
+comment = 'pg_fix_truncation - Fix truncation of corrupted FSM files'
+default_version = '1.0'
+module_pathname = '$libdir/pg_fix_truncation'
+relocatable = true

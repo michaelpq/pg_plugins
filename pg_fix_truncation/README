@@ -1,0 +1,18 @@
+pg_fix_truncation
+=================
+
+PostgreSQL versions up to 9.6.0, 9.5.4, 9.4.9 and 9.3.14 may be subject
+to corruptions in the file-space map file associated to a relation on
+a promoted standby, preventing the insertion of new data in a relation
+in such a case.
+
+Detecting corrupted FSM is possible by using the in-core extension module
+pg_freespacemap() to see if there is any reference to blocks that have been
+already truncated in a relation.  Removing those FSM files requires however
+manual handling of the file deletion while the server is stopped.  This
+extension provides a way to truncate the FSM to its right size, at the cost
+of taking an exclusive lock on the relation while this is happening. This
+is still less expensive than having to stop momentarily a server for the
+duration of the FSM, as little as it may be.
+
+See upstream commit 917dc7d for more details on the matter.
