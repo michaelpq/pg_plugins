@@ -50,8 +50,11 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 
 	RelationOpenSmgr(rel);
 	tgt_blk = RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM);
-	FreeSpaceMapTruncateRel(rel, tgt_blk);
 
+	/*
+	 * WAL-log the truncation before actually doing it. This will prevent
+	 * torn pages if there is a crash in-between.
+	 */
 	if (RelationNeedsWAL(rel))
 	{
 		xl_smgr_truncate xlrec;
@@ -65,6 +68,8 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 
 		XLogInsert(RM_SMGR_ID, XLOG_SMGR_TRUNCATE | XLR_SPECIAL_REL_UPDATE);
 	}
+
+	FreeSpaceMapTruncateRel(rel, tgt_blk);
 
 	/*
 	 * Release the lock right away, and not at commit time.
