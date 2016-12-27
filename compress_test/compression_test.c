@@ -3,7 +3,7 @@
  * compression_test.c
  *	  Set of utilities to test compression.
  *
- * Copyright (c) 1996-2016, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2017, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *	  compression_test/compression_test.c
