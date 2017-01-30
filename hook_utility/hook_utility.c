@@ -24,7 +24,7 @@ static char *hook_dbname = "postres";
 static char *hook_username = "postgres";
 static ProcessUtility_hook_type prev_utility_hook = NULL;
 
-static void dbrestrict_utility(Node *parsetree,
+static void dbrestrict_utility(PlannedStmt *pstmt,
 							   const char *queryString,
 							   ProcessUtilityContext context,
 							   ParamListInfo params,
@@ -33,13 +33,15 @@ static void dbrestrict_utility(Node *parsetree,
 static void load_params(void);
 
 static
-void dbrestrict_utility(Node *parsetree,
+void dbrestrict_utility(PlannedStmt *pstmt,
 						const char *queryString,
 						ProcessUtilityContext context,
 						ParamListInfo params,
 						DestReceiver *dest,
 						char *completionTag)
 {
+	Node	   *parsetree = pstmt->utilityStmt;
+
 	/* Do our custom process on drop database */
 	switch (nodeTag(parsetree))
 	{
@@ -70,11 +72,11 @@ void dbrestrict_utility(Node *parsetree,
 	 * or the in-core code path if the previous hook does not exist.
 	 */
 	if (prev_utility_hook)
-		(*prev_utility_hook) (parsetree, queryString,
+		(*prev_utility_hook) (pstmt, queryString,
 							  context, params,
 							  dest, completionTag);
 	else
-		standard_ProcessUtility(parsetree, queryString,
+		standard_ProcessUtility(pstmt, queryString,
 								context, params,
 								dest, completionTag);
 }
