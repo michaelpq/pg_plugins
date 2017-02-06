@@ -89,9 +89,7 @@ decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
 	data = palloc(sizeof(DecoderRawData));
 	data->context = AllocSetContextCreate(ctx->context,
 										  "Raw decoder context",
-										  ALLOCSET_DEFAULT_MINSIZE,
-										  ALLOCSET_DEFAULT_INITSIZE,
-										  ALLOCSET_DEFAULT_MAXSIZE);
+										  ALLOCSET_DEFAULT_SIZES);
 	data->include_transaction = false;
 
 	ctx->output_plugin_private = data;
