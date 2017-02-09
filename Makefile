@@ -16,6 +16,7 @@ SUBDIRS = blackhole	\
 	kill_idle	\
 	mcxtalloc_test	\
 	pg_rep_state	\
+	pg_sasl_prepare	\
 	pg_wal_blocks	\
 	pgmpc		\
 	receiver_raw

@@ -1,0 +1,5 @@
+# pg_sasl_prepare extension
+comment = 'SASLprepare for UTF-8 strings'
+default_version = '1.0'
+module_pathname = '$libdir/pg_sasl_prepare'
+relocatable = true
