@@ -47,7 +47,7 @@ new_intArrayType(int num)
 
 	SET_VARSIZE(r, nbytes);
 	ARR_NDIM(r) = 1;
-	r->dataoffset = 0;		  /* marker for no null bitmap */
+	r->dataoffset = 0;		/* marker for no null bitmap */
 	ARR_ELEMTYPE(r) = INT4OID;
 	ARR_DIMS(r)[0] = num;
 	ARR_LBOUND(r)[0] = 1;
@@ -71,7 +71,7 @@ conv_compare(const void *p1, const void *p2)
 }
 
 /*
- * Get the entry corresponding to code in the comversion table. This
+ * Get the entry corresponding to code in the conversion table. This
  * is useful to avoid repeating the calls to bsearch everywhere.
  */
 static pg_utf_decomposition *
@@ -80,7 +80,7 @@ get_code_entry(uint32 code)
 	pg_utf_decomposition *entry;
 
 	/*
-	 * bsearch works as follows:
+	 * bsearch() works as follows:
 	 * - a key to check for matches.
 	 * - a pointer pointing to the base of the conversion table.
 	 * - number of elements in the array to look for,
@@ -224,7 +224,7 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 
 	/*
 	 * Now that the decomposition is done, apply the combining class
-	 * for each character of the.
+	 * for each multibyte character.
 	 */
 	for (count = 1; count < ARRNELEMS(result); count++)
 	{
@@ -417,7 +417,7 @@ utf8_conv_table(PG_FUNCTION_ARGS)
 	MemoryContext	oldcontext;
 	int				i;
 
-    /* check to see if caller supports us returning a tuplestore */
+	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
 		ereport(ERROR,
 				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
@@ -450,7 +450,6 @@ utf8_conv_table(PG_FUNCTION_ARGS)
 		int			size, count;
 		ArrayType  *decomp = NULL;
 		int		   *decomp_ptr = NULL;
-
 
 		MemSet(values, 0, sizeof(values));
 		MemSet(nulls, 0, sizeof(nulls));
