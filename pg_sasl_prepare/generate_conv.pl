@@ -60,7 +60,7 @@ open my $OUTPUT, "> $output_file" or die "Could not open output file $output_fil
 # Print header of output file.
 print $OUTPUT <<HEADER;
 /*
- * File auto-generated from generate_conv.pl, do not edit, There is
+ * File auto-generated from generate_conv.pl, do not edit. There is
  * deliberately not an #ifndef PG_UTF8_TABLE_H here.
  */
 typedef struct
