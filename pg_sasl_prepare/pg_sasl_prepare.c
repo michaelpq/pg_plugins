@@ -62,12 +62,11 @@ new_intArrayType(int num)
 static int
 conv_compare(const void *p1, const void *p2)
 {
-    uint32      v1,
-                v2;
+	uint32		v1, v2;
 
-    v1 = *(const uint32 *) p1;
-    v2 = ((const pg_utf_decomposition *) p2)->utf;
-    return (v1 > v2) ? 1 : ((v1 == v2) ? 0 : -1);
+	v1 = *(const uint32 *) p1;
+	v2 = ((const pg_utf_decomposition *) p2)->utf;
+	return (v1 > v2) ? 1 : ((v1 == v2) ? 0 : -1);
 }
 
 /*
@@ -410,7 +409,7 @@ PG_FUNCTION_INFO_V1(utf8_conv_table);
 Datum
 utf8_conv_table(PG_FUNCTION_ARGS)
 {
-    TupleDesc		tupdesc;
+	TupleDesc		tupdesc;
 	Tuplestorestate *tupstore;
 	ReturnSetInfo  *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext	per_query_ctx;
@@ -485,7 +484,7 @@ utf8_conv_table(PG_FUNCTION_ARGS)
 			pfree(decomp);
 	}
 
-    /* clean up and return the tuplestore */
+	/* clean up and return the tuplestore */
 	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
