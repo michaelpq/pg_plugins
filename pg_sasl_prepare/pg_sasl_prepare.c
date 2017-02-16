@@ -93,7 +93,6 @@ get_code_entry(uint32 code)
 					sizeof(pg_utf_decomposition),
 					conv_compare);
 
-	Assert(entry != NULL);
 	return entry;
 }
 
@@ -107,6 +106,26 @@ get_decomposed_size(uint32 code)
 	pg_utf_decomposition *entry;
 	int		size = 0;
 	int		i;
+
+	/*
+	 * Fast path for Hangul characters not stored in tables to save memory
+	 * as decomposition is algorithmic.
+	 * See http://unicode.org/reports/tr15/tr15-18.html, annex 10 for details
+	 * on the matter.
+	 */
+	if (code >= 0xAC00 && code < 0xD7A4)
+	{
+		uint32	l, v, t, hindex;
+
+		hindex = code - 0xAC00;
+		l = 0x1100 + hindex / (21 * 28);
+		v = 0x1161 + (hindex % (21 * 28)) / 28;
+		t = hindex % 28;
+
+		if (t != 0)
+			return 3;
+		return 2;
+	}
 
 	entry = get_code_entry(code);
 
@@ -142,6 +161,36 @@ decompose_code(uint32 code, int **result, int *current)
 {
 	pg_utf_decomposition *entry;
 	int		i;
+
+	/*
+	 * Fast path for Hangul characters not stored in tables to save memory
+	 * as decomposition is algorithmic.
+	 * See http://unicode.org/reports/tr15/tr15-18.html, annex 10 for details
+	 * on the matter.
+	 */
+	if (code >= 0xAC00 && code < 0xD7A4)
+	{
+		uint32	l, v, t, hindex;
+		int	   *res = *result;
+
+		hindex = code - 0xAC00;
+		l = 0x1100 + hindex / (21 * 28);
+		v = 0x1161 + (hindex % (21 * 28)) / 28;
+		t = hindex % 28;
+
+		res[*current] = l;
+		(*current)++;
+		res[*current] = v;
+		(*current)++;
+
+		if (t != 0)
+		{
+			res[*current] = 0x11A7 + t;
+			(*current)++;
+		}
+
+		return;
+    }
 
 	entry = get_code_entry(code);
 
@@ -232,6 +281,14 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 		uint32	tmp;
 		pg_utf_decomposition *prevEntry = get_code_entry(prev);
 		pg_utf_decomposition *nextEntry = get_code_entry(next);
+
+		/*
+		 * If no entries are found, the character used is either an Hangul
+		 * character or a character with a class of 0 and no decompositions,
+		 * so move to next result.
+		 */
+		if (prevEntry == NULL || nextEntry == NULL)
+			continue;
 
 		/*
 		 * Per Unicode (http://unicode.org/reports/tr15/tr15-18.html) annex 4,
