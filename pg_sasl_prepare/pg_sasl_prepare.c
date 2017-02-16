@@ -129,8 +129,12 @@ get_decomposed_size(uint32 code)
 
 	entry = get_code_entry(code);
 
-	/* Just count current code if no other decompositions */
-	if (entry->codes[0] == 0x0)
+	/*
+	 * Just count current code if no other decompositions.  A NULL entry
+	 * is equivalent to a character with class 0 and no decompositions,
+	 * so just leave.
+	 */
+	if (entry == NULL || entry->codes[0] == 0x0)
 		return 1;
 
 	/*
@@ -196,9 +200,11 @@ decompose_code(uint32 code, int **result, int *current)
 
 	/*
 	 * Just fill in with the current decomposition if there are no
-	 * decomposition codes to recurse to.
+	 * decomposition codes to recurse to.  A NULL entry is equivalent
+	 * to a character with class 0 and no decompositions, so just leave
+	 * also in this case.
 	 */
-	if (entry->codes[0] == 0x0)
+	if (entry == NULL || entry->codes[0] == 0x0)
 	{
 		int *res = *result;
 

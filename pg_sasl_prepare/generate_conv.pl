@@ -48,6 +48,10 @@ while (my $line = <$FH>)
 
 	# Skip codes longer than 4 bytes, or 8 characters.
 	next if length($code) > 8;
+
+	# Skip characters with no decompositions and a class of 0.
+	next if $elts[3] eq '0' && $elts[5] eq '';
+
 	$input_lines++;
 }
 close $FH;
@@ -88,6 +92,10 @@ while ( my $line = <$INPUT> )
 
 	# Skip codes longer than 4 bytes, or 8 characters.
 	next if length($code) > 8;
+
+	# Skip characters with no decompositions and a class of 0.
+	# to reduce the table size.
+	next if $elts[3] eq '0' && $elts[5] eq '';
 
 	# Print a comma for all items except the first one.
 	if ($first_item)
