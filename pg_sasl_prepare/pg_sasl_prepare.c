@@ -56,7 +56,7 @@ new_intArrayType(int num)
 }
 
 /*
- * comparison routine for bsearch()
+ * comparison routine for bsearch() of main conversion table.
  * this routine is intended for UTF8 code -> conversion entry
  */
 static int
@@ -70,8 +70,31 @@ conv_compare(const void *p1, const void *p2)
 }
 
 /*
- * Get the entry corresponding to code in the conversion table. This
- * is useful to avoid repeating the calls to bsearch everywhere.
+ * Set of comparison functions for sub-tables.
+ */
+#define CONV_COMPARE_SIZE(type)									\
+static int														\
+conv_compare_size_##type(const void *p1, const void *p2)		\
+{																\
+	uint32		v1, v2;											\
+	v1 = *(const uint32 *) p1;									\
+	v2 = ((const pg_utf_decomposition_size_##type *) p2)->utf;	\
+	return (v1 > v2) ? 1 : ((v1 == v2) ? 0 : -1);				\
+}
+/* Update this list of new sub-tables are present in utf8_table.h */
+CONV_COMPARE_SIZE(1);
+CONV_COMPARE_SIZE(2);
+CONV_COMPARE_SIZE(3);
+CONV_COMPARE_SIZE(4);
+CONV_COMPARE_SIZE(5);
+CONV_COMPARE_SIZE(6);
+CONV_COMPARE_SIZE(7);
+CONV_COMPARE_SIZE(8);
+CONV_COMPARE_SIZE(18);
+
+/*
+ * Get the entry corresponding to code in the main conversion table.
+ * This is useful to avoid repeating the calls to bsearch everywhere.
  */
 static pg_utf_decomposition *
 get_code_entry(uint32 code)
@@ -97,6 +120,55 @@ get_code_entry(uint32 code)
 }
 
 /*
+ * Using an entry from the main decomposition table, return an
+ * array which is a pointer to the decomposition.
+ */
+#define CONV_SEARCH_SIZE(type)					\
+{												\
+	pg_utf_decomposition_size_##type *item;		\
+	uint32	*result;							\
+	item = bsearch(&code,						\
+		(void *) UtfDecomp_##type,				\
+		lengthof(UtfDecomp_##type),				\
+		sizeof(pg_utf_decomposition_size_##type), \
+		conv_compare_size_##type);				\
+	result = item->decomp;						\
+	return result;								\
+} while(0);
+static uint32 *
+get_code_decomposition(pg_utf_decomposition *entry)
+{
+	uint32	code = entry->utf;
+
+	switch (entry->dec_size)
+	{
+		case 1:
+			CONV_SEARCH_SIZE(1);
+		case 2:
+			CONV_SEARCH_SIZE(2);
+		case 3:
+			CONV_SEARCH_SIZE(3);
+		case 4:
+			CONV_SEARCH_SIZE(4);
+		case 5:
+			CONV_SEARCH_SIZE(5);
+		case 6:
+			CONV_SEARCH_SIZE(6);
+		case 7:
+			CONV_SEARCH_SIZE(7);
+		case 8:
+			CONV_SEARCH_SIZE(8);
+		case 18:
+			CONV_SEARCH_SIZE(18);
+		default:
+			Assert(false);
+	}
+
+	/* should not come here */
+	return NULL;
+}
+
+/*
  * Recursively look at the number of elements in the conversion table
  * to calculate how many characters are used for the given code.
  */
@@ -106,6 +178,7 @@ get_decomposed_size(uint32 code)
 	pg_utf_decomposition *entry;
 	int		size = 0;
 	int		i;
+	uint32 *decomp;
 
 	/*
 	 * Fast path for Hangul characters not stored in tables to save memory
@@ -131,22 +204,20 @@ get_decomposed_size(uint32 code)
 
 	/*
 	 * Just count current code if no other decompositions.  A NULL entry
-	 * is equivalent to a character with class 0 and no decompositions,
-	 * so just leave.
+	 * is equivalent to a character with class 0 and no decompositions.
 	 */
-	if (entry == NULL || entry->codes[0] == 0x0)
+	if (entry == NULL || entry->dec_size == 0)
 		return 1;
 
 	/*
 	 * If this entry has other decomposition codes look at them as well.
+	 * First get its decomposition in the list of tables available.
 	 */
-	for (i = 0; i < lengthof(SASLPrepConv[0].codes); i++)
+	decomp = get_code_decomposition(entry);
+	for (i = 0; i < entry->dec_size; i++)
 	{
-		uint32 lcode = entry->codes[i];
+		uint32 lcode = decomp[i];
 
-		/* Leave if no more decompositions */
-		if (lcode == 0x0)
-			break;
 		size += get_decomposed_size(lcode);
 	}
 
@@ -165,6 +236,7 @@ decompose_code(uint32 code, int **result, int *current)
 {
 	pg_utf_decomposition *entry;
 	int		i;
+	uint32 *decomp;
 
 	/*
 	 * Fast path for Hangul characters not stored in tables to save memory
@@ -204,7 +276,7 @@ decompose_code(uint32 code, int **result, int *current)
 	 * to a character with class 0 and no decompositions, so just leave
 	 * also in this case.
 	 */
-	if (entry == NULL || entry->codes[0] == 0x0)
+	if (entry == NULL || entry->dec_size == 0)
 	{
 		int *res = *result;
 
@@ -216,13 +288,12 @@ decompose_code(uint32 code, int **result, int *current)
 	/*
 	 * If this entry has other decomposition codes look at them as well.
 	 */
-	for (i = 0; i < lengthof(SASLPrepConv->codes); i++)
+	decomp = get_code_decomposition(entry);
+	for (i = 0; i < entry->dec_size; i++)
 	{
-		uint32 lcode = entry->codes[i];
+		uint32 lcode = decomp[i];
 
 		/* Leave if no more decompositions */
-		if (lcode == 0x0)
-			break;
 		decompose_code(lcode, result, current);
 	}
 }
@@ -509,7 +580,7 @@ utf8_conv_table(PG_FUNCTION_ARGS)
 		Datum		values[3];
 		bool		nulls[3];
 		pg_utf_decomposition entry = SASLPrepConv[i];
-		int			size, count;
+		int			count;
 		ArrayType  *decomp = NULL;
 		int		   *decomp_ptr = NULL;
 
@@ -523,21 +594,19 @@ utf8_conv_table(PG_FUNCTION_ARGS)
 		values[1] = Int16GetDatum((int16) entry.class);
 
 		/* decomposition array */
-		size = 0;
-		for (count = 0; count < lengthof(entry.codes); count++)
-		{
-			if (entry.codes[count] == 0x0)
-				break;
-			size++;
-		}
-		if (size == 0)
+		if (entry.dec_size == 0)
 			nulls[2] = true;
 		else
 		{
-			decomp = new_intArrayType(size);
+			uint32     *entry_decomp;
+
+			/* Get decomposition of entry */
+			entry_decomp = get_code_decomposition(&entry);
+
+			decomp = new_intArrayType(entry.dec_size);
 			decomp_ptr = ARRPTR(decomp);
-			for (count = 0; count < size; count++)
-				decomp_ptr[count] = (int) entry.codes[count];
+			for (count = 0; count < entry.dec_size; count++)
+				decomp_ptr[count] = (int) entry_decomp[count];
 			values[2] = PointerGetDatum(decomp);
 		}
 

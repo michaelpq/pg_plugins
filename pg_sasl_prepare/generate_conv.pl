@@ -69,14 +69,18 @@ print $OUTPUT <<HEADER;
  */
 typedef struct
 {
-    uint32      utf;        /* UTF-8 */
-    uint8       class;      /* combining class of character */
-    uint32      codes[18];   /* decomposition codes */
+	uint32	utf;		/* UTF-8 */
+	uint8	class;		/* combining class of character */
+	uint8	dec_size;	/* size of decomposition code list */
 } pg_utf_decomposition;
 
 /* conversion table */
 HEADER
-print $OUTPUT "static const pg_utf_decomposition SASLPrepConv[ $input_lines ] = {\n";
+print $OUTPUT "static const pg_utf_decomposition SASLPrepConv[ $input_lines ] =\n{\n";
+
+# Hash for decomposition tables made of string arrays (one for each
+# character decomposition, classified by size).
+my %decomp_tabs = ();
 
 my $first_item = 1;
 while ( my $line = <$INPUT> )
@@ -107,18 +111,33 @@ while ( my $line = <$INPUT> )
 	    print $OUTPUT ",\n";
 	}
 
+	# Remove decomposition type if any, keep only character codes and
+	# then print them.
+	$decom =~ s/\<[^][]*\>//g;
+	my @decom_elts = split(" ", $decom);
+
 	# Now print a single entry in the conversion table.
 	print $OUTPUT "\t{";
 	# Code number
 	print $OUTPUT "0x$code, ";
 	# Combining class
-	print $OUTPUT "$class, {";
+	print $OUTPUT "$class, ";
+	# Decomposition size
+	# Print size of decomposition
+	my $decom_size = scalar(@decom_elts);
 
-	# Remove decomposition type if any, keep only character codes and
-	# then print them.
-	$decom =~ s/\<[^][]*\>//g;
-	my @decom_elts = split(" ", $decom);
+	print $OUTPUT "$decom_size}";
+
+	# If the character has no decomposition we are done.
+	next if $decom_size == 0;
+
+	# Now save the decompositions into a dedicated area that will
+	# be written afterwards.  First build the entry dedicated to
+	# a sub-table with the code and decomposition.
 	my $first_decom = 1;
+	my $decomp_string = "{";
+	# Code number
+	$decomp_string .= "0x$code, {";
 	foreach(@decom_elts)
 	{
 		if ($first_decom)
@@ -127,14 +146,53 @@ while ( my $line = <$INPUT> )
 		}
 		else
 		{
-		    print $OUTPUT ", ";
+		    $decomp_string .= ", ";
 		}
 		my $decom_data = get_hexa_code($_);
-		print $OUTPUT "0x$decom_data";
+		$decomp_string .= "0x$decom_data";
 	}
-	print $OUTPUT "}}";
+	$decomp_string .= "}}";
+	# Store it in its dedicated list.
+	push(@{ $decomp_tabs{$decom_size} }, $decomp_string);
 }
 
-print $OUTPUT "\n};\n";
+print $OUTPUT "\n};\n\n\n";
+
+# Print the decomposition tables by size.
+foreach my $decomp_size (sort keys %decomp_tabs )
+{
+	my @decomp_entries = @{ $decomp_tabs{$decomp_size}};
+	my $decomp_length = scalar(@decomp_entries);
+
+	# First print the header.
+	print $OUTPUT <<HEADER;
+\n\n/* Decomposition table with entries of list length of $decomp_size */
+typedef struct
+{
+	uint32	utf;		/* UTF-8 */
+	uint32	decomp[$decomp_size];	/* size of decomposition code list */
+} pg_utf_decomposition_size_$decomp_size;
+
+static const pg_utf_decomposition_size_$decomp_size UtfDecomp_$decomp_size [ $decomp_length ] =
+{
+HEADER
+
+	$first_item = 1;
+	# Print each entry.
+	foreach(@decomp_entries)
+	{
+		if ($first_item)
+		{
+		    $first_item = 0;
+		}
+		else
+		{
+		    print $OUTPUT ",\n";
+		}
+		print $OUTPUT "\t$_";
+	}
+	print $OUTPUT "\n};\n";
+}
+
 close $OUTPUT;
 close $INPUT;
