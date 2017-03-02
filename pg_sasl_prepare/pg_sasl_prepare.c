@@ -225,6 +225,58 @@ get_decomposed_size(uint32 code)
 }
 
 /*
+ * Recompose a set of characters. For hangul characters, the calculation
+ * is algorithmic. For others, an inverse lookup at the decomposition
+ * table is necessary. Returns true if a recomposition can be done, and
+ * false otherwise.
+ */
+static bool
+recompose_code(uint32 start, uint32 code, uint32 *result)
+{
+	/* No need to care about ascii characters */
+	if (start <= 0xef || code <= 0xef)
+		return false;
+
+	/* Hangul characters go here */
+	if (start >= 0x1100 && start < 0x1113 &&
+		code >= 0x1161 && code < 0x1176)
+	{
+		*result = ((start - 0x1100) * 21 + code - 0x1161) * 28 + 0xAC00;
+		return true;
+	}
+	else if (start >= 0xAC00 && start < 0xD7A4 &&
+			 !((start - 0xAC00) % 28) &&
+			 code >= 0x11A8 && code < 0x11C3)
+	{
+		*result = start + code - 0x11A7;
+		return true;
+	}
+	else
+	{
+		int i;
+
+		/*
+		 * Do an inverse lookup of the decomposition tables to see if
+		 * anything matches. The comparison just needs to be a perfect
+		 * match on the sub-table of size two, because the start character
+		 * has already been recomposed partially.
+		 */
+		for (i = 0; i < lengthof(UtfDecomp_2); i++)
+		{
+			pg_utf_decomposition_size_2 entry = UtfDecomp_2[i];
+			if (start == entry.decomp[0] &&
+				code == entry.decomp[1])
+			{
+				*result = entry.utf;
+				return true;
+			}
+		}
+    }
+
+	return false;
+}
+
+/*
  * Decompose the given code into the array given by caller. The
  * decomposition begins at the position given by caller, saving one
  * lookup at the conversion table. The current position needs to be
@@ -313,10 +365,21 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 	int		   *input_ptr = ARRPTR(input);
 	ArrayType  *result;
 	int		   *result_ptr;
+	int		   *decomp_ptr;
+	int		   *recomp_ptr;
 	int			count;
 	int			size = 0;
+	int			decomp_size = 0;
+	int			recomp_size = 0;
 
-	/* First do the character decomposition */
+	/* variables for recomposition */
+	int		lastClass;
+	int		starterPos;
+	int		sourceLength;
+	int		targetPos;
+	uint32	starterCh;
+
+	/* First do the compatibility decomposition */
 
 	/*
 	 * Look recursively at the convertion table to understand the number
@@ -330,31 +393,34 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 		 * Recursively look at the conversion table to determine into
 		 * how many characters the given code need to be decomposed.
 		 */
-		size += get_decomposed_size(code);
+		decomp_size += get_decomposed_size(code);
 	}
 
 	/*
 	 * Now fill in each entry recursively. This needs a second pass on
 	 * the conversion table.
 	 */
-	result = new_intArrayType(size);
-	result_ptr = ARRPTR(result);
+	decomp_ptr = (int *) palloc(decomp_size * sizeof(int));
 	size = 0;
 	for (count = 0; count < ARRNELEMS(input); count++)
 	{
 		uint32 code = input_ptr[count];
 
-		decompose_code(code, &result_ptr, &size);
+		decompose_code(code, &decomp_ptr, &size);
+
+		/*
+		 * XXX: Is it necessary to reorder the combining marks here?
+		 */
 	}
 
 	/*
 	 * Now that the decomposition is done, apply the combining class
 	 * for each multibyte character.
 	 */
-	for (count = 1; count < ARRNELEMS(result); count++)
+	for (count = 1; count < decomp_size; count++)
 	{
-		uint32	prev = result_ptr[count - 1];
-		uint32	next = result_ptr[count];
+		uint32	prev = decomp_ptr[count - 1];
+		uint32	next = decomp_ptr[count];
 		uint32	tmp;
 		pg_utf_decomposition *prevEntry = get_code_entry(prev);
 		pg_utf_decomposition *nextEntry = get_code_entry(next);
@@ -382,15 +448,61 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 			continue;
 
 		/* exchange can happen */
-		tmp = result_ptr[count - 1];
-		result_ptr[count - 1] = result_ptr[count];
-		result_ptr[count] = tmp;
+		tmp = decomp_ptr[count - 1];
+		decomp_ptr[count - 1] = decomp_ptr[count];
+		decomp_ptr[count] = tmp;
 
 		/* backtrack to check again */
 		if (count > 1)
 			count -= 2;
 	}
 
+	/*
+	 * The last phase of NFKC is the recomposition of the multibyte string
+	 * that has been reordered previously using combining classes. The
+	 * recomposed string cannot be longer than the decomposed one, so
+	 * make the allocation of the recomposed string based on that assumption.
+	 */
+	recomp_ptr = (int *) palloc(decomp_size * sizeof(int));
+	lastClass = -1;		/* this eliminates a special check */
+	starterPos = 0;
+	sourceLength = decomp_size;
+	targetPos = 1;
+	starterCh = decomp_ptr[0];
+
+	for (count = 1; count < decomp_size; count++)
+	{
+		uint32 ch = (uint32) decomp_ptr[count];
+		pg_utf_decomposition *chEntry = get_code_entry(ch);
+		int chClass = chEntry == NULL ? 0 : chEntry->class;
+		uint32 composite;
+		bool	found_match = recompose_code(starterCh, ch, &composite);
+
+		if (found_match && lastClass < chClass)
+		{
+			recomp_ptr[starterPos] = (int) composite;
+			starterCh = composite;
+		}
+		else if (chClass == 0)
+		{
+			starterPos = targetPos;
+			starterCh  = ch;
+			lastClass  = -1;
+			recomp_ptr[targetPos++] = (int) ch;
+		}
+		else
+		{
+			lastClass = chClass;
+			recomp_ptr[targetPos++] = (int) ch;
+		}
+	}
+
+	recomp_size = targetPos;
+
+	/* And finally fill-in the result */
+	result = new_intArrayType(recomp_size);
+	result_ptr = ARRPTR(result);
+	memcpy(result_ptr, recomp_ptr, recomp_size * sizeof(uint32));
 	PG_RETURN_POINTER(result);
 }
 
