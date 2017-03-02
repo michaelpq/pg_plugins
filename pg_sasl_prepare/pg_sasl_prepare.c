@@ -468,7 +468,7 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 	starterPos = 0;
 	sourceLength = decomp_size;
 	targetPos = 1;
-	starterCh = decomp_ptr[0];
+	starterCh = recomp_ptr[0] = decomp_ptr[0];
 
 	for (count = 1; count < decomp_size; count++)
 	{
