@@ -33,6 +33,17 @@ PG_MODULE_MAGIC;
 #define ARRPTR(x)  ((int32 *) ARR_DATA_PTR(x))
 #define ARRNELEMS(x)  ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
 
+/* Constants for calculations wih Hangul characters */
+#define SBASE		0xAC00
+#define LBASE		0x1100
+#define VBASE		0x1161
+#define TBASE		0x11A7
+#define LCOUNT		19
+#define VCOUNT		21
+#define TCOUNT		28
+#define NCOUNT		VCOUNT * TCOUNT
+#define SCOUNT		LCOUNT * NCOUNT
+
 /*
  * Create a new int array with room for "num" elements.
  * Taken from contrib/intarray/.
@@ -186,16 +197,14 @@ get_decomposed_size(uint32 code)
 	 * See http://unicode.org/reports/tr15/tr15-18.html, annex 10 for details
 	 * on the matter.
 	 */
-	if (code >= 0xAC00 && code < 0xD7A4)
+	if (code >= SBASE && code < SBASE + SCOUNT)
 	{
-		uint32	l, v, t, hindex;
+		uint32	tindex, sindex;
 
-		hindex = code - 0xAC00;
-		l = 0x1100 + hindex / (21 * 28);
-		v = 0x1161 + (hindex % (21 * 28)) / 28;
-		t = hindex % 28;
+		sindex = code - SBASE;
+		tindex = sindex % TCOUNT;
 
-		if (t != 0)
+		if (tindex != 0)
 			return 3;
 		return 2;
 	}
@@ -234,21 +243,21 @@ static bool
 recompose_code(uint32 start, uint32 code, uint32 *result)
 {
 	/* No need to care about ascii characters */
-	if (start <= 0xef || code <= 0xef)
+	if (start <= 0x7f || code <= 0x7f)
 		return false;
 
 	/* Hangul characters go here */
-	if (start >= 0x1100 && start < 0x1113 &&
-		code >= 0x1161 && code < 0x1176)
+	if (start >= LBASE && start < LBASE + LCOUNT &&
+		code >= VBASE && code < VBASE + VCOUNT)
 	{
-		*result = ((start - 0x1100) * 21 + code - 0x1161) * 28 + 0xAC00;
+		*result = ((start - LBASE) * VCOUNT + code - VBASE) * TCOUNT + SBASE;
 		return true;
 	}
-	else if (start >= 0xAC00 && start < 0xD7A4 &&
-			 !((start - 0xAC00) % 28) &&
-			 code >= 0x11A8 && code < 0x11C3)
+	else if (start >= SBASE && start < (SBASE + SCOUNT) &&
+			 ((start - SBASE) % TCOUNT) == 0 &&
+			 code >= TBASE && code < (TBASE + TCOUNT))
 	{
-		*result = start + code - 0x11A7;
+		*result = start + code - TBASE;
 		return true;
 	}
 	else
@@ -296,29 +305,29 @@ decompose_code(uint32 code, int **result, int *current)
 	 * See http://unicode.org/reports/tr15/tr15-18.html, annex 10 for details
 	 * on the matter.
 	 */
-	if (code >= 0xAC00 && code < 0xD7A4)
+	if (code >= SBASE && code < SBASE + SCOUNT)
 	{
-		uint32	l, v, t, hindex;
-		int	   *res = *result;
+		uint32	l, v, tindex, sindex;
+		int   *res = *result;
 
-		hindex = code - 0xAC00;
-		l = 0x1100 + hindex / (21 * 28);
-		v = 0x1161 + (hindex % (21 * 28)) / 28;
-		t = hindex % 28;
+		sindex = code - SBASE;
+		l = LBASE + sindex / (VCOUNT * TCOUNT);
+		v = VBASE + (sindex % (VCOUNT * TCOUNT)) / TCOUNT;
+		tindex = sindex % TCOUNT;
 
 		res[*current] = l;
 		(*current)++;
 		res[*current] = v;
 		(*current)++;
 
-		if (t != 0)
+		if (tindex != 0)
 		{
-			res[*current] = 0x11A7 + t;
+			res[*current] = TBASE + tindex;
 			(*current)++;
 		}
 
 		return;
-    }
+	}
 
 	entry = get_code_entry(code);
 
@@ -371,13 +380,11 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 	int			size = 0;
 	int			decomp_size = 0;
 	int			recomp_size = 0;
-
 	/* variables for recomposition */
-	int		lastClass;
-	int		starterPos;
-	int		sourceLength;
-	int		targetPos;
-	uint32	starterCh;
+	int			last_class;
+	int			starter_pos;
+	int			target_pos;
+	uint32		starter_ch;
 
 	/* First do the compatibility decomposition */
 
@@ -464,40 +471,39 @@ pg_sasl_prepare(PG_FUNCTION_ARGS)
 	 * make the allocation of the recomposed string based on that assumption.
 	 */
 	recomp_ptr = (int *) palloc(decomp_size * sizeof(int));
-	lastClass = -1;		/* this eliminates a special check */
-	starterPos = 0;
-	sourceLength = decomp_size;
-	targetPos = 1;
-	starterCh = recomp_ptr[0] = decomp_ptr[0];
+	last_class = -1;	 /* this eliminates a special check */
+	starter_pos = 0;
+	target_pos = 1;
+	starter_ch = recomp_ptr[0] = decomp_ptr[0];
 
 	for (count = 1; count < decomp_size; count++)
 	{
 		uint32 ch = (uint32) decomp_ptr[count];
-		pg_utf_decomposition *chEntry = get_code_entry(ch);
-		int chClass = chEntry == NULL ? 0 : chEntry->class;
-		uint32 composite;
-		bool	found_match = recompose_code(starterCh, ch, &composite);
+		pg_utf_decomposition *ch_entry = get_code_entry(ch);
+		int			ch_class = ch_entry == NULL ? 0 : ch_entry->class;
+		pg_wchar	composite;
 
-		if (found_match && lastClass < chClass)
+		if (last_class < ch_class &&
+			recompose_code(starter_ch, ch, &composite))
 		{
-			recomp_ptr[starterPos] = (int) composite;
-			starterCh = composite;
+			recomp_ptr[starter_pos] = composite;
+			starter_ch = composite;
 		}
-		else if (chClass == 0)
+		else if (ch_class == 0)
 		{
-			starterPos = targetPos;
-			starterCh  = ch;
-			lastClass  = -1;
-			recomp_ptr[targetPos++] = (int) ch;
+			starter_pos = target_pos;
+			starter_ch  = ch;
+			last_class  = -1;
+			recomp_ptr[target_pos++] = ch;
 		}
 		else
 		{
-			lastClass = chClass;
-			recomp_ptr[targetPos++] = (int) ch;
+			last_class = ch_class;
+			recomp_ptr[target_pos++] = ch;
 		}
 	}
 
-	recomp_size = targetPos;
+	recomp_size = target_pos;
 
 	/* And finally fill-in the result */
 	result = new_intArrayType(recomp_size);

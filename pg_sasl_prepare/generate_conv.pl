@@ -38,6 +38,93 @@ die "Usage: $0 INPUT_FILE OUTPUT_PUT\n" if @ARGV != 2;
 my $input_file = $ARGV[0];
 my $output_file = $ARGV[1];
 
+# Script-specific and post composition that need to be excluded from the tables
+# generated per http://www.unicode.org/reports/tr15/.
+my @no_recomp_codes = (
+	'0958',  # DEVANAGARI LETTER QA
+	'0959',  # DEVANAGARI LETTER KHHA
+	'095A',  # DEVANAGARI LETTER GHHA
+	'095B',  # DEVANAGARI LETTER ZA
+	'095C',  # DEVANAGARI LETTER DDDHA
+	'095D',  # DEVANAGARI LETTER RHA
+	'095E',  # DEVANAGARI LETTER FA
+	'095F',  # DEVANAGARI LETTER YYA
+	'09DC',  # BENGALI LETTER RRA
+	'09DD',  # BENGALI LETTER RHA
+	'09DF',  # BENGALI LETTER YYA
+	'0A33',  # GURMUKHI LETTER LLA
+	'0A36',  # GURMUKHI LETTER SHA
+	'0A59',  # GURMUKHI LETTER KHHA
+	'0A5A',  # GURMUKHI LETTER GHHA
+	'0A5B',  # GURMUKHI LETTER ZA
+	'0A5E',  # GURMUKHI LETTER FA
+	'0B5C',  # ORIYA LETTER RRA
+	'0B5D',  # ORIYA LETTER RHA
+	'0F43',  # TIBETAN LETTER GHA
+	'0F4D',  # TIBETAN LETTER DDHA
+	'0F52',  # TIBETAN LETTER DHA
+	'0F57',  # TIBETAN LETTER BHA
+	'0F5C',  # TIBETAN LETTER DZHA
+	'0F69',  # TIBETAN LETTER KSSA
+	'0F76',  # TIBETAN VOWEL SIGN VOCALIC R
+	'0F78',  # TIBETAN VOWEL SIGN VOCALIC L
+	'0F93',  # TIBETAN SUBJOINED LETTER GHA
+	'0F9D',  # TIBETAN SUBJOINED LETTER DDHA
+	'0FA2',  # TIBETAN SUBJOINED LETTER DHA
+	'0FA7',  # TIBETAN SUBJOINED LETTER BHA
+	'0FAC',  # TIBETAN SUBJOINED LETTER DZHA
+	'0FB9',  # TIBETAN SUBJOINED LETTER KSSA
+	'FB1D',  # HEBREW LETTER YOD WITH HIRIQ:
+	'FB1F',  # HEBREW LIGATURE YIDDISH YOD YOD PATAH
+	'FB2A',  # HEBREW LETTER SHIN WITH SHIN DOT
+	'FB2B',  # HEBREW LETTER SHIN WITH SIN DOT
+	'FB2C',  # HEBREW LETTER SHIN WITH DAGESH AND SHIN DOT
+	'FB2D',  # HEBREW LETTER SHIN WITH DAGESH AND SIN DOT
+	'FB2E',  # HEBREW LETTER ALEF WITH PATAH
+	'FB2F',  # HEBREW LETTER ALEF WITH QAMATS
+	'FB30',  # HEBREW LETTER ALEF WITH MAPIQ
+	'FB31',  # HEBREW LETTER BET WITH DAGESH
+	'FB32',  # HEBREW LETTER GIMEL WITH DAGESH
+	'FB33',  # HEBREW LETTER DALET WITH DAGESH
+	'FB34',  # HEBREW LETTER HE WITH MAPIQ
+	'FB35',  # HEBREW LETTER VAV WITH DAGESH
+	'FB36',  # HEBREW LETTER ZAYIN WITH DAGESH
+	'FB38',  # HEBREW LETTER TET WITH DAGESH
+	'FB39',  # HEBREW LETTER YOD WITH DAGESH
+	'FB3A',  # HEBREW LETTER FINAL KAF WITH DAGESH
+	'FB3B',  # HEBREW LETTER KAF WITH DAGESH
+	'FB3C',  # HEBREW LETTER LAMED WITH DAGESH
+	'FB3E',  # HEBREW LETTER MEM WITH DAGESH
+	'FB40',  # HEBREW LETTER NUN WITH DAGESH
+	'FB41',  # HEBREW LETTER SAMEKH WITH DAGESH
+	'FB43',  # HEBREW LETTER FINAL PE WITH DAGESH
+	'FB44',  # HEBREW LETTER PE WITH DAGESH
+	'FB46',  # HEBREW LETTER TSADI WITH DAGESH
+	'FB47',  # HEBREW LETTER QOF WITH DAGESH
+	'FB48',  # HEBREW LETTER RESH WITH DAGESH
+	'FB49',  # HEBREW LETTER SHIN WITH DAGESH
+	'FB4A',  # HEBREW LETTER TAV WITH DAGESH
+	'FB4B',  # HEBREW LETTER VAV WITH HOLAM
+	'FB4C',  # HEBREW LETTER BET WITH RAFE
+	'FB4D',  # HEBREW LETTER KAF WITH RAFE
+	'FB4E',  # HEBREW LETTER PE WITH RAFE
+	# post composition exclusion
+	'2ADC',  #  FORKING
+	'1D15E', # MUSICAL SYMBOL HALF NOTE
+	'1D15F', # MUSICAL SYMBOL QUARTER NOTE
+	'1D160', # MUSICAL SYMBOL EIGHTH NOTE
+	'1D161', # MUSICAL SYMBOL SIXTEENTH NOTE
+	'1D162', # MUSICAL SYMBOL THIRTY-SECOND NOTE
+	'1D163', # MUSICAL SYMBOL SIXTY-FOURTH NOTE
+	'1D164', # MUSICAL SYMBOL ONE HUNDRED TWENTY-EIGHTH NOTE
+	'1D1BB', # MUSICAL SYMBOL MINIMA
+	'1D1BC', # MUSICAL SYMBOL MINIMA BLACK
+	'1D1BD', # MUSICAL SYMBOL SEMIMINIMA WHITE
+	'1D1BE', # MUSICAL SYMBOL SEMIMINIMA BLACK
+	'1D1BF', # MUSICAL SYMBOL FUSA WHITE
+	'1D1C0'  # MUSICAL SYMBOL FUSA BLACK
+    );
+
 # Count number of lines in input file to get size of table.
 my $input_lines = 0;
 open(my $FH, $input_file) or die "Could not open input file $input_file: $!.";
@@ -48,6 +135,18 @@ while (my $line = <$FH>)
 
 	# Skip codes longer than 4 bytes, or 8 characters.
 	next if length($code) > 8;
+
+	# Skip codes that cannot be composed
+	my $found_no_recomp = 0;
+	foreach my $lcode  (@no_recomp_codes)
+	{
+		if ($lcode eq $elts[0])
+		{
+			$found_no_recomp = 1;
+			last;
+		}
+	}
+	next if $found_no_recomp;
 
 	# Skip characters with no decompositions and a class of 0.
 	next if $elts[3] eq '0' && $elts[5] eq '';
@@ -100,6 +199,18 @@ while ( my $line = <$INPUT> )
 	# Skip characters with no decompositions and a class of 0.
 	# to reduce the table size.
 	next if $elts[3] eq '0' && $elts[5] eq '';
+
+	# Skip codes that cannot be composed
+	my $found_no_recomp = 0;
+	foreach my $lcode  (@no_recomp_codes)
+	{
+		if ($lcode eq $elts[0])
+		{
+			$found_no_recomp = 1;
+			last;
+		}
+	}
+	next if $found_no_recomp;
 
 	# Print a comma for all items except the first one.
 	if ($first_item)
