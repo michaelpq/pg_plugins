@@ -34,10 +34,10 @@ PG_MODULE_MAGIC;
 #define ARRNELEMS(x)  ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
 
 /* Constants for calculations wih Hangul characters */
-#define SBASE		0xAC00
-#define LBASE		0x1100
-#define VBASE		0x1161
-#define TBASE		0x11A7
+#define SBASE		0xEAB080	/* U+AC00 */
+#define LBASE		0xE18480	/* U+1100 */
+#define VBASE		0xE185A1	/* U+1161 */
+#define TBASE		0xE186A7	/* U+11A7 */
 #define LCOUNT		19
 #define VCOUNT		21
 #define TCOUNT		28
