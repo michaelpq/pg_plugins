@@ -33,7 +33,7 @@ PG_MODULE_MAGIC;
 #define ARRPTR(x)  ((int32 *) ARR_DATA_PTR(x))
 #define ARRNELEMS(x)  ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
 
-/* Constants for calculations wih Hangul characters */
+/* Constants for calculations with Hangul characters */
 #define SBASE		0xEAB080	/* U+AC00 */
 #define LBASE		0xE18480	/* U+1100 */
 #define VBASE		0xE185A1	/* U+1161 */
