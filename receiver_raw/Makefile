@@ -7,3 +7,5 @@ SHLIB_LINK = $(libpq)
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
++CC+=-I $(shell $(PG_CONFIG) --includedir)
+
