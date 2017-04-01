@@ -38,7 +38,7 @@ void _PG_init(void);
 static volatile sig_atomic_t got_sigterm = false;
 
 static void
-worker_spi_sigterm(SIGNAL_ARGS)
+count_relations_sigterm(SIGNAL_ARGS)
 {
 	int			save_errno = errno;
 
@@ -50,7 +50,7 @@ worker_spi_sigterm(SIGNAL_ARGS)
 }
 
 static void
-worker_spi_sighup(SIGNAL_ARGS)
+count_relations_sighup(SIGNAL_ARGS)
 {
 	elog(LOG, "got sighup");
 	if (MyProc)
@@ -58,11 +58,11 @@ worker_spi_sighup(SIGNAL_ARGS)
 }
 
 static void
-worker_spi_main(Datum main_arg)
+count_relations_main(Datum main_arg)
 {
 	/* Register functions for SIGTERM/SIGHUP management */
-	pqsignal(SIGHUP, worker_spi_sighup);
-	pqsignal(SIGTERM, worker_spi_sigterm);
+	pqsignal(SIGHUP, count_relations_sighup);
+	pqsignal(SIGTERM, count_relations_sigterm);
 
 	/* We're now ready to receive signals */
 	BackgroundWorkerUnblockSignals();
@@ -141,7 +141,7 @@ _PG_init(void)
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-	worker.bgw_main = worker_spi_main;
+	worker.bgw_main = count_relations_main;
 	snprintf(worker.bgw_name, BGW_MAXLEN, "count relations");
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
 	worker.bgw_main_arg = (Datum) 0;
