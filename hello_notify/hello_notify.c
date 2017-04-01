@@ -265,12 +265,6 @@ _PG_init(void)
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
 	worker.bgw_restart_time = 10;
 	worker.bgw_main_arg = (Datum) 0;
-#if PG_VERSION_NUM >= 90400
-	/*
-	 * Notify PID is present since 9.4. If this is not initialized
-	 * a static background worker cannot start properly.
-	 */
 	worker.bgw_notify_pid = 0;
-#endif
 	RegisterBackgroundWorker(&worker);
 }
