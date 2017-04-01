@@ -34,7 +34,7 @@
 PG_MODULE_MAGIC;
 
 void _PG_init(void);
-void count_relations_main(Datum main_arg);
+void count_relations_main(Datum main_arg) pg_attribute_noreturn();
 
 static volatile sig_atomic_t got_sigterm = false;
 

@@ -32,7 +32,7 @@
 PG_MODULE_MAGIC;
 
 void _PG_init(void);
-void hello_notify_main(Datum main_arg);
+void hello_notify_main(Datum main_arg) pg_attribute_noreturn();
 
 /* Worker name */
 static const char *hello_notify_name = "hello_notify";
