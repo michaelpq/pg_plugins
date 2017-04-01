@@ -28,6 +28,7 @@ static void dbrestrict_utility(PlannedStmt *pstmt,
 							   const char *queryString,
 							   ProcessUtilityContext context,
 							   ParamListInfo params,
+							   QueryEnvironment *queryEnv,
 							   DestReceiver *dest,
 							   char *completionTag);
 static void load_params(void);
@@ -37,6 +38,7 @@ void dbrestrict_utility(PlannedStmt *pstmt,
 						const char *queryString,
 						ProcessUtilityContext context,
 						ParamListInfo params,
+						QueryEnvironment *queryEnv,
 						DestReceiver *dest,
 						char *completionTag)
 {
@@ -73,11 +75,11 @@ void dbrestrict_utility(PlannedStmt *pstmt,
 	 */
 	if (prev_utility_hook)
 		(*prev_utility_hook) (pstmt, queryString,
-							  context, params,
+							  context, params, queryEnv,
 							  dest, completionTag);
 	else
 		standard_ProcessUtility(pstmt, queryString,
-								context, params,
+								context, params, queryEnv,
 								dest, completionTag);
 }
 
