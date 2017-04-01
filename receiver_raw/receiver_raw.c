@@ -15,6 +15,9 @@
 
 /* Some general headers for custom bgworker facility */
 #include "postgres.h"
+
+#include <sys/time.h>
+
 #include "fmgr.h"
 #include "libpq-fe.h"
 #include "pqexpbuffer.h"
