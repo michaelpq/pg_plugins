@@ -25,6 +25,7 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void _PG_init(void);
+void hello_main(Datum main_arg);
 
 /* SIGTERM handling */
 static volatile sig_atomic_t got_sigterm = false;
@@ -54,7 +55,7 @@ hello_sighup(SIGNAL_ARGS)
 	errno = save_errno;
 }
 
-static void
+void
 hello_main(Datum main_arg)
 {
 	/*
@@ -116,7 +117,8 @@ _PG_init(void)
 	MemSet(&worker, 0, sizeof(BackgroundWorker));
 	worker.bgw_flags = 0;
 	worker.bgw_start_time = BgWorkerStart_PostmasterStart;
-	worker.bgw_main = hello_main;
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "hello_signal");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "hello_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", worker_name);
 	/* Wait 10 seconds for restart before crash */
 	worker.bgw_restart_time = 10;

@@ -32,6 +32,7 @@
 PG_MODULE_MAGIC;
 
 void _PG_init(void);
+void hello_notify_main(Datum main_arg);
 
 /* Worker name */
 static const char *hello_notify_name = "hello_notify";
@@ -111,7 +112,7 @@ hello_notify_build_query(StringInfoData *buf)
  *
  * Main loop processing notify requests.
  */
-static void
+void
 hello_notify_main(Datum main_arg)
 {
 	StringInfoData buf;
@@ -256,11 +257,12 @@ _PG_init(void)
 
 	/* Register this worker */
 	MemSet(&worker, 0, sizeof(BackgroundWorker));
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "hello_notify");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "hello_notify_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", hello_notify_name);
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-	worker.bgw_main = hello_notify_main;
 	worker.bgw_restart_time = 10;
 	worker.bgw_main_arg = (Datum) 0;
 #if PG_VERSION_NUM >= 90400

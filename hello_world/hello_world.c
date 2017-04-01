@@ -25,6 +25,8 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void _PG_init(void);
+/* Main loop of process */
+void hello_main(Datum main_arg)
 
 /* Signal handling */
 static volatile sig_atomic_t got_sigterm = false;
@@ -49,7 +51,7 @@ hello_sigterm(SIGNAL_ARGS)
  *
  * Main loop processing.
  */
-static void
+void
 hello_main(Datum main_arg)
 {
 	/* Set up the sigterm signal before unblocking them */
@@ -91,12 +93,8 @@ _PG_init(void)
 	MemSet(&worker, 0, sizeof(BackgroundWorker));
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-
-	/*
-	 * Function to call when starting bgworker, in this case library is
-	 * already loaded.
-	 */
-	worker.bgw_main = hello_main;
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "hello_world");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "hello_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "hello world");
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
 	worker.bgw_main_arg = (Datum) 0;

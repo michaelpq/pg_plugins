@@ -34,6 +34,7 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void _PG_init(void);
+void receiver_raw_main(Datum main_arg);
 
 /* Signal handling */
 static volatile sig_atomic_t got_sigterm = false;
@@ -198,7 +199,7 @@ feTimestampDifference(int64 start_time, int64 stop_time,
 	}
 }
 
-static void
+void
 receiver_raw_main(Datum main_arg)
 {
 	/* Variables for replication connection */
@@ -583,7 +584,8 @@ _PG_init(void)
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;
-	worker.bgw_main = receiver_raw_main;
+    snprintf(worker.bgw_library_name, BGW_MAXLEN, "receiver_raw");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "receiver_raw_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", worker_name);
 	/* Wait 10 seconds for restart before crash */
 	worker.bgw_restart_time = 10;

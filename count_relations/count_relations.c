@@ -34,6 +34,7 @@
 PG_MODULE_MAGIC;
 
 void _PG_init(void);
+void count_relations_main(Datum main_arg);
 
 static volatile sig_atomic_t got_sigterm = false;
 
@@ -57,7 +58,7 @@ count_relations_sighup(SIGNAL_ARGS)
 		SetLatch(&MyProc->procLatch);
 }
 
-static void
+void
 count_relations_main(Datum main_arg)
 {
 	/* Register functions for SIGTERM/SIGHUP management */
@@ -141,7 +142,8 @@ _PG_init(void)
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-	worker.bgw_main = count_relations_main;
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "count_relations");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "count_relations_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "count relations");
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
 	worker.bgw_main_arg = (Datum) 0;

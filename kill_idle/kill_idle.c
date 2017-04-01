@@ -31,6 +31,7 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void _PG_init(void);
+void kill_idle_main(Datum main_arg);
 
 /* Signal handling */
 static volatile sig_atomic_t got_sigterm = false;
@@ -73,7 +74,7 @@ kill_idle_build_query(StringInfoData *buf)
 					 kill_max_idle_time);
 }
 
-static void
+void
 kill_idle_main(Datum main_arg)
 {
 	StringInfoData buf;
@@ -229,7 +230,8 @@ _PG_init(void)
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;
-	worker.bgw_main = kill_idle_main;
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "kill_idle");
+	snprintf(worker.bgw_function_name, BGW_MAXLEN, "kill_idle_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", worker_name);
 	/* Wait 10 seconds for restart before crash */
 	worker.bgw_restart_time = 10;
