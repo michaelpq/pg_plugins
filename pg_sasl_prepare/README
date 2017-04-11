@@ -1,8 +1,5 @@
 pg_sasl_prepare
 ===============
 
-Implementation of RFC4013, SASLprepare to work on strings for SCRAM
-authentication protocol. A couple of utilities are included as well
-to manipulate UTF-8 strings as array of integers. UnicodeData.txt
-is as well used as a base to generate a conversion table that Postgres
-can directly refer to for decomposition and class.
+Simple utility wrapper on top of PostgreSQL implementation of SASLprep,
+as explained in RFC4013.
