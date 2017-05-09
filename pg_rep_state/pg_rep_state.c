@@ -149,21 +149,39 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	Datum		values[12];
 	bool		nulls[12];
 	WalRcvData *walrcv = WalRcv;
+	int			pid;
+	XLogRecPtr	receiveStart, receivedUpto, latestChunkStart, latestWalEnd;
+	TimeLineID	receiveStartTLI, receivedTLI;
+	TimestampTz	lastMsgSendTime, lastMsgReceiptTime, latestWalEndTime;
+	char	   *slotname;
+	WalRcvState	walRcvState;
 
 	if (!superuser())
 		ereport(ERROR,
 				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
 				 (errmsg("must be superuser to fetch WAL receiver state"))));
 
+	/* Save all the wanted fields to minimize spin lock acquisition */
 	SpinLockAcquire(&walrcv->mutex);
+	pid = walrcv->pid;
+	receiveStart = walrcv->receiveStart;
+	receiveStartTLI = walrcv->receiveStartTLI;
+	receivedUpto = walrcv->receivedUpto;
+	receivedTLI = walrcv->receivedTLI;
+	latestChunkStart = walrcv->latestChunkStart;
+	lastMsgSendTime = walrcv->lastMsgSendTime;
+	lastMsgReceiptTime = walrcv->lastMsgReceiptTime;
+	latestWalEnd = walrcv->latestWalEnd;
+	latestWalEndTime = walrcv->latestWalEndTime;
+	walRcvState = walrcv->walRcvState;
+	slotname = pstrdup(walrcv->slotname);
+	SpinLockRelease(&walrcv->mutex);
 
-	if (walrcv->pid == 0)
-	{
-		SpinLockRelease(&walrcv->mutex);
+	/* Leave if no WAL receiver */
+	if (pid == 0)
 		PG_RETURN_NULL();
-	}
 
-    /* Initialise values and NULL flags arrays */
+	/* Initialise values and NULL flags arrays */
 	MemSet(values, 0, sizeof(values));
 	MemSet(nulls, 0, sizeof(nulls));
 
@@ -197,9 +215,9 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	BlessTupleDesc(tupdesc);
 
 	/* Fetch values */
-	values[0] = Int32GetDatum(walrcv->pid);
+	values[0] = Int32GetDatum(pid);
 
-	switch (walrcv->walRcvState)
+	switch (walRcvState)
 	{
 		case WALRCV_STOPPING:
 			values[1] = CStringGetTextDatum("stopping");
@@ -223,42 +241,40 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 			Assert(0);
 	}
 
-	if (XLogRecPtrIsInvalid(walrcv->receiveStart))
+	if (XLogRecPtrIsInvalid(receiveStart))
 		nulls[2] = true;
 	else
-		values[2] = LSNGetDatum(walrcv->receiveStart);
-	values[3] = Int32GetDatum(walrcv->receiveStartTLI);
-	if (XLogRecPtrIsInvalid(walrcv->receivedUpto))
+		values[2] = LSNGetDatum(receiveStart);
+	values[3] = Int32GetDatum(receiveStartTLI);
+	if (XLogRecPtrIsInvalid(receivedUpto))
 		nulls[4] = true;
 	else
-		values[4] = LSNGetDatum(walrcv->receivedUpto);
-	values[5] = Int32GetDatum(walrcv->receivedTLI);
-	if (XLogRecPtrIsInvalid(walrcv->latestChunkStart))
+		values[4] = LSNGetDatum(receivedUpto);
+	values[5] = Int32GetDatum(receivedTLI);
+	if (XLogRecPtrIsInvalid(latestChunkStart))
 		nulls[6] = true;
 	else
-		values[6] = LSNGetDatum(walrcv->latestChunkStart);
-	if (walrcv->lastMsgSendTime == 0)
+		values[6] = LSNGetDatum(latestChunkStart);
+	if (lastMsgSendTime == 0)
 		nulls[7] = true;
 	else
-		values[7] = TimestampTzGetDatum(walrcv->lastMsgSendTime);
-	if (walrcv->lastMsgReceiptTime == 0)
+		values[7] = TimestampTzGetDatum(lastMsgSendTime);
+	if (lastMsgReceiptTime == 0)
 		nulls[8] = true;
 	else
-		values[8] = TimestampTzGetDatum(walrcv->lastMsgReceiptTime);
-	if (XLogRecPtrIsInvalid(walrcv->latestWalEnd))
+		values[8] = TimestampTzGetDatum(lastMsgReceiptTime);
+	if (XLogRecPtrIsInvalid(latestWalEnd))
 		nulls[9] = true;
 	else
-		values[9] = LSNGetDatum(walrcv->latestWalEnd);
-	if (walrcv->latestWalEndTime == 0)
+		values[9] = LSNGetDatum(latestWalEnd);
+	if (latestWalEndTime == 0)
 		nulls[10] = true;
 	else
-		values[10] = TimestampTzGetDatum(walrcv->latestWalEndTime);
-	if (*(walrcv->slotname) == '\0')
+		values[10] = TimestampTzGetDatum(latestWalEndTime);
+	if (*(slotname) == '\0')
 		nulls[11] = true;
 	else
-		values[11] = CStringGetTextDatum(walrcv->slotname);
-
-	SpinLockRelease(&walrcv->mutex);
+		values[11] = CStringGetTextDatum(slotname);
 
 	/* Returns the record as Datum */
 	PG_RETURN_DATUM(HeapTupleGetDatum(
