@@ -72,8 +72,9 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 	rsinfo->setDesc = tupdesc;
 	MemoryContextSwitchTo(oldcontext);
 
+	LWLockAcquire(ProcArrayLock, LW_SHARED);
 	LWLockAcquire(SyncRepLock, LW_SHARED);
-	for (i = 0; i <= ProcGlobal->allProcCount; i++)
+	for (i = 0; i < ProcGlobal->allProcCount; i++)
 	{
 		Datum		values[3];
 		bool		nulls[3];
@@ -130,6 +131,7 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
 	LWLockRelease(SyncRepLock);
+	LWLockRelease(ProcArrayLock);
 
 	/* clean up and return the tuplestore */
 	tuplestore_donestoring(tupstore);
