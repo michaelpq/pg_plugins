@@ -101,7 +101,7 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 			continue;
 
 		/* Ignore backends with unassigned role */
-		if (proc->roleId == InvalidOid)
+		if (!OidIsValid(proc->roleId))
 			continue;
 
 		/* Check if process really exists */
