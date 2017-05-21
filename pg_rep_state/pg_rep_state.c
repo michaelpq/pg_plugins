@@ -154,6 +154,7 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	TimeLineID	receiveStartTLI, receivedTLI;
 	TimestampTz	lastMsgSendTime, lastMsgReceiptTime, latestWalEndTime;
 	char	   *slotname;
+	bool		ready_to_display;
 	WalRcvState	walRcvState;
 
 	if (!superuser())
@@ -175,10 +176,11 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	latestWalEndTime = walrcv->latestWalEndTime;
 	walRcvState = walrcv->walRcvState;
 	slotname = pstrdup(walrcv->slotname);
+	ready_to_display = walrcv->ready_to_display;
 	SpinLockRelease(&walrcv->mutex);
 
 	/* Leave if no WAL receiver */
-	if (pid == 0)
+	if (pid == 0 || !ready_to_display)
 		PG_RETURN_NULL();
 
 	/* Initialise values and NULL flags arrays */
