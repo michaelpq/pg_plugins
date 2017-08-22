@@ -319,7 +319,7 @@ print_where_clause_item(StringInfo s,
 	bool				isnull;
 	TupleDesc			tupdesc = RelationGetDescr(relation);
 
-	attr = tupdesc->attrs[natt - 1];
+	attr = TupleDescAttr(tupdesc, natt - 1);
 
 	/* Skip dropped columns and system columns */
 	if (attr->attisdropped || attr->attnum < 0)
@@ -430,7 +430,7 @@ decoder_raw_insert(StringInfo s,
 		Datum				origval;
 		bool				isnull;
 
-		attr = tupdesc->attrs[natt];
+		attr = TupleDescAttr(tupdesc, natt);
 
 		/* Skip dropped columns and system columns */
 		if (attr->attisdropped || attr->attnum < 0)
@@ -513,7 +513,7 @@ decoder_raw_update(StringInfo s,
 		Oid					typoutput;
 		bool				typisvarlena;
 
-		attr = tupdesc->attrs[natt];
+		attr = TupleDescAttr(tupdesc, natt);
 
 		/* Skip dropped columns and system columns */
 		if (attr->attisdropped || attr->attnum < 0)
