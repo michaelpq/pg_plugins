@@ -1,0 +1,8 @@
+wal_utils
+=========
+
+Set of tools related to WAL data and segment handling:
+
+  * Parsing and handling of history file data.
+  * WAL segment list between timelines.
+
