@@ -27,4 +27,4 @@ CREATE FUNCTION build_wal_segment_list(
 	OUT wal_segs text)
 RETURNS SETOF text
 AS 'MODULE_PATHNAME'
-LANGUAGE C STRICT;
+LANGUAGE C;

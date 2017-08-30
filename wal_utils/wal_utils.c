@@ -223,17 +223,17 @@ parse_wal_history(PG_FUNCTION_ARGS)
 Datum
 build_wal_segment_list(PG_FUNCTION_ARGS)
 {
-	TimeLineID	origin_tli = PG_GETARG_INT32(0);
-	XLogRecPtr	origin_lsn = PG_GETARG_LSN(1);
-	TimeLineID	target_tli = PG_GETARG_INT32(2);
-	XLogRecPtr	target_lsn = PG_GETARG_LSN(3);
-	char	   *history_buf = TextDatumGetCString(PG_GETARG_DATUM(4));
+	TimeLineID	origin_tli;
+	XLogRecPtr	origin_lsn;
+	TimeLineID	target_tli;
+	XLogRecPtr	target_lsn;
+	char	   *history_buf;
 	ReturnSetInfo  *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext	per_query_ctx;
 	MemoryContext	oldcontext;
 	TupleDesc		tupdesc;
 	Tuplestorestate *tupstore;
-	List		   *entries;
+	List		   *entries = NIL;
 	ListCell	   *entry;
 	TimeLineHistoryEntry *history;
 	bool			history_match = false;
@@ -243,6 +243,20 @@ build_wal_segment_list(PG_FUNCTION_ARGS)
 	Datum			values[1];
 	bool			nulls[1];
 	XLogSegNo		logSegNo;
+
+	/* Sanity checks for arguments */
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
+		PG_ARGISNULL(2) || PG_ARGISNULL(3))
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("origin or target data cannot be NULL")));
+
+	origin_tli = PG_GETARG_INT32(0);
+	origin_lsn = PG_GETARG_LSN(1);
+	target_tli = PG_GETARG_INT32(2);
+	target_lsn = PG_GETARG_LSN(3);
+	history_buf = PG_ARGISNULL(4) ? NULL :
+		TextDatumGetCString(PG_GETARG_DATUM(4));
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -283,57 +297,83 @@ build_wal_segment_list(PG_FUNCTION_ARGS)
 				 errmsg("origin timeline %u newer than target timeline %u",
 						origin_tli, target_tli)));
 
-	/* parse the history file */
-	entries = parseTimeLineHistory(history_buf);
-
 	/*
-	 * Check that the target data is newer than the last entry in the history
-	 * file. Better safe than sorry.
+	 * Check parentage of the target and origin timelines if a history file
+	 * has been given by caller.
 	 */
-	history = (TimeLineHistoryEntry *) llast(entries);
-	if (history->tli >= target_tli)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("timeline of last history entry %u newer than or "
-						"equal to target timeline %u",
-						history->tli, target_tli)));
-	if (history->end > target_lsn)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("LSN %X/%X of last history entry newer than target LSN %X/%X",
-						(uint32) (history->end >> 32),
-						(uint32) history->end,
-						(uint32) (target_lsn >> 32),
-						(uint32) target_lsn)));
-
-	/*
-	 * Check that origin and target are direct parents, we already know that
-	 * the target fits with the history file.
-	 */
-	foreach(entry, entries)
+	if (history_buf)
 	{
-		history = (TimeLineHistoryEntry *) lfirst(entry);
+		/* parse the history file */
+		entries = parseTimeLineHistory(history_buf);
 
-		if (history->begin <= origin_lsn &&
-			history->end >= origin_lsn &&
-			history->tli == origin_tli)
+		if (entries == NIL)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 errmsg("timeline history found empty after parsing")));
+
+		/*
+		 * Check that the target data is newer than the last entry in the history
+		 * file. Better safe than sorry.
+		 */
+		history = (TimeLineHistoryEntry *) llast(entries);
+		if (history->tli >= target_tli)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 errmsg("timeline of last history entry %u newer than or "
+							"equal to target timeline %u",
+						history->tli, target_tli)));
+		if (history->end > target_lsn)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 errmsg("LSN %X/%X of last history entry newer than target LSN %X/%X",
+							(uint32) (history->end >> 32),
+							(uint32) history->end,
+							(uint32) (target_lsn >> 32),
+							(uint32) target_lsn)));
+		/*
+		 * Check that origin and target are direct parents, we already know that
+		 * the target fits with the history file.
+		 */
+		foreach(entry, entries)
 		{
-			history_match = true;
-			break;
-		}
-	}
+			history = (TimeLineHistoryEntry *) lfirst(entry);
 
-	if (!history_match)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("origin data not a direct parent of target")));
+			if (history->begin <= origin_lsn &&
+				history->end >= origin_lsn &&
+				history->tli == origin_tli)
+			{
+				history_match = true;
+				break;
+			}
+		}
+
+		if (!history_match)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 errmsg("origin data not a direct parent of target")));
+
+		/*
+		 * Abuse this variable as temporary storage, we want the beginning
+		 * of the last, target timeline to match the end of the last timeline
+		 * tracked in the history file.
+		 */
+		current_seg_lsn = history->end;
+	}
+	else
+	{
+		/* Here the origin and target timeline match */
+		if (origin_tli != target_tli)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 errmsg("origin and target timelines not matching without history file")));
+
+		current_seg_lsn = origin_lsn;
+	}
 
 	/*
 	 * Before listing the list of files, add a last history entry using the
 	 * target data, this simplifies the logic below to build the segment list.
 	 */
-	current_seg_lsn = history->end;	/* abuse this variable as temporary
-									 * storage */
 	history = (TimeLineHistoryEntry *) palloc(sizeof(TimeLineHistoryEntry));
 	history->tli = target_tli;
 	history->begin = current_seg_lsn;

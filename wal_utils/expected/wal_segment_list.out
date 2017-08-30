@@ -1,6 +1,15 @@
 -- Install extension for tests
 CREATE EXTENSION wal_utils;
 ERROR:  extension "wal_utils" already exists
+-- NULL checks
+SELECT build_wal_segment_list(NULL, '0/0'::pg_lsn, 1, '0/0'::pg_lsn, NULL);
+ERROR:  origin or target data cannot be NULL
+SELECT build_wal_segment_list(1, NULL, 1, '0/0'::pg_lsn, NULL);
+ERROR:  origin or target data cannot be NULL
+SELECT build_wal_segment_list(1, '0/0'::pg_lsn, NULL, '0/0'::pg_lsn, NULL);
+ERROR:  origin or target data cannot be NULL
+SELECT build_wal_segment_list(1, '0/0'::pg_lsn, 1, NULL, NULL);
+ERROR:  origin or target data cannot be NULL
 CREATE TABLE history_data (data text);
 -- Load history file to use as a base with multiple timelines
 INSERT INTO history_data VALUES (
@@ -83,6 +92,36 @@ SELECT build_wal_segment_list(3, '0/177BEB38'::pg_lsn, 8, '0/259BEB38'::pg_lsn, 
  000000080000000000000025
 (15 rows)
 
+-- List of segments with same timeline for origin and target
+SELECT build_wal_segment_list(1, '0/1D4F390', 1, '0/189BEB38'::pg_lsn, NULL);
+  build_wal_segment_list  
+--------------------------
+ 000000010000000000000001
+ 000000010000000000000002
+ 000000010000000000000003
+ 000000010000000000000004
+ 000000010000000000000005
+ 000000010000000000000006
+ 000000010000000000000007
+ 000000010000000000000008
+ 000000010000000000000009
+ 00000001000000000000000A
+ 00000001000000000000000B
+ 00000001000000000000000C
+ 00000001000000000000000D
+ 00000001000000000000000E
+ 00000001000000000000000F
+ 000000010000000000000010
+ 000000010000000000000011
+ 000000010000000000000012
+ 000000010000000000000013
+ 000000010000000000000014
+ 000000010000000000000015
+ 000000010000000000000016
+ 000000010000000000000017
+ 000000010000000000000018
+(24 rows)
+
 -- error, target TLI older than origin TLI
 SELECT build_wal_segment_list(2, '0/09D4F389'::pg_lsn, 1, '0/259BEB38'::pg_lsn, data)
    FROM history_data;
@@ -99,4 +138,7 @@ ERROR:  timeline of last history entry 7 newer than or equal to target timeline 
 SELECT build_wal_segment_list(6, '0/09D4F389'::pg_lsn, 9, '0/259BEB38'::pg_lsn, data)
    FROM history_data;
 ERROR:  origin data not a direct parent of target
+-- error, target and origin timelines have to match without history file
+SELECT build_wal_segment_list(1, '0/1D4F390', 2, '0/189BEB38'::pg_lsn, NULL);
+ERROR:  origin and target timelines not matching without history file
 DROP TABLE history_data;
