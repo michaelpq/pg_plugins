@@ -14,3 +14,17 @@ CREATE FUNCTION parse_wal_history(
 RETURNS SETOF record
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT;
+
+-- Build a list of WAL segments necessary to join the given origin LSN
+-- and timeline to their targets. Note that the origin needs to be a
+-- direct parent of the target as specified by the history data.
+CREATE FUNCTION build_wal_segment_list(
+	IN origin_tli int,
+	IN origin_lsn pg_lsn,
+	IN target_tli int,
+	IN target_lsn pg_lsn,
+	IN history_data text,
+	OUT wal_segs text)
+RETURNS SETOF text
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;
