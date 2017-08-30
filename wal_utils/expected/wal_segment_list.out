@@ -1,0 +1,102 @@
+-- Install extension for tests
+CREATE EXTENSION wal_utils;
+ERROR:  extension "wal_utils" already exists
+CREATE TABLE history_data (data text);
+-- Load history file to use as a base with multiple timelines
+INSERT INTO history_data VALUES (
+'1       0/09D4F390      no recovery target specified
+2       0/117BEB70      no recovery target specified
+3       0/187BEB38      no recovery target specified
+4       0/188BEB38      no recovery target specified
+5       0/189BEB38      no recovery target specified
+7       0/249BEB38      no recovery target specified
+');
+SELECT parse_wal_history(data) FROM history_data;
+     parse_wal_history     
+---------------------------
+ (1,,0/9D4F390)
+ (2,0/9D4F390,0/117BEB70)
+ (3,0/117BEB70,0/187BEB38)
+ (4,0/187BEB38,0/188BEB38)
+ (5,0/188BEB38,0/189BEB38)
+ (7,0/189BEB38,0/249BEB38)
+(6 rows)
+
+-- Build full list of segments needed for recovery.
+SELECT build_wal_segment_list(1, '0/06D4F389'::pg_lsn, 8, '0/259BEB38'::pg_lsn, data)
+   FROM history_data;
+  build_wal_segment_list  
+--------------------------
+ 000000010000000000000006
+ 000000010000000000000007
+ 000000010000000000000008
+ 000000020000000000000009
+ 00000002000000000000000A
+ 00000002000000000000000B
+ 00000002000000000000000C
+ 00000002000000000000000D
+ 00000002000000000000000E
+ 00000002000000000000000F
+ 000000020000000000000010
+ 000000030000000000000011
+ 000000030000000000000012
+ 000000030000000000000013
+ 000000030000000000000014
+ 000000030000000000000015
+ 000000030000000000000016
+ 000000030000000000000017
+ 000000070000000000000018
+ 000000070000000000000019
+ 00000007000000000000001A
+ 00000007000000000000001B
+ 00000007000000000000001C
+ 00000007000000000000001D
+ 00000007000000000000001E
+ 00000007000000000000001F
+ 000000070000000000000020
+ 000000070000000000000021
+ 000000070000000000000022
+ 000000070000000000000023
+ 000000080000000000000024
+ 000000080000000000000025
+(32 rows)
+
+-- Partial list of segments
+SELECT build_wal_segment_list(3, '0/177BEB38'::pg_lsn, 8, '0/259BEB38'::pg_lsn, data)
+   FROM history_data;
+  build_wal_segment_list  
+--------------------------
+ 000000030000000000000017
+ 000000070000000000000018
+ 000000070000000000000019
+ 00000007000000000000001A
+ 00000007000000000000001B
+ 00000007000000000000001C
+ 00000007000000000000001D
+ 00000007000000000000001E
+ 00000007000000000000001F
+ 000000070000000000000020
+ 000000070000000000000021
+ 000000070000000000000022
+ 000000070000000000000023
+ 000000080000000000000024
+ 000000080000000000000025
+(15 rows)
+
+-- error, target TLI older than origin TLI
+SELECT build_wal_segment_list(2, '0/09D4F389'::pg_lsn, 1, '0/259BEB38'::pg_lsn, data)
+   FROM history_data;
+ERROR:  origin timeline 2 newer than target timeline 1
+-- error, target LSN older than origin LSN
+SELECT build_wal_segment_list(1, '0/09D4F389'::pg_lsn, 2, '0/08D4F389'::pg_lsn, data)
+   FROM history_data;
+ERROR:  origin LSN 0/9D4F389 newer than target LSN 0/8D4F389
+-- error, target LSN older than last history file entry
+SELECT build_wal_segment_list(1, '0/09D4F389'::pg_lsn, 2, '0/10D4F389'::pg_lsn, data)
+   FROM history_data;
+ERROR:  timeline of last history entry 7 newer than or equal to target timeline 2
+-- error, timelines are not direct parents
+SELECT build_wal_segment_list(6, '0/09D4F389'::pg_lsn, 9, '0/259BEB38'::pg_lsn, data)
+   FROM history_data;
+ERROR:  origin data not a direct parent of target
+DROP TABLE history_data;
