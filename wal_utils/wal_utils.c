@@ -118,6 +118,13 @@ parseTimeLineHistory(char *buffer)
 }
 
 
+/*
+ * parse_wal_history
+ *
+ * Parse input buffer of a history file and build a set of rows to
+ * give a SQL representation of TimeLineHistoryEntry entries part
+ * of a timeline history file.
+ */
 Datum
 parse_wal_history(PG_FUNCTION_ARGS)
 {
