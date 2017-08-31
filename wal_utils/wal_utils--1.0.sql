@@ -37,14 +37,14 @@ LANGUAGE C;
 -- caller can use here, a segment file could be compressed, and the
 -- archive could be used as well to store some custom metadata. The path
 -- defined cannot be absolute as well.
--- CREATE FUNCTION archive_get_data(
--- 	IN filename text,
--- 	IN begin bigint,
--- 	IN offset bigint,
--- 	OUT data bytea)
--- RETURNS bytea
--- AS 'MODULE_PATHNAME'
--- LANGUAGE C STRICT;
+CREATE FUNCTION archive_get_data(
+	IN filename text,
+	IN begin_t bigint,
+	IN offset_t bigint,
+	OUT data bytea)
+RETURNS bytea
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;
 -- Get the size of a file in archives.
 CREATE FUNCTION archive_get_size(
 	IN filename text,

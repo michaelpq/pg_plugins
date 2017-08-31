@@ -22,6 +22,7 @@
 #include "funcapi.h"
 #include "miscadmin.h"
 #include "utils/builtins.h"
+#include "utils/memutils.h"
 #include "utils/pg_lsn.h"
 
 PG_MODULE_MAGIC;
@@ -34,6 +35,7 @@ static List *parseTimeLineHistory(char *buffer);
 PG_FUNCTION_INFO_V1(parse_wal_history);
 PG_FUNCTION_INFO_V1(build_wal_segment_list);
 PG_FUNCTION_INFO_V1(archive_get_size);
+PG_FUNCTION_INFO_V1(archive_get_data);
 
 /*
  * parseTimeLineHistory
@@ -505,4 +507,93 @@ archive_get_size(PG_FUNCTION_ARGS)
 				 errmsg("could not stat file \"%s\": %m", filepath)));
 
 	PG_RETURN_INT64((int64) fst.st_size);
+}
+
+/*
+ * archive_get_data
+ *
+ * Read a portion of data in an archive folder defined by PGARCHIVE,
+ * and return it as bytea. If bytes_to_read is negative or higher
+ * than the file's size, read the whole file.
+ */
+Datum
+archive_get_data(PG_FUNCTION_ARGS)
+{
+	char	   *filename = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char	   *filepath;
+	int64		seek_offset = 0;
+	int64		bytes_to_read = -1;
+	bytea	   *result;
+	size_t		nbytes;
+	FILE	   *file;
+
+	if (!superuser())
+		ereport(ERROR,
+				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+				 (errmsg("must be superuser to read files"))));
+
+	seek_offset = PG_GETARG_INT64(1);
+	bytes_to_read = PG_GETARG_INT64(2);
+
+	if (bytes_to_read < 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("requested length cannot be negative")));
+
+	filepath = check_and_build_filepath(filename);
+	pfree(filename);
+
+	/*
+	 * Read the file, the whole file is read if bytes_to_read is
+	 * negative.
+	 */
+	if (bytes_to_read < 0)
+	{
+		if (seek_offset < 0)
+			bytes_to_read = -seek_offset;
+		else
+		{
+			struct stat fst;
+
+			if (stat(filepath, &fst) < 0)
+				ereport(ERROR,
+						(errcode_for_file_access(),
+						 errmsg("could not stat file \"%s\": %m", filepath)));
+
+			bytes_to_read = fst.st_size - seek_offset;
+		}
+	}
+
+	/* not sure why anyone thought that int64 length was a good idea */
+	if (bytes_to_read > (MaxAllocSize - VARHDRSZ))
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("requested length too large")));
+
+	if ((file = AllocateFile(filepath, PG_BINARY_R)) == NULL)
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not open file \"%s\" for reading: %m",
+						filepath)));
+
+	if (fseeko(file, (off_t) seek_offset,
+			   (seek_offset >= 0) ? SEEK_SET : SEEK_END) != 0)
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not seek in file \"%s\": %m", filepath)));
+
+	result = (bytea *) palloc((Size) bytes_to_read + VARHDRSZ);
+
+	nbytes = fread(VARDATA(result), 1, (size_t) bytes_to_read, file);
+
+	if (ferror(file))
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not read file \"%s\": %m", filepath)));
+
+	SET_VARSIZE(result, nbytes + VARHDRSZ);
+
+	FreeFile(file);
+
+	PG_RETURN_BYTEA_P(result);
 }
