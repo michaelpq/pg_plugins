@@ -461,7 +461,7 @@ check_and_build_filepath(char *filename)
 	archive_path = getenv("PGARCHIVE");
 	if (archive_path == NULL)
 		ereport(ERROR,
-				(errcode(ERRCODE_FDW_INVALID_OPTION_NAME),
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("archive path is not defined"),
 				 errhint("Check value of environment variable %s",
 						 "PGARCHIVE")));

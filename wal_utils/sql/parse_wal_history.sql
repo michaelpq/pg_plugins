@@ -2,7 +2,6 @@
 
 CREATE TABLE history_data (data text);
 
--- Note that COPY truncates newlines.
 -- Load history file that succeeds
 INSERT INTO history_data VALUES (
 '# Ignore this comment
