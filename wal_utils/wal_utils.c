@@ -512,9 +512,14 @@ archive_get_size(PG_FUNCTION_ARGS)
 /*
  * archive_get_data
  *
- * Read a portion of data in an archive folder defined by PGARCHIVE,
- * and return it as bytea. If bytes_to_read is negative or higher
- * than the file's size, read the whole file.
+ * Read a portion of data in an archive folder defined by PGARCHIVE, and
+ * return it as bytea. If bytes_to_read is negative or higher than the
+ * file's size, read the whole file.
+ *
+ * Even if data is returned in binary format, it is always possible to
+ * convert it to text using encode(data, 'escape'), which is recommended
+ * way of doing for small files like timeline history files, so we don't
+ * bother having a text version of this function.
  */
 Datum
 archive_get_data(PG_FUNCTION_ARGS)
