@@ -32,8 +32,8 @@ static List *parseTimeLineHistory(char *buffer);
 /*
  * Set of SQL-callable functions.
  */
-PG_FUNCTION_INFO_V1(parse_wal_history);
-PG_FUNCTION_INFO_V1(build_wal_segment_list);
+PG_FUNCTION_INFO_V1(archive_parse_history);
+PG_FUNCTION_INFO_V1(archive_build_segment_list);
 PG_FUNCTION_INFO_V1(archive_get_size);
 PG_FUNCTION_INFO_V1(archive_get_data);
 
@@ -126,14 +126,14 @@ parseTimeLineHistory(char *buffer)
 
 
 /*
- * parse_wal_history
+ * archive_parse_history
  *
  * Parse input buffer of a history file and build a set of rows to
  * give a SQL representation of TimeLineHistoryEntry entries part
  * of a timeline history file.
  */
 Datum
-parse_wal_history(PG_FUNCTION_ARGS)
+archive_parse_history(PG_FUNCTION_ARGS)
 {
 	char	   *history_buf = TextDatumGetCString(PG_GETARG_DATUM(0));
 	TupleDesc   tupdesc;
@@ -207,7 +207,7 @@ parse_wal_history(PG_FUNCTION_ARGS)
 }
 
 /*
- * build_wal_segment_list
+ * archive_build_segment_list
  *
  * Taking in input an origin timeline and LSN, as well as a target timeline
  * and LSN, build a list of WAL segments able to allow a standby pointing to
@@ -226,7 +226,7 @@ parse_wal_history(PG_FUNCTION_ARGS)
  * timeline entry is higher than the target.
  */
 Datum
-build_wal_segment_list(PG_FUNCTION_ARGS)
+archive_build_segment_list(PG_FUNCTION_ARGS)
 {
 	TimeLineID	origin_tli;
 	XLogRecPtr	origin_lsn;
