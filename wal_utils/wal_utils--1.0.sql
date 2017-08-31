@@ -28,3 +28,27 @@ CREATE FUNCTION build_wal_segment_list(
 RETURNS SETOF text
 AS 'MODULE_PATHNAME'
 LANGUAGE C;
+
+-- Set of routines for archive data fetching
+-- Get data from the archive path. The base path where the lookup is
+-- done uses as environment variable PGARCHIVE which points to a local
+-- path where the archives are located. This should be a variable loaded
+-- by Postgres. Note that there is no restriction on the file name that
+-- caller can use here, a segment file could be compressed, and the
+-- archive could be used as well to store some custom metadata. The path
+-- defined cannot be absolute as well.
+-- CREATE FUNCTION archive_get_data(
+-- 	IN filename text,
+-- 	IN begin bigint,
+-- 	IN offset bigint,
+-- 	OUT data bytea)
+-- RETURNS bytea
+-- AS 'MODULE_PATHNAME'
+-- LANGUAGE C STRICT;
+-- Get the size of a file in archives.
+CREATE FUNCTION archive_get_size(
+	IN filename text,
+	OUT size bigint)
+RETURNS bigint
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;

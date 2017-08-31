@@ -1,5 +1,4 @@
--- Install extension for tests
-CREATE EXTENSION wal_utils;
+-- Tests for build of WAL segment list for multiple timelines
 
 -- NULL checks
 SELECT build_wal_segment_list(NULL, '0/0'::pg_lsn, 1, '0/0'::pg_lsn, NULL);

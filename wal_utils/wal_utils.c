@@ -14,6 +14,8 @@
 #include "postgres.h"
 #include "fmgr.h"
 
+#include <sys/stat.h>
+
 #include "access/timeline.h"
 #include "access/xlog_internal.h"
 #include "catalog/pg_type.h"
@@ -31,6 +33,7 @@ static List *parseTimeLineHistory(char *buffer);
  */
 PG_FUNCTION_INFO_V1(parse_wal_history);
 PG_FUNCTION_INFO_V1(build_wal_segment_list);
+PG_FUNCTION_INFO_V1(archive_get_size);
 
 /*
  * parseTimeLineHistory
@@ -432,4 +435,74 @@ build_wal_segment_list(PG_FUNCTION_ARGS)
 	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
+}
+
+/*
+ * Check the defined file name, looking at if it is an absolute path
+ * and if it contains references to a parent directory. Then build
+ * a full path name using the path defined for the archives which is
+ * enforced by the environment where Postgres is running.
+ */
+static char *
+check_and_build_filepath(char *filename)
+{
+	char	   *filepath;
+	char	   *archive_path;
+
+	if (is_absolute_path(filename))
+		ereport(ERROR,
+				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+				 (errmsg("absolute path not allowed"))));
+	if (path_contains_parent_reference(filename))
+		ereport(ERROR,
+				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+				 (errmsg("reference to parent directory (\"..\") not allowed"))));
+
+	archive_path = getenv("PGARCHIVE");
+	if (archive_path == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_FDW_INVALID_OPTION_NAME),
+				 errmsg("archive path is not defined"),
+				 errhint("Check value of environment variable %s",
+						 "PGARCHIVE")));
+
+	filepath = (char *) palloc(MAXPGPATH);
+	snprintf(filepath, MAXPGPATH, "%s/%s", archive_path, filename);
+
+	/* length can change here */
+	canonicalize_path(filepath);
+
+	return filepath;
+}
+
+/*
+ * archive_get_size
+ *
+ * Look at a file in the archives whose path is defined by the environment
+ * variable PGARCHIVE and get its size. This is useful when combined with
+ * archive_get_data to evaluate a set of chunks to be used during any
+ * data transfer from the archives.
+ */
+Datum
+archive_get_size(PG_FUNCTION_ARGS)
+{
+	char	   *filename = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char	   *filepath;
+	struct stat fst;
+
+	if (!superuser())
+		ereport(ERROR,
+				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+				 (errmsg("must be superuser to read files"))));
+
+	filepath = check_and_build_filepath(filename);
+	pfree(filename);
+
+	/* get needed information about the file */
+	if (stat(filepath, &fst) < 0)
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not stat file \"%s\": %m", filepath)));
+
+	PG_RETURN_INT64((int64) fst.st_size);
 }

@@ -1,0 +1,5 @@
+-- Sanity check for archive_get_size
+SELECT archive_get_size('../no_parent'); -- error
+ERROR:  reference to parent directory ("..") not allowed
+SELECT archive_get_size('/no_absolute'); -- error
+ERROR:  absolute path not allowed

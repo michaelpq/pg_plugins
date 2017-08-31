@@ -1,5 +1,4 @@
--- Install extension for tests
-CREATE EXTENSION wal_utils;
+-- Tests for parsing of WAL history file
 CREATE TABLE history_data (data text);
 -- Note that COPY truncates newlines.
 -- Load history file that succeeds
