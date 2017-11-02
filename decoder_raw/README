@@ -8,9 +8,9 @@ are by any remote source.
 UPDATE and DELETE queries are generated for relations using a level of
 REPLICA IDENTITY sufficient to ensure that tuple selectivity is guaranteed:
 - FULL, all the old tuple values are decoded from WAL all the time so
-they are used for WHERE clause generation
+they are used for WHERE clause generation.
 - DEFAULT, when relation has an index usable for selectivity like a
-primary key
+primary key.
 - USING INDEX, because the UNIQUE index on NOT NULL values ensures
 that tuples are uniquely identified.
 In those cases, for DEFAULT and USING INDEX, WHERE clause is generated
@@ -41,4 +41,4 @@ TODO
 ----
 
 - Implement options filtering INSERT generation depending on REPLICA
-IDENTITY level of relation involved
+IDENTITY level of relation involved.
