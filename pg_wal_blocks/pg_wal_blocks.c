@@ -24,6 +24,7 @@ const char *progname;
 /* Global parameters */
 static bool verbose = false;
 static char *full_path = NULL;
+static uint32 WalSegSz = DEFAULT_XLOG_SEG_SIZE;	/* should be settable */
 
 /* Data regarding input WAL to parse */
 static XLogSegNo segno = 0;
@@ -94,7 +95,7 @@ XLogReadPageBlock(XLogReaderState *xlogreader, XLogRecPtr targetPagePtr,
 		(XLogReadBlockPrivate *) xlogreader->private_data;
 	uint32      targetPageOff;
 
-	targetPageOff = targetPagePtr % XLogSegSize;
+	targetPageOff = targetPagePtr % WalSegSz;
 
 	if (xlogreadfd < 0)
 	{
@@ -181,8 +182,8 @@ do_wal_parsing(void)
 	private.full_path = full_path;
 
 	/* Set the first record to look at */
-	XLogSegNoOffsetToRecPtr(segno, 0, first_record);
-	xlogreader = XLogReaderAllocate(XLogReadPageBlock, &private);
+	XLogSegNoOffsetToRecPtr(segno, 0, first_record, WalSegSz);
+	xlogreader = XLogReaderAllocate(WalSegSz, XLogReadPageBlock, &private);
 	first_record = XLogFindNextRecord(xlogreader, first_record);
 
 	/* Loop through all the records */
@@ -285,7 +286,7 @@ main(int argc, char **argv)
 		close(fd);
 
 		/* parse timeline and segment number from file name */
-		XLogFromFileName(fname, &timeline_id, &segno);
+		XLogFromFileName(fname, &timeline_id, &segno, WalSegSz);
 	}
 
 	if (full_path == NULL)
