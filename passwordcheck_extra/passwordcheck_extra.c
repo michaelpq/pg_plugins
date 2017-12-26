@@ -32,6 +32,7 @@ static int password_min_len = 8;
 static int password_max_len = 15;
 static bool password_lower_case = true;
 static bool password_upper_case = true;
+static bool password_special = true;
 static bool password_numbers = true;
 static char *password_special_chars = "!@#$%^&*()_+{}|<>?=";
 
@@ -174,7 +175,8 @@ check_password(const char *username,
 				}
 
 				/* Special character missing */
-				if ((password_flag & PASSWORD_HAS_SPECIAL) == 0)
+				if ((password_flag & PASSWORD_HAS_SPECIAL) == 0 &&
+					password_special)
 				{
 					if (set_comma)
 						appendStringInfo(&buf, ", ");
@@ -248,6 +250,15 @@ passwordcheck_extra_load_params(void)
 							 "Enforce use of numbers.",
 							 NULL,
 							 &password_numbers,
+							 true,
+							 PGC_SUSET,
+							 0, NULL, NULL, NULL);
+
+	/* Restrict use of special characters */
+	DefineCustomBoolVariable("passwordcheck_extra.restrict_special",
+							 "Enforce use of special characters.",
+							 NULL,
+							 &password_special,
 							 true,
 							 PGC_SUSET,
 							 0, NULL, NULL, NULL);

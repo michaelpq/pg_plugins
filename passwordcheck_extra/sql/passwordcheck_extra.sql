@@ -67,3 +67,9 @@ CREATE ROLE regress_pwd_foo PASSWORD '012345678901Aa';
 -- Valid password
 CREATE ROLE regress_pwd_foo PASSWORD '@%';
 DROP ROLE regress_pwd_foo;
+
+-- Even less restrictive policy
+SET passwordcheck_extra.restrict_special TO false;
+-- Valid password
+CREATE ROLE regress_pwd_foo PASSWORD 'A';
+DROP ROLE regress_pwd_foo;

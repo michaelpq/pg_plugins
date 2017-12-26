@@ -40,6 +40,8 @@ at creation with a user-defined policy:
   upper-case character.
 - passwordcheck_extra.restrict_numbers, to enforce the use of at least
   one number.
+- passwordcheck_extra.restrict_special, to enforce the use of at least
+  one special character listed in \"passwordcheck_extra.special_chars\".
 - passwordcheck_extra.minimum_length, minimum length of password allowed.
   Default is 8, which likely sucks.
 - passwordcheck_extra.maximum_length, maximum length of password allowed.
