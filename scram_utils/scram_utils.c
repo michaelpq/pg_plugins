@@ -33,7 +33,7 @@ PG_FUNCTION_INFO_V1(scram_utils_verifier);
 /*
  * scram_utils_verifier
  *
- * Generate a verifier for SCRAM-SHA-256 authentiction and update the
+ * Generate a verifier for SCRAM-SHA-256 authentication and update the
  * related user's pg_authid entry as per RFC 7677.
  */
 Datum
