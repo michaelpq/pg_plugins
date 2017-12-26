@@ -1,0 +1,5 @@
+# scram_utils extension
+comment = 'Set of tools for SCRAM authetication'
+default_version = '1.0'
+module_pathname = '$libdir/scram_utils'
+relocatable = true
