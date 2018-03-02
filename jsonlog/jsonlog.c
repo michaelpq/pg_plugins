@@ -208,6 +208,35 @@ appendJSONLiteral(StringInfo buf, char *key, char *value, bool is_comma)
 }
 
 /*
+ * is_log_level_output -- is elevel logically >= log_min_level?
+ *
+ * We use this for tests that should consider LOG to sort out-of-order,
+ * between ERROR and FATAL.  Generally this is the right thing for testing
+ * whether a message should go to the postmaster log, whereas a simple >=
+ * test is correct for testing whether the message should go to the client.
+ */
+static bool
+is_log_level_output(int elevel, int log_min_level)
+{
+	if (elevel == LOG || elevel == COMMERROR)
+	{
+		if (log_min_level == LOG || log_min_level <= ERROR)
+			return true;
+	}
+	else if (log_min_level == LOG)
+	{
+		/* elevel != LOG */
+		if (elevel >= FATAL)
+			return true;
+	}
+	/* Neither is LOG */
+	else if (elevel >= log_min_level)
+		return true;
+
+	return false;
+}
+
+/*
  * write_jsonlog
  * Write logs in json format.
  */
@@ -227,7 +256,7 @@ write_jsonlog(ErrorData *edata)
 	 * Nothing to do if log message has a severity lower than the minimum
 	 * wanted.
 	 */
-	if (edata->elevel < log_min_messages)
+	if (!is_log_level_output(edata->elevel, log_min_messages))
 		return;
 
 	initStringInfo(&buf);
