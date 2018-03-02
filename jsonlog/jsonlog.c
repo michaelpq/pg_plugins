@@ -218,7 +218,7 @@ appendJSONLiteral(StringInfo buf, char *key, char *value, bool is_comma)
 static bool
 is_log_level_output(int elevel, int log_min_level)
 {
-	if (elevel == LOG || elevel == LOG_SERVER_ONLY)
+	if (elevel == LOG || elevel == COMMERROR)
 	{
 		if (log_min_level == LOG || log_min_level <= ERROR)
 			return true;
