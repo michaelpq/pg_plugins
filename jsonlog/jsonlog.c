@@ -169,7 +169,7 @@ setup_formatted_log_time(void)
 	 */
 	pg_strftime(log_time, LOG_TIMESTAMP_LEN,
 				/* leave room for milliseconds... */
-				"%Y-%m-%d %H:%M:%S	 %Z",
+				"%Y-%m-%dT%H:%M:%S.000%z",
 				pg_localtime(&stamp_time, log_timezone));
 
 	/* 'paste' milliseconds into place... */
