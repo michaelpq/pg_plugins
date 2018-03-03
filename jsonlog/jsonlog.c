@@ -236,8 +236,7 @@ write_jsonlog(ErrorData *edata)
 	appendStringInfoChar(&buf, '{');
 
 	/* Timestamp */
-	if (log_time[0] == '\0')
-		setup_formatted_log_time();
+    setup_formatted_log_time();
 	appendJSONLiteral(&buf, "timestamp", log_time, true);
 
 	/* Username */
