@@ -169,7 +169,7 @@ setup_formatted_log_time(void)
 	 */
 	pg_strftime(log_time, LOG_TIMESTAMP_LEN,
 				/* leave room for milliseconds... */
-				"%Y-%m-%d %H:%M:%S	 %Z",
+				"%Y-%m-%dT%H:%M:%S.000%z",
 				pg_localtime(&stamp_time, log_timezone));
 
 	/* 'paste' milliseconds into place... */
@@ -262,8 +262,7 @@ write_jsonlog(ErrorData *edata)
 	appendStringInfoChar(&buf, '{');
 
 	/* Timestamp */
-	if (log_time[0] == '\0')
-		setup_formatted_log_time();
+    setup_formatted_log_time();
 	appendJSONLiteral(&buf, "timestamp", log_time, true);
 
 	/* Username */
