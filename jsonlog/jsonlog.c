@@ -45,8 +45,8 @@ static emit_log_hook_type prev_log_hook = NULL;
 extern bool redirection_done;
 
 /* Log timestamp */
-#define LOG_TIMESTAMP_LEN 128
-static char log_time[LOG_TIMESTAMP_LEN];
+#define FORMATTED_TS_LEN 128
+static char formatted_log_time[FORMATTED_TS_LEN];
 
 static const char *error_severity(int elevel);
 static void write_jsonlog(ErrorData *edata);
@@ -167,14 +167,14 @@ setup_formatted_log_time(void)
 	 * least with a minimal GMT value) before Log_line_prefix can become
 	 * nonempty or CSV mode can be selected.
 	 */
-	pg_strftime(log_time, LOG_TIMESTAMP_LEN,
-				/* leave room for milliseconds... */
-				"%Y-%m-%d %H:%M:%S	 %Z",
+	pg_strftime(formatted_log_time, FORMATTED_TS_LEN,
+	/* leave room for milliseconds... */
+				"%Y-%m-%dT%H:%M:%S     %Z",
 				pg_localtime(&stamp_time, log_timezone));
 
 	/* 'paste' milliseconds into place... */
 	sprintf(msbuf, ".%03d", (int) (tv.tv_usec / 1000));
-	strncpy(log_time + 19, msbuf, 4);
+	memcpy(formatted_log_time + 19, msbuf, 4);
 }
 
 /*
@@ -262,9 +262,8 @@ write_jsonlog(ErrorData *edata)
 	appendStringInfoChar(&buf, '{');
 
 	/* Timestamp */
-	if (log_time[0] == '\0')
-		setup_formatted_log_time();
-	appendJSONLiteral(&buf, "timestamp", log_time, true);
+	setup_formatted_log_time();
+	appendJSONLiteral(&buf, "timestamp", formatted_log_time, true);
 
 	/* Username */
 	if (MyProcPort && MyProcPort->user_name)
