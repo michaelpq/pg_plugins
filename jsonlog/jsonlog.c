@@ -24,6 +24,7 @@
 #include "lib/stringinfo.h"
 #include "postmaster/syslogger.h"
 #include "storage/proc.h"
+#include "tcop/tcopprot.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
 #include "utils/json.h"
@@ -183,7 +184,8 @@ setup_formatted_log_time(void)
  * not yet made literal.
  */
 static void
-appendJSONLiteral(StringInfo buf, char *key, char *value, bool is_comma)
+appendJSONLiteral(StringInfo buf, const char *key, const char *value,
+				  bool is_comma)
 {
 	StringInfoData literal_json;
 
@@ -245,6 +247,7 @@ write_jsonlog(ErrorData *edata)
 {
 	StringInfoData	buf;
 	TransactionId	txid = GetTopTransactionIdIfAny();
+	bool			print_stmt = false;
 
 	/*
 	 * Disable logs to server, we don't want duplicate entries in
@@ -329,6 +332,16 @@ write_jsonlog(ErrorData *edata)
 	/* Error context */
 	if (edata->context)
 		appendJSONLiteral(&buf, "context", edata->context, true);
+
+	/* user query --- only reported if not disabled by the caller */
+	if (is_log_level_output(edata->elevel, log_min_error_statement) &&
+		debug_query_string != NULL &&
+		!edata->hide_stmt)
+		print_stmt = true;
+	if (print_stmt)
+		appendJSONLiteral(&buf, "statement", debug_query_string, true);
+	if (print_stmt && edata->cursorpos > 0)
+		appendStringInfo(&buf, "\"cursor_position\":%d,", edata->cursorpos);
 
 	/* File error location */
 	if (Log_error_verbosity >= PGERROR_VERBOSE)
