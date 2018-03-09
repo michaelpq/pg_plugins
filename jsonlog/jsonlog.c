@@ -159,6 +159,8 @@ setup_formatted_log_time(void)
 	struct timeval tv;
 	pg_time_t   stamp_time;
 	char		msbuf[8];
+    long int gmtoff;
+    bool isgmt;
 
 	gettimeofday(&tv, NULL);
 	stamp_time = (pg_time_t) tv.tv_sec;
@@ -167,10 +169,27 @@ setup_formatted_log_time(void)
 	 * Note: we expect that guc.c will ensure that log_timezone is set up (at
 	 * least with a minimal GMT value) before Log_line_prefix can become
 	 * nonempty or CSV mode can be selected.
+     *
+     * For maximum compatibility with non timezone-aware tools like jq
+     * if you use log_timezone='GMT' we go out of our way to print it
+     * in the format they expect: 2015-03-05T23:51:47Z (same as
+     * JavaScript).
+     *
+     * If you use a different log_timezone we at least use a format
+     * that Joda-based tools like ElasticSearch will be able to parse
+     * like 2015-03-05T23:51:47+05:00
+     *
+     * (Use pg_get_timezone_offset so it doesn't matter how you spell
+     * GMT but the timestamp format doesn't just change back and force
+     * spontaneously if you use a timezone that has offset 0 for part
+     * of the year)
+     *
+     * Take care to leave room for milliseconds which we paste in
 	 */
-	pg_strftime(formatted_log_time, FORMATTED_TS_LEN,
-	/* leave room for milliseconds... */
-				"%Y-%m-%dT%H:%M:%S     %Z",
+	isgmt = pg_get_timezone_offset(log_timezone, &gmtoff) && gmtoff == 0;
+    
+    pg_strftime(formatted_log_time, FORMATTED_TS_LEN,
+                isgmt ? "%Y-%m-%dT%H:%M:%S.000Z" : "%Y-%m-%dT%H:%M:%S.000%z",
 				pg_localtime(&stamp_time, log_timezone));
 
 	/* 'paste' milliseconds into place... */
