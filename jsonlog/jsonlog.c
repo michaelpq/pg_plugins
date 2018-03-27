@@ -159,19 +159,25 @@ setup_formatted_log_time(void)
 	struct timeval tv;
 	pg_time_t   stamp_time;
 	char		msbuf[8];
+	static pg_tz *utc_tz;
 
 	gettimeofday(&tv, NULL);
 	stamp_time = (pg_time_t) tv.tv_sec;
 
 	/*
-	 * Note: we expect that guc.c will ensure that log_timezone is set up (at
-	 * least with a minimal GMT value) before Log_line_prefix can become
-	 * nonempty or CSV mode can be selected.
+	 * Note: we ignore log_timezone as JSON is meant to be
+	 * machine-readable. Users can use tools to display the timestamps
+	 * in their local time zone. jq in particular can only handle
+	 * timestamps with the iso-8601 "Z" suffix representing UTC.
+	 *
+	 * Take care to leave room for milliseconds which we paste in
 	 */
+	if (!utc_tz) {
+		utc_tz = pg_tzset("UTC");
+	}
 	pg_strftime(formatted_log_time, FORMATTED_TS_LEN,
-	/* leave room for milliseconds... */
-				"%Y-%m-%dT%H:%M:%S     %Z",
-				pg_localtime(&stamp_time, log_timezone));
+				"%Y-%m-%dT%H:%M:%S.000Z",
+				pg_localtime(&stamp_time, utc_tz));
 
 	/* 'paste' milliseconds into place... */
 	sprintf(msbuf, ".%03d", (int) (tv.tv_usec / 1000));
