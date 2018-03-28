@@ -48,6 +48,7 @@ extern bool redirection_done;
 /* Log timestamp */
 #define FORMATTED_TS_LEN 128
 static char formatted_log_time[FORMATTED_TS_LEN];
+static pg_tz *utc_tz = NULL;
 
 static const char *error_severity(int elevel);
 static void write_jsonlog(ErrorData *edata);
@@ -164,14 +165,28 @@ setup_formatted_log_time(void)
 	stamp_time = (pg_time_t) tv.tv_sec;
 
 	/*
-	 * Note: we expect that guc.c will ensure that log_timezone is set up (at
-	 * least with a minimal GMT value) before Log_line_prefix can become
-	 * nonempty or CSV mode can be selected.
+	 * Note: we ignore log_timezone as JSON is meant to be
+	 * machine-readable so load arbitrarily UTC. Users can use tools to
+	 * display the timestamps in their local time zone. jq in particular
+	 * can only handle timestamps with the iso-8601 "Z" suffix
+	 * representing UTC.
+	 *
+	 * Note that JSON does not specify the format of dates and
+	 * timestamps, however Javascript enforces a somewhat-widely spread
+	 * format like what is done in Date's toJSON. The main reasons to
+	 * do so are that this is conform to ISO 8601 and that this is
+	 * rather established.
+	 *
+	 * Take care to leave room for milliseconds which we paste in.
 	 */
+
+	/* Load timezone only once */
+	if (!utc_tz)
+		utc_tz = pg_tzset("UTC");
+
 	pg_strftime(formatted_log_time, FORMATTED_TS_LEN,
-	/* leave room for milliseconds... */
-				"%Y-%m-%dT%H:%M:%S     %Z",
-				pg_localtime(&stamp_time, log_timezone));
+				"%Y-%m-%dT%H:%M:%S.000Z",
+				pg_localtime(&stamp_time, utc_tz));
 
 	/* 'paste' milliseconds into place... */
 	sprintf(msbuf, ".%03d", (int) (tv.tv_usec / 1000));
