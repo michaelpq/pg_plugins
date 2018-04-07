@@ -21,7 +21,15 @@
 
 #include "commands/user.h"
 #include "fmgr.h"
-#include "common/md5.h"
+
+#ifndef OLD_PASSWORD_TYPE 
+    #include "common/md5.h"
+#else
+    #include "libpq/md5.h"
+    #include "commands/user.h"
+    typedef int PasswordType;
+#endif
+
 #include "lib/stringinfo.h"
 #include "utils/guc.h"
 
