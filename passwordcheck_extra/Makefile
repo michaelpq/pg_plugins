@@ -11,5 +11,9 @@ REGRESS = passwordcheck_extra
 # SHLIB_LINK = -lcrack
 
 PG_CONFIG = pg_config
+PG_MAJOR_VERSION := $(word 2, $(subst ., ,$(shell $(PG_CONFIG) --version)))
+ifeq ($(PG_MAJOR_VERSION),9)
+  PG_CPPFLAGS = -DOLD_PASSWORD_TYPE
+endif
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
