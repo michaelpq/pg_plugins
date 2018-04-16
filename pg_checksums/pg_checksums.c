@@ -17,6 +17,7 @@
 #include "catalog/pg_control.h"
 #include "common/controldata_utils.h"
 #include "common/file_perm.h"
+#include "common/file_utils.h"
 #include "storage/bufpage.h"
 #include "storage/checksum.h"
 #include "storage/checksum_impl.h"
@@ -34,6 +35,7 @@ static int64 badblocks = 0;
 static ControlFileData *ControlFile;
 
 static bool debug = false;
+static bool do_sync = true;
 
 typedef enum
 {
@@ -59,6 +61,7 @@ usage()
 	printf(_("  -A, --action   action to take on the cluster, can be set as\n"));
 	printf(_("                 \"verify\", \"disable\" and \"enable\"\n"));
 	printf(_("  -d, --debug    debug output, listing all checked blocks\n"));
+	printf(_("      --no-sync  do not wait for changes to be written safely to disk\n"));
 	printf(_("  -V, --version  output version information, then exit\n"));
 	printf(_("  -?, --help     show this help, then exit\n"));
 	printf(_("\nIf no data directory (DATADIR) is specified, "
@@ -323,6 +326,7 @@ main(int argc, char *argv[])
 		{"debug", no_argument, NULL, 'd'},
 		{"pgdata", no_argument, NULL, 'D'},
 		{"version", no_argument, NULL, 'V'},
+		{"no-sync", no_argument, NULL, 1},
 		{NULL, 0, NULL, 0}
 	};
 	int			c;
@@ -381,6 +385,9 @@ main(int argc, char *argv[])
 							progname, optarg);
 					exit(1);
 				}
+				break;
+			case 1:
+				do_sync = false;
 				break;
 			default:
 				fprintf(stderr, _("Try \"%s --help\" for more information.\n"), progname);
@@ -492,6 +499,8 @@ main(int argc, char *argv[])
 	{
 		printf(_("Disabling checksums in cluster\n"));
 		updateControlFile();
+		if (do_sync)
+			fsync_pgdata(DataDir, progname, PG_VERSION_NUM);
 		return 0;
 	}
 
@@ -524,6 +533,8 @@ main(int argc, char *argv[])
 	{
 		printf(_("Enabling checksums in cluster\n"));
 		updateControlFile();
+		if (do_sync)
+			fsync_pgdata(DataDir, progname, PG_VERSION_NUM);
 	}
 
 	return 0;

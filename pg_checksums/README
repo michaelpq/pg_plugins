@@ -28,6 +28,7 @@ of options.
   * -d or --debug, to print more information about the operations
   being done.
   * -A or --action to do an operation on a stopped cluster.
+  * --no-sync, to not wait for changes to be written safely to disk.
 
 The set of actions supported is as follows:
 
