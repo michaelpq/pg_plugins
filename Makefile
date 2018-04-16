@@ -15,6 +15,7 @@ SUBDIRS = blackhole	\
 	jsonlog		\
 	kill_idle	\
 	mcxtalloc_test	\
+	pg_checksums	\
 	pg_rep_state	\
 	pg_sasl_prepare	\
 	pg_wal_blocks	\
