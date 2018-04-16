@@ -414,13 +414,23 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-    /*
-     * Don't allow pg_checksums to be run as root, to avoid overwriting the
-     * ownership of files in the data directory. We need only check for root
-     * -- any other user won't have sufficient permissions to modify files in
-     * the data directory.  This does not matter for the "verify" mode, but
+	/* Set mask based on PGDATA permissions */
+	if (!GetDataDirectoryCreatePerm(DataDir))
+	{
+		fprintf(stderr, _("%s: unable to read permissions from \"%s\"\n"),
+				progname, DataDir);
+		exit(1);
+	}
+
+	umask(pg_mode_mask);
+
+	/*
+	 * Don't allow pg_checksums to be run as root, to avoid overwriting the
+	 * ownership of files in the data directory. We need only check for root
+	 * -- any other user won't have sufficient permissions to modify files in
+	 * the data directory.  This does not matter for the "verify" mode, but
 	 * let's be consistent.
-     */
+	 */
 #ifndef WIN32
 	if (geteuid() == 0)
 	{
