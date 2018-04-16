@@ -414,6 +414,23 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+    /*
+     * Don't allow pg_checksums to be run as root, to avoid overwriting the
+     * ownership of files in the data directory. We need only check for root
+     * -- any other user won't have sufficient permissions to modify files in
+     * the data directory.  This does not matter for the "verify" mode, but
+	 * let's be consistent.
+     */
+#ifndef WIN32
+	if (geteuid() == 0)
+	{
+		fprintf(stderr, _("cannot be executed by \"root\"\n"));
+		fprintf(stderr, _("You must run %s as the PostgreSQL superuser.\n"),
+				progname);
+		exit(1);
+	}
+#endif
+
 	/* Check if an action has been set */
 	if (action == PG_ACTION_NONE)
 	{
