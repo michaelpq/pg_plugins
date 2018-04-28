@@ -69,7 +69,7 @@ count_relations_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 
 	/* Connect to our database */
-	BackgroundWorkerInitializeConnection("postgres", NULL);
+	BackgroundWorkerInitializeConnection("postgres", NULL, 0);
 
 	while (!got_sigterm)
 	{

@@ -87,7 +87,7 @@ kill_idle_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 
 	/* Connect to a database */
-	BackgroundWorkerInitializeConnection("postgres", NULL);
+	BackgroundWorkerInitializeConnection("postgres", NULL, 0);
 
 	/* Build query for process */
 	initStringInfo(&buf);

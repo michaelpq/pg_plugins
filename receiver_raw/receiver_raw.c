@@ -218,7 +218,7 @@ receiver_raw_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 
 	/* Connect to a database */
-	BackgroundWorkerInitializeConnection(receiver_database, NULL);
+	BackgroundWorkerInitializeConnection(receiver_database, NULL, 0);
 
 	/* Establish connection to remote server */
 	conn = PQconnectdb(receiver_conn_string);

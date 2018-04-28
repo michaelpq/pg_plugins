@@ -125,7 +125,7 @@ hello_notify_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 
 	/* Connect to database */
-	BackgroundWorkerInitializeConnection(notify_database, NULL);
+	BackgroundWorkerInitializeConnection(notify_database, NULL, 0);
 
 	/* Build the query string */
 	initStringInfo(&buf);
