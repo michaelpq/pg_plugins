@@ -5,6 +5,9 @@
 *.lib
 *.a
 
+# LLVM bitcode
+*.bc
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
