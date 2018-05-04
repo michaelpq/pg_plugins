@@ -14,6 +14,7 @@
 /* Some general headers for custom bgworker facility */
 #include "postgres.h"
 #include "fmgr.h"
+#include "miscadmin.h"
 #include "pgstat.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
@@ -31,9 +32,6 @@ void hello_main(Datum main_arg) pg_attribute_noreturn();
 static volatile sig_atomic_t got_sigterm = false;
 static volatile sig_atomic_t got_sighup = false;
 
-/* The latch used for this worker to manage sleep correctly */
-static Latch signalLatch;
-
 /* Worker name */
 static char *worker_name = "hello signal worker";
 
@@ -42,7 +40,7 @@ hello_sigterm(SIGNAL_ARGS)
 {
 	int save_errno = errno;
 	got_sigterm = true;
-	SetLatch(&signalLatch);
+	SetLatch(MyLatch);
 	errno = save_errno;
 }
 
@@ -51,20 +49,13 @@ hello_sighup(SIGNAL_ARGS)
 {
 	int save_errno = errno;
 	got_sighup = true;
-	SetLatch(&signalLatch);
+	SetLatch(MyLatch);
 	errno = save_errno;
 }
 
 void
 hello_main(Datum main_arg)
 {
-	/*
-	 * Initialize latch for this worker. Note that this initialization needs to
-	 * be done absolutely before unblocking signals.
-	 */
-	InitializeLatchSupport();
-	InitLatch(&signalLatch);
-
 	/* Register functions for SIGTERM/SIGHUP management */
 	pqsignal(SIGHUP, hello_sighup);
 	pqsignal(SIGTERM, hello_sigterm);
@@ -77,11 +68,11 @@ hello_main(Datum main_arg)
 		int rc;
 
 		/* Wait 1s */
-		rc = WaitLatch(&signalLatch,
+		rc = WaitLatch(MyLatch,
 					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
 					   1000L,
 					   PG_WAIT_EXTENSION);
-		ResetLatch(&signalLatch);
+		ResetLatch(MyLatch);
 
 		/* Emergency bailout if postmaster has died */
 		if (rc & WL_POSTMASTER_DEATH)
