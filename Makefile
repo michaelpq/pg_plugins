@@ -15,12 +15,20 @@ SUBDIRS = blackhole	\
 	jsonlog		\
 	kill_idle	\
 	mcxtalloc_test	\
+	passwordcheck_extra	\
 	pg_checksums	\
+	pg_fix_truncation	\
+	pg_panic	\
 	pg_rep_state	\
 	pg_sasl_prepare	\
+	pg_statvfs	\
+	pg_swap_pages	\
+	pg_trunc2del	\
 	pg_wal_blocks	\
 	pgmpc		\
-	receiver_raw
+	receiver_raw	\
+	scram_utils	\
+	wal_utils
 
 $(recurse)
 $(recurse_always)
