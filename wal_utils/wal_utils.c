@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 
 #include "access/timeline.h"
+#include "access/xlog.h"
 #include "access/xlog_internal.h"
 #include "catalog/pg_type.h"
 #include "funcapi.h"
@@ -394,8 +395,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 	 */
 
 	/* Begin tracking at the beginning of the next segment */
-	current_seg_lsn = origin_lsn + XLOG_SEG_SIZE;
-	current_seg_lsn -= current_seg_lsn % XLOG_SEG_SIZE;
+	current_seg_lsn = origin_lsn + wal_segment_size;
+	current_seg_lsn -= current_seg_lsn % wal_segment_size;
 	current_tli = origin_tli;
 
 	foreach(entry, entries)
@@ -408,8 +409,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 		while (current_seg_lsn >= history->begin &&
 			   current_seg_lsn < history->end)
 		{
-			XLByteToPrevSeg(current_seg_lsn, logSegNo);
-			XLogFileName(xlogfname, current_tli, logSegNo);
+			XLByteToPrevSeg(current_seg_lsn, logSegNo, wal_segment_size);
+			XLogFileName(xlogfname, current_tli, logSegNo, wal_segment_size);
 			nulls[0] = false;
 			values[0] = CStringGetTextDatum(xlogfname);
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
@@ -418,8 +419,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 			 * Add equivalent of one segment, and just track the beginning
 			 * of it.
 			 */
-			current_seg_lsn += XLOG_SEG_SIZE;
-			current_seg_lsn -= current_seg_lsn % XLOG_SEG_SIZE;
+			current_seg_lsn += wal_segment_size;
+			current_seg_lsn -= current_seg_lsn % wal_segment_size;
 		}
 	}
 
@@ -427,8 +428,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 	 * Add as well the last segment possible, this is needed to reach
 	 * consistency up to the target point.
 	 */
-	XLByteToPrevSeg(target_lsn, logSegNo);
-	XLogFileName(xlogfname, target_tli, logSegNo);
+	XLByteToPrevSeg(target_lsn, logSegNo, wal_segment_size);
+	XLogFileName(xlogfname, target_tli, logSegNo, wal_segment_size);
 	nulls[0] = false;
 	values[0] = CStringGetTextDatum(xlogfname);
 	tuplestore_putvalues(tupstore, tupdesc, values, nulls);
