@@ -11,12 +11,11 @@
  *-------------------------------------------------------------------------
  */
 
+#include "postgres.h"
+
 /* mpd stuff */
 #include "mpd/client.h"
-/* Calm down compiler as boolean type is defined on libmpdclient side too */
-#undef bool
 
-#include "postgres.h"
 #include "fmgr.h"
 #include "funcapi.h"
 #include "miscadmin.h"
@@ -24,7 +23,7 @@
 #include "access/htup.h"
 #include "access/htup_details.h"
 #include "access/tupdesc.h"
-#include "catalog/pg_type.h"
+#include "catalog/pg_type_d.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
 #include "utils/memutils.h"
