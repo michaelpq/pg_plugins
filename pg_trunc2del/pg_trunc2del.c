@@ -29,13 +29,16 @@ void	_PG_fini(void);
 static ProcessUtility_hook_type prev_utility_hook = NULL;
 
 static void
-trunc2del(Node *parsetree,
+trunc2del(PlannedStmt *pstmt,
 		  const char *queryString,
 		  ProcessUtilityContext context,
 		  ParamListInfo params,
+		  QueryEnvironment *queryEnv,
 		  DestReceiver *dest,
 		  char *completionTag)
 {
+	Node	*parsetree = pstmt->utilityStmt;
+
 	/*
 	 * Do custom processing for TRUNCATE. Note that this is not aimed at
 	 * doing much for TRUNCATE CASCADE and triggers that should fire here.
@@ -91,12 +94,12 @@ trunc2del(Node *parsetree,
 	 * or the in-core code path if the previous hook does not exist.
 	 */
 	if (prev_utility_hook)
-		(*prev_utility_hook) (parsetree, queryString,
-							  context, params,
+		(*prev_utility_hook) (pstmt, queryString,
+							  context, params, queryEnv,
 							  dest, completionTag);
 	 else
-		 standard_ProcessUtility(parsetree, queryString,
-								 context, params,
+		 standard_ProcessUtility(pstmt, queryString,
+								 context, params, queryEnv,
 								 dest, completionTag);
 }
 
