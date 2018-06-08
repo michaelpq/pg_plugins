@@ -8,6 +8,8 @@ be used as templates for more extensive work, like:
 - Logical decoding plug-ins
 - Custom logging formats
 - Containers
+- Hook examples with custom logs
+- Extensions
 - etc.
 
 Installation
