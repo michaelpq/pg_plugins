@@ -182,7 +182,7 @@ do_wal_parsing(void)
 	private.full_path = full_path;
 
 	/* Set the first record to look at */
-	XLogSegNoOffsetToRecPtr(segno, 0, first_record, WalSegSz);
+	XLogSegNoOffsetToRecPtr(segno, 0, WalSegSz, first_record);
 	xlogreader = XLogReaderAllocate(WalSegSz, XLogReadPageBlock, &private);
 	first_record = XLogFindNextRecord(xlogreader, first_record);
 
