@@ -70,6 +70,7 @@ kill_idle_build_query(StringInfoData *buf)
 			   "AS status, usename, datname, client_addr "
 			   "FROM pg_stat_activity "
 			   "WHERE now() - state_change > interval '%d s' AND "
+			   "state = 'idle' AND "
 			   "pid != pg_backend_pid();",
 					 kill_max_idle_time);
 }
