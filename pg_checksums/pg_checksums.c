@@ -11,23 +11,20 @@
  *------------------------------------------------------------------------
  */
 
-#define FRONTEND 1
-
-#include "postgres.h"
-#include "catalog/pg_control.h"
-#include "common/controldata_utils.h"
-#include "common/file_perm.h"
-#include "common/file_utils.h"
-#include "storage/bufpage.h"
-#include "storage/checksum.h"
-#include "storage/checksum_impl.h"
+#include "postgres_fe.h"
 
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
 
+#include "catalog/pg_control.h"
+#include "common/controldata_utils.h"
+#include "common/file_perm.h"
+#include "common/file_utils.h"
 #include "getopt_long.h"
-
+#include "storage/bufpage.h"
+#include "storage/checksum.h"
+#include "storage/checksum_impl.h"
 
 static int64 files = 0;
 static int64 blocks = 0;
@@ -44,6 +41,10 @@ typedef enum
 	PG_ACTION_ENABLE,
 	PG_ACTION_VERIFY
 } ChecksumAction;
+
+/* Filename components, taken from upstream's storage/fd.h */
+#define PG_TEMP_FILES_DIR "pgsql_tmp/"
+#define PG_TEMP_FILE_PREFIX "pgsql_tmp"
 
 static ChecksumAction action = PG_ACTION_NONE;
 static char	   *DataDir = NULL;
@@ -157,6 +158,19 @@ skipfile(char *fn)
 	for (f = skip; *f; f++)
 		if (strcmp(*f, fn) == 0)
 			return true;
+
+	/* Skip temporary files */
+	if (strncmp(fn,
+				PG_TEMP_FILE_PREFIX,
+				strlen(PG_TEMP_FILE_PREFIX)) == 0)
+		return true;
+
+	/* Skip temporary folders */
+	if (strncmp(fn,
+				PG_TEMP_FILES_DIR,
+				strlen(PG_TEMP_FILES_DIR)) == 0)
+		return true;
+
 	return false;
 }
 

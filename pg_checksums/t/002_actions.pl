@@ -36,6 +36,12 @@ $node->init;
 $node->start;
 my $pgdata = $node->data_dir;
 
+# There are temporary files and folders with dummy contents, which
+# should be ignored by the scan.
+append_to_file "$pgdata/global/pgsql_tmp_123", "foo";
+mkdir "$pgdata/global/pgsql_tmp";
+append_to_file "$pgdata/global/pgsql_tmp/1.1", "foo";
+
 # Error, server must be shut down cleanly.
 command_fails(['pg_checksums', '--action', 'verify', '-d', $pgdata],
 	      "pg_checksums requires server to be cleanly stopped");
