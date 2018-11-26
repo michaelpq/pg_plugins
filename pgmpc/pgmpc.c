@@ -202,7 +202,7 @@ pgmpc_init_setof(FunctionCallInfo fcinfo,
 	oldcontext = MemoryContextSwitchTo(per_query_ctx);
 
 	/* Build tuple descriptor */
-	*tupdesc = CreateTemplateTupleDesc(argnum, false);
+	*tupdesc = CreateTemplateTupleDesc(argnum);
 	for (i = 0; i < argnum; i++)
 		TupleDescInitEntry(*tupdesc, (AttrNumber) i + 1, argnames[i],
 						   argtypes[i], -1, 0);

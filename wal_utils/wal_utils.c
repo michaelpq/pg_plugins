@@ -277,7 +277,7 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 
 	per_query_ctx = rsinfo->econtext->ecxt_per_query_memory;
 	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-	tupdesc = CreateTemplateTupleDesc(1, false);
+	tupdesc = CreateTemplateTupleDesc(1);
 
 	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "wal_segs", TEXTOID, -1, 0);
 
