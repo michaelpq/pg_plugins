@@ -96,18 +96,14 @@ kill_idle_main(Datum main_arg)
 
 	while (!got_sigterm)
 	{
-		int rc, ret, i;
+		int ret, i;
 
 		/* Wait necessary amount of time */
-		rc = WaitLatch(&MyProc->procLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   kill_max_idle_time * 1000L,
-					   PG_WAIT_EXTENSION);
+		WaitLatch(&MyProc->procLatch,
+				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
+				  kill_max_idle_time * 1000L,
+				  PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
-
-		/* Emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
-			proc_exit(1);
 
 		/* Process signals */
 		if (got_sighup)

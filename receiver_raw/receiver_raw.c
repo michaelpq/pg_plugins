@@ -256,7 +256,7 @@ receiver_raw_main(Datum main_arg)
 
 		/* Wait necessary amount of time */
 		rc = WaitLatch(&MyProc->procLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
+					   WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
 					   receiver_idle_time * 1L,
 					   PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
@@ -276,10 +276,6 @@ receiver_raw_main(Datum main_arg)
 			ereport(LOG, (errmsg("%s: processed SIGTERM", worker_name)));
 			proc_exit(0);
 		}
-
-		/* Emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
-			proc_exit(1);
 
 		/* Some cleanup */
 		if (copybuf != NULL)

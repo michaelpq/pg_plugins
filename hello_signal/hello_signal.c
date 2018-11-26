@@ -65,18 +65,12 @@ hello_main(Datum main_arg)
 
 	while (true)
 	{
-		int rc;
-
 		/* Wait 1s */
-		rc = WaitLatch(MyLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   1000L,
-					   PG_WAIT_EXTENSION);
+		WaitLatch(MyLatch,
+				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
+				  1000L,
+				  PG_WAIT_EXTENSION);
 		ResetLatch(MyLatch);
-
-		/* Emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
-			proc_exit(1);
 
 		/* Process signals */
 		if (got_sighup)

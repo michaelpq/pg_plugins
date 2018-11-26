@@ -61,18 +61,12 @@ hello_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 	while (!got_sigterm)
 	{
-		int rc;
-
 		/* Wait 10s */
-		rc = WaitLatch(&MyProc->procLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   10000L,
-					   PG_WAIT_EXTENSION);
+		WaitLatch(&MyProc->procLatch,
+				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
+				  10000L,
+				  PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
-
-		/* Emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
-			proc_exit(1);
 
 		elog(LOG, "Hello World!"); /* Say Hello to the world */
 	}

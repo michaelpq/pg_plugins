@@ -137,22 +137,15 @@ hello_notify_main(Datum main_arg)
 	/* Main processing loop */
 	while (!got_sigterm)
 	{
-		int	ret, rc;
+		int	ret;
 		bool process_notifies;
 
 		/* Take a nap... */
-		rc = WaitLatch(&MyProc->procLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   notify_nap_time * 1000,
-					   PG_WAIT_EXTENSION);
+		WaitLatch(&MyProc->procLatch,
+				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
+				  notify_nap_time * 1000,
+				  PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
-
-		/* Emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
-		{
-			elog(LOG, "hello_notify: WL_POSTMASTER_DEATH");
-			proc_exit(1);
-		}
 
 		/* Handle signal SIGHUP */
 		if (got_sighup)

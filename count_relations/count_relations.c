@@ -74,7 +74,6 @@ count_relations_main(Datum main_arg)
 	while (!got_sigterm)
 	{
 		int		ret;
-		int		rc;
 		StringInfoData	buf;
 
 		/*
@@ -83,15 +82,11 @@ count_relations_main(Datum main_arg)
 		 * necessary, but is awakened if postmaster dies.  That way the
 		 * background process goes away immediately in an emergency.
 		 */
-		rc = WaitLatch(&MyProc->procLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   1000L,
-					   PG_WAIT_EXTENSION);
+		WaitLatch(&MyProc->procLatch,
+				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
+				  1000L,
+				  PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
-
-		/* emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
-			proc_exit(1);
 
 		StartTransactionCommand();
 		SPI_connect();
