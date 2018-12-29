@@ -2,7 +2,9 @@
 -- Tests for PL/pgSQL instrumentation callbacks.
 --
 LOAD 'plpgsql_cb';
-CREATE OR REPLACE FUNCTION public.f1()
+-- Functions
+-- One level of depth
+CREATE OR REPLACE FUNCTION func_1()
 RETURNS void
 LANGUAGE plpgsql
 AS $$
@@ -12,7 +14,8 @@ BEGIN
   RETURN;
 END;
 $$;
-CREATE OR REPLACE FUNCTION public.f2()
+-- Two levels of depth
+CREATE OR REPLACE FUNCTION func_2()
 RETURNS void
 LANGUAGE plpgsql
 AS $$
@@ -24,31 +27,137 @@ BEGIN
   END;
 END
 $$;
-SELECT f1();
-NOTICE:  function setup: "f1()"
-NOTICE:  function beg: "f1()"
+-- Check footprint
+SELECT func_1();
+NOTICE:  function setup: "func_1()"
+NOTICE:  function beg: "func_1()"
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement end - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
-NOTICE:  function end: "f1()"
- f1 
-----
+NOTICE:  function end: "func_1()"
+ func_1 
+--------
  
 (1 row)
 
-SELECT f2();
-NOTICE:  function setup: "f2()"
-NOTICE:  function beg: "f2()"
+SELECT func_2();
+NOTICE:  function setup: "func_2()"
+NOTICE:  function beg: "func_2()"
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
 NOTICE:  statement beg - ln: 6
 NOTICE:  statement end - ln: 6
 NOTICE:  statement end - ln: 4
-NOTICE:  function end: "f2()"
- f2 
-----
+NOTICE:  function end: "func_2()"
+ func_2 
+--------
  
 (1 row)
 
+DROP FUNCTION func_1();
+DROP FUNCTION func_2();
+-- Event triggers
+-- One level of depth
+CREATE OR REPLACE FUNCTION event_1()
+RETURNS event_trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE x int;
+BEGIN
+  x := 2;
+  RETURN;
+END;
+$$;
+-- Two levels of depth
+CREATE OR REPLACE FUNCTION event_2()
+RETURNS event_trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE x int;
+BEGIN
+  BEGIN
+    x := 3;
+    RETURN;
+  END;
+END
+$$;
+CREATE EVENT TRIGGER create_table_event ON ddl_command_start
+  WHEN TAG IN ('CREATE TABLE') EXECUTE PROCEDURE event_1();
+CREATE EVENT TRIGGER drop_table_event ON ddl_command_start
+  WHEN TAG IN ('DROP TABLE') EXECUTE PROCEDURE event_2();
+-- Check footprint of event trigger execution
+CREATE TABLE event_trigger_test (a int);
+NOTICE:  function setup: "event_1()"
+NOTICE:  function beg: "event_1()"
+NOTICE:  statement beg - ln: 4
+NOTICE:  statement end - ln: 4
+NOTICE:  statement beg - ln: 5
+NOTICE:  statement end - ln: 5
+NOTICE:  function end: "event_1()"
+DROP TABLE event_trigger_test;
+NOTICE:  function setup: "event_2()"
+NOTICE:  function beg: "event_2()"
+NOTICE:  statement beg - ln: 4
+NOTICE:  statement beg - ln: 5
+NOTICE:  statement end - ln: 5
+NOTICE:  statement beg - ln: 6
+NOTICE:  statement end - ln: 6
+NOTICE:  statement end - ln: 4
+NOTICE:  function end: "event_2()"
+DROP EVENT TRIGGER create_table_event;
+DROP EVENT TRIGGER drop_table_event;
+-- Triggers
+-- One level of depth
+CREATE FUNCTION trigger_1()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE x int;
+BEGIN
+  x := 2;
+  RETURN NEW;
+END;
+$$;
+-- Two levels of depth
+CREATE FUNCTION trigger_2()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE x int;
+BEGIN
+  BEGIN
+    x := 3;
+    RETURN OLD;
+  END;
+END
+$$;
+CREATE TABLE tab_trigger (a int);
+CREATE TRIGGER trigger_insert_1
+  BEFORE INSERT ON tab_trigger
+  FOR EACH ROW EXECUTE PROCEDURE trigger_1();
+CREATE TRIGGER trigger_insert_2
+  AFTER INSERT ON tab_trigger
+  FOR EACH ROW EXECUTE PROCEDURE trigger_2();
+-- Check footprint of trigger execution
+INSERT INTO tab_trigger VALUES (1);
+NOTICE:  function setup: "trigger_1()"
+NOTICE:  function beg: "trigger_1()"
+NOTICE:  statement beg - ln: 4
+NOTICE:  statement end - ln: 4
+NOTICE:  statement beg - ln: 5
+NOTICE:  statement end - ln: 5
+NOTICE:  function end: "trigger_1()"
+NOTICE:  function setup: "trigger_2()"
+NOTICE:  function beg: "trigger_2()"
+NOTICE:  statement beg - ln: 4
+NOTICE:  statement beg - ln: 5
+NOTICE:  statement end - ln: 5
+NOTICE:  statement beg - ln: 6
+NOTICE:  statement end - ln: 6
+NOTICE:  statement end - ln: 4
+NOTICE:  function end: "trigger_2()"
+DROP TABLE tab_trigger;
+DROP FUNCTION trigger_1();
+DROP FUNCTION trigger_2();
