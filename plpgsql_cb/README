@@ -2,7 +2,7 @@ plpgsql_cb
 ==========
 
 This module is a PostgreSQL library which can be loaded at session level
-of loaded directly with shared_preload_libraries in postgresql.conf making
-use of PL/pgSQL plugin structure.  This does nothing fancy, using simple
-logic to test the moments when the different callbacks are called for
-a test of functions in the various regression tests.
+or loaded directly with shared_preload_libraries in postgresql.conf to
+make use of PL/pgSQL plugin structure.  This does nothing fancy, using
+a simple logic to test the moments when the different callbacks are called
+using the given regression test set.
