@@ -2,7 +2,7 @@
  *
  * passwordcheck_extra.c
  *
- * Copyright (c) 2009-2018, PostgreSQL Global Development Group
+ * Copyright (c) 2009-2019, PostgreSQL Global Development Group
  *
  * Author: Laurenz Albe <laurenz.albe@wien.gv.at>
  *

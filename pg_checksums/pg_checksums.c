@@ -3,7 +3,7 @@
  * pg_checksums.c
  *		Handle page-level checksums in an offline cluster
  *
- *	Copyright (c) 2010-2018, PostgreSQL Global Development Group
+ *	Copyright (c) 2010-2019, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		pg_checksums/pg_checksums.c

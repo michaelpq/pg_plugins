@@ -3,7 +3,7 @@
  * scram_utils.c
  *		Set of functions for SCRAM authentication
  *
- * Copyright (c) 1996-2018, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2019, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  scram_utils/scram_utils.c

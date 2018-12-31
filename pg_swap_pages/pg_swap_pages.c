@@ -3,7 +3,7 @@
  * pg_swap_pages.c
  *		Extension switching pages of a relation via WAL replay.
  *
- * Copyright (c) 1996-2018, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2019, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_swap_pages/pg_swap_pages.c
