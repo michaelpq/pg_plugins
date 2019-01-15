@@ -13,6 +13,7 @@
 
 #include "postgres.h"
 
+#include "access/heapam.h"
 #include "executor/spi.h"
 #include "fmgr.h"
 #include "tcop/utility.h"
