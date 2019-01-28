@@ -31,10 +31,12 @@ $$;
 SELECT func_1();
 NOTICE:  function setup: "func_1()"
 NOTICE:  function beg: "func_1()"
+NOTICE:  statement beg - ln: 3
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement end - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
+NOTICE:  statement end - ln: 3
 NOTICE:  function end: "func_1()"
  func_1 
 --------
@@ -44,12 +46,14 @@ NOTICE:  function end: "func_1()"
 SELECT func_2();
 NOTICE:  function setup: "func_2()"
 NOTICE:  function beg: "func_2()"
+NOTICE:  statement beg - ln: 3
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
 NOTICE:  statement beg - ln: 6
 NOTICE:  statement end - ln: 6
 NOTICE:  statement end - ln: 4
+NOTICE:  statement end - ln: 3
 NOTICE:  function end: "func_2()"
  func_2 
 --------
@@ -91,20 +95,24 @@ CREATE EVENT TRIGGER drop_table_event ON ddl_command_start
 CREATE TABLE event_trigger_test (a int);
 NOTICE:  function setup: "event_1()"
 NOTICE:  function beg: "event_1()"
+NOTICE:  statement beg - ln: 3
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement end - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
+NOTICE:  statement end - ln: 3
 NOTICE:  function end: "event_1()"
 DROP TABLE event_trigger_test;
 NOTICE:  function setup: "event_2()"
 NOTICE:  function beg: "event_2()"
+NOTICE:  statement beg - ln: 3
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
 NOTICE:  statement beg - ln: 6
 NOTICE:  statement end - ln: 6
 NOTICE:  statement end - ln: 4
+NOTICE:  statement end - ln: 3
 NOTICE:  function end: "event_2()"
 DROP EVENT TRIGGER create_table_event;
 DROP EVENT TRIGGER drop_table_event;
@@ -144,19 +152,23 @@ CREATE TRIGGER trigger_insert_2
 INSERT INTO tab_trigger VALUES (1);
 NOTICE:  function setup: "trigger_1()"
 NOTICE:  function beg: "trigger_1()"
+NOTICE:  statement beg - ln: 3
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement end - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
+NOTICE:  statement end - ln: 3
 NOTICE:  function end: "trigger_1()"
 NOTICE:  function setup: "trigger_2()"
 NOTICE:  function beg: "trigger_2()"
+NOTICE:  statement beg - ln: 3
 NOTICE:  statement beg - ln: 4
 NOTICE:  statement beg - ln: 5
 NOTICE:  statement end - ln: 5
 NOTICE:  statement beg - ln: 6
 NOTICE:  statement end - ln: 6
 NOTICE:  statement end - ln: 4
+NOTICE:  statement end - ln: 3
 NOTICE:  function end: "trigger_2()"
 DROP TABLE tab_trigger;
 DROP FUNCTION trigger_1();
