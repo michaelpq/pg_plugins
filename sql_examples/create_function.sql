@@ -10,3 +10,15 @@ BEGIN
   RETURN res;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
+
+-- Create many tables at once
+CREATE OR REPLACE FUNCTION create_tables(num_tables int)
+  RETURNS VOID AS
+  $func$
+  BEGIN
+  FOR i IN 1..num_tables LOOP
+    EXECUTE format('
+      CREATE TABLE IF NOT EXISTS %I (id int)', 't_' || i);
+  END LOOP;
+END
+$func$ LANGUAGE plpgsql;
