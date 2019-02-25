@@ -22,3 +22,14 @@ CREATE OR REPLACE FUNCTION create_tables(num_tables int)
   END LOOP;
 END
 $func$ LANGUAGE plpgsql;
+
+-- Lock many tables at once
+CREATE OR REPLACE FUNCTION lock_tables(num_tables int)
+  RETURNS VOID AS
+  $func$
+  BEGIN
+  FOR i IN 1..num_tables LOOP
+    EXECUTE format('LOCK t_' || i || ' IN EXCLUSIVE MODE');
+  END LOOP;
+END
+$func$ LANGUAGE plpgsql;
