@@ -30,5 +30,10 @@ SUBDIRS = blackhole	\
 	scram_utils	\
 	wal_utils
 
+# This can only be compiled on Linux.
+ifeq ($(PORTNAME), linux)
+SUBDIRS += pg_mark_glibc
+endif
+
 $(recurse)
 $(recurse_always)
