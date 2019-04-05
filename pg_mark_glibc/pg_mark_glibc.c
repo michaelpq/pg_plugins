@@ -123,7 +123,7 @@ main(int argc, char **argv)
 		}
 	}
 
-    /* Complain if any arguments remain */
+	/* Complain if any arguments remain */
 	if (optind < argc)
 	{
 		fprintf(stderr, _("%s: too many command-line arguments (first is \"%s\")\n"),
