@@ -1,0 +1,23 @@
+pg_mark_glibc
+=============
+
+pg_mark_glibc is a binary utility able to register in a given data folder
+the version of glibc currently in use by the system, which is useful for
+debugging and checking after a system upgrade if the version of glibc in
+use is still compatible with the one the data folder has been initialized
+with.
+
+Installation
+------------
+
+Compiling can be done with "make".  In addition, pg_config must be in $PATH.
+
+Usage
+-----
+
+pg_mark_glibc is rather simple to use, requiring only a data folder as
+argument.  If nothing is specified, the environment variable PGDATA will
+be used.
+
+    pg_mark_glibc -D my_data_folder
+
