@@ -16,7 +16,6 @@ SUBDIRS = blackhole	\
 	kill_idle	\
 	mcxtalloc_test	\
 	passwordcheck_extra	\
-	pg_checksums	\
 	pg_fix_truncation	\
 	pg_panic	\
 	pg_rep_state	\
