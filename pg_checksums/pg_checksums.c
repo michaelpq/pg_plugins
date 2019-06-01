@@ -81,7 +81,7 @@ static const char *skip[] = {
 static void
 updateControlFile(void)
 {
-    char        buffer[PG_CONTROL_FILE_SIZE];
+	char		buffer[PG_CONTROL_FILE_SIZE];
 	char		path[MAXPGPATH];
 	int			fd;
 
@@ -97,9 +97,9 @@ updateControlFile(void)
 		ControlFile->data_checksum_version = 0;
 
 	/*
-     * For good luck, apply the same static assertions as in backend's
-     * WriteControlFile().
-     */
+	 * For good luck, apply the same static assertions as in backend's
+	 * WriteControlFile().
+	 */
 	StaticAssertStmt(sizeof(ControlFileData) <= PG_CONTROL_MAX_SAFE_SIZE,
 					 "pg_control is too large for atomic disk writes");
 	StaticAssertStmt(sizeof(ControlFileData) <= PG_CONTROL_FILE_SIZE,
@@ -113,10 +113,10 @@ updateControlFile(void)
 	FIN_CRC32C(ControlFile->crc);
 
 	/*
-     * Write out PG_CONTROL_FILE_SIZE bytes into pg_control by zero-padding
-     * the excess over sizeof(ControlFileData), to avoid premature EOF related
-     * errors when reading it.
-     */
+	 * Write out PG_CONTROL_FILE_SIZE bytes into pg_control by zero-padding
+	 * the excess over sizeof(ControlFileData), to avoid premature EOF related
+	 * errors when reading it.
+	 */
 	memset(buffer, 0, PG_CONTROL_FILE_SIZE);
 	memcpy(buffer, ControlFile, sizeof(ControlFileData));
 

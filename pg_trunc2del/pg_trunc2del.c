@@ -114,5 +114,5 @@ _PG_init(void)
 void
 _PG_fini(void)
 {
-    ProcessUtility_hook = prev_utility_hook;
+	ProcessUtility_hook = prev_utility_hook;
 }

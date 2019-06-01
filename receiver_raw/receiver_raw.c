@@ -234,8 +234,9 @@ receiver_raw_main(Datum main_arg)
 	query = createPQExpBuffer();
 
 	/* Start logical replication at specified position */
-	appendPQExpBuffer(query, "START_REPLICATION SLOT \"%s\" LOGICAL 0/0 "
-					         "(\"include_transaction\" 'off')",
+	appendPQExpBuffer(query,
+					  "START_REPLICATION SLOT \"%s\" LOGICAL 0/0 "
+					  "(\"include_transaction\" 'off')",
 					  receiver_slot);
 	res = PQexec(conn, query->data);
 	if (PQresultStatus(res) != PGRES_COPY_BOTH)
@@ -559,7 +560,7 @@ receiver_raw_load_params(void)
 							0, NULL, NULL, NULL);
 
 	/* Synchronous mode */
-    DefineCustomBoolVariable("receiver_raw.sync_mode",
+	DefineCustomBoolVariable("receiver_raw.sync_mode",
 							 "Enforce feedback to server.",
 							 NULL,
 							 &receiver_sync_mode,
@@ -583,7 +584,7 @@ _PG_init(void)
 	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
 		BGWORKER_BACKEND_DATABASE_CONNECTION;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;
-    snprintf(worker.bgw_library_name, BGW_MAXLEN, "receiver_raw");
+	snprintf(worker.bgw_library_name, BGW_MAXLEN, "receiver_raw");
 	snprintf(worker.bgw_function_name, BGW_MAXLEN, "receiver_raw_main");
 	snprintf(worker.bgw_name, BGW_MAXLEN, "%s", worker_name);
 	/* Wait 10 seconds for restart before crash */

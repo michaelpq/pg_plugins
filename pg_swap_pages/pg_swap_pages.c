@@ -51,12 +51,12 @@ pg_swap_pages(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("invalid block number 2")));
 
-    if (blkno1 >= RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM))
+	if (blkno1 >= RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("block number 1 %u is out of range for relation \"%s\"",
 						blkno1, RelationGetRelationName(rel))));
-    if (blkno2 >= RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM))
+	if (blkno2 >= RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM))
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("block number 2 %u is out of range for relation \"%s\"",

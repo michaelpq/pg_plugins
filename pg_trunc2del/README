@@ -12,4 +12,3 @@ acceptable:
 Not really recommended for production purposes, this is aimed at
 demonstrating how to dynamically switch SQL queries sent to PostgreSQL
 transparently.
-

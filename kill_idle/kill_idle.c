@@ -198,17 +198,17 @@ kill_idle_load_params(void)
 	 * candidates for execution are scanned at the same time interbal.
 	 */
 	DefineCustomIntVariable("kill_idle.max_idle_time",
-                            "Maximum time allowed for backends to be idle (s).",
-                            "Default of 5s, max of 3600s",
-                            &kill_max_idle_time,
-                            5,
-                            1,
-                            3600,
-                            PGC_SIGHUP,
-                            0,
-                            NULL,
-                            NULL,
-                            NULL);
+							"Maximum time allowed for backends to be idle (s).",
+							"Default of 5s, max of 3600s",
+							&kill_max_idle_time,
+							5,
+							1,
+							3600,
+							PGC_SIGHUP,
+							0,
+							NULL,
+							NULL,
+							NULL);
 }
 
 /*

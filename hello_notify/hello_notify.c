@@ -211,21 +211,21 @@ hello_notify_load_params(void)
 	 * needs to remain constant after worker startup.
 	 */
 	DefineCustomStringVariable("hello_notify.database",
-	                           "Database where NOTIFY is sent.",
-	                           "Default value is \"postgres\".",
-	                           &notify_database,
-	                           "postgres",
-	                           PGC_POSTMASTER,
-	                           0, NULL, NULL, NULL);
+							   "Database where NOTIFY is sent.",
+							   "Default value is \"postgres\".",
+							   &notify_database,
+							   "postgres",
+							   PGC_POSTMASTER,
+							   0, NULL, NULL, NULL);
 
 	/* Channel name used for NOTIFY messages */
 	DefineCustomStringVariable("hello_notify.channel_name",
-	                           "Channel name of NOTIFY requests.",
-	                           "Default value is the worker name.",
-	                           &notify_channel,
-	                           hello_notify_name,
-	                           PGC_SIGHUP,
-	                           0, NULL, NULL, NULL);
+							   "Channel name of NOTIFY requests.",
+							   "Default value is the worker name.",
+							   &notify_channel,
+							   hello_notify_name,
+							   PGC_SIGHUP,
+							   0, NULL, NULL, NULL);
 
 	/* Nap time between two updates */
 	DefineCustomIntVariable("hello_notify.nap_time",

@@ -34,7 +34,7 @@ PG_FUNCTION_INFO_V1(pg_truncate_fsm);
 Datum
 pg_truncate_fsm(PG_FUNCTION_ARGS)
 {
-    Oid			relid = PG_GETARG_OID(0);
+	Oid			relid = PG_GETARG_OID(0);
 	Relation	rel;
 	BlockNumber	tgt_blk;
 

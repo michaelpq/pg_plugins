@@ -20,4 +20,3 @@ argument.  If nothing is specified, the environment variable PGDATA will
 be used.
 
     pg_mark_glibc -D my_data_folder
-
