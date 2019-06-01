@@ -1,0 +1,6 @@
+*		whitespace=space-before-tab,trailing-space
+*.[chly]	whitespace=space-before-tab,trailing-space,indent-with-non-tab,tabwidth=4
+*.pl		whitespace=space-before-tab,trailing-space,tabwidth=4
+
+# Test output files that contain extra whitespace
+*.out		-whitespace
