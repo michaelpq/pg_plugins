@@ -5,6 +5,7 @@ PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
 SUBDIRS = blackhole	\
+	blackhole_am	\
 	compress_test	\
 	count_relations	\
 	decoder_raw	\

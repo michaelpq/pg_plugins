@@ -1,0 +1,25 @@
+CREATE EXTENSION blackhole_am;
+CREATE TABLE blackhole_tab (a int) USING blackhole_am;
+SELECT * FROM blackhole_tab;
+ a 
+---
+(0 rows)
+
+INSERT INTO blackhole_tab VALUES (1);
+SELECT * FROM blackhole_tab;
+ a 
+---
+(0 rows)
+
+UPDATE blackhole_tab SET a = 0 WHERE a = 1;
+SELECT * FROM blackhole_tab;
+ a 
+---
+(0 rows)
+
+DELETE FROM blackhole_tab WHERE a = 1;
+SELECT * FROM blackhole_tab;
+ a 
+---
+(0 rows)
+

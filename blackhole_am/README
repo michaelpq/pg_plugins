@@ -1,0 +1,9 @@
+blackhole_am
+============
+
+This module is a PostgreSQL extension template wanted as minimalistic
+as possible that can be used for the development of other table access
+methods, which provides documentation.
+
+By design, any data sent to a table using this access method is sent to
+the void, and disappears purely and simply.
