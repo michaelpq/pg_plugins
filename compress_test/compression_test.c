@@ -216,7 +216,7 @@ decompress_data(PG_FUNCTION_ARGS)
 	uncompress_buffer = palloc(raw_len);
 	if (pglz_decompress(VARDATA(compress_data),
 						VARSIZE(compress_data) - VARHDRSZ,
-						uncompress_buffer, raw_len) < 0)
+						uncompress_buffer, raw_len, true) < 0)
 		ereport(ERROR, (errmsg("Decompression failed...")));
 
 	/* Build result */
