@@ -1,0 +1,6 @@
+overflow
+========
+
+This module is a PostgreSQL extension including a set of functions
+to test several types of overflow behaviors for low-level facilities
+in the backend code.

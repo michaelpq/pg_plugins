@@ -1,0 +1,5 @@
+# blackhole extension
+comment = 'Overflow checks'
+default_version = '1.0'
+module_pathname = '$libdir/overflow'
+relocatable = true
