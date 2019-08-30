@@ -1,12 +1,12 @@
 /*-------------------------------------------------------------------------
  *
- * blackhole.c
- *		Set of functions for a minimal extension template
+ * overflow.c
+ *		Overflow checks for signed integers
  *
  * Copyright (c) 1996-2019, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
- *		  blackhole/blackhole.c
+ *		  overflow/overflow.c
  *
  *-------------------------------------------------------------------------
  */

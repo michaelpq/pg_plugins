@@ -16,6 +16,7 @@ SUBDIRS = blackhole	\
 	jsonlog		\
 	kill_idle	\
 	mcxtalloc_test	\
+	overflow	\
 	passwordcheck_extra	\
 	pg_fix_truncation	\
 	pg_panic	\
