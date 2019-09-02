@@ -35,3 +35,36 @@ SELECT pg_mul_int64_overflow(9223372036854775807::bigint, 1::bigint);
 SELECT pg_mul_int64_overflow((-9223372036854775808)::bigint, 1::bigint);
 SELECT pg_mul_int64_overflow(9223372036854775807::bigint, (-1)::bigint);
 SELECT pg_mul_int64_overflow((-9223372036854775808)::bigint, (-1)::bigint);
+
+-- unsigned smallint overflow checks
+-- maximum uint16 65535 => -1 as signed
+SELECT pg_add_uint16_overflow((-1)::smallint, 0::smallint);
+SELECT pg_add_uint16_overflow((-1)::smallint, 1::smallint);
+SELECT pg_sub_uint16_overflow(0::smallint, 0::smallint);
+SELECT pg_sub_uint16_overflow(0::smallint, 1::smallint);
+SELECT pg_mul_uint16_overflow((-1)::smallint, 1::smallint);
+SELECT pg_mul_uint16_overflow(0::smallint, 1::smallint);
+SELECT pg_mul_uint16_overflow((-1)::smallint, (-1)::smallint);
+SELECT pg_mul_uint16_overflow((0)::smallint, (-1)::smallint);
+
+-- unsigned int overflow checks
+-- maximum uint32 4294967295 => -1
+SELECT pg_add_uint32_overflow(-1, 0);
+SELECT pg_add_uint32_overflow(-1, 1);
+SELECT pg_sub_uint32_overflow(0, 0);
+SELECT pg_sub_uint32_overflow(0, 1);
+SELECT pg_mul_uint32_overflow(-1, 1);
+SELECT pg_mul_uint32_overflow(0, 1);
+SELECT pg_mul_uint32_overflow(-1, -1);
+SELECT pg_mul_uint32_overflow(0, -1);
+
+-- unsigned bigint overflow checks
+-- maximum uint64 18446744073709551615 => -1
+SELECT pg_add_uint64_overflow((-1)::bigint, 0::bigint);
+SELECT pg_add_uint64_overflow((-1)::bigint, 1::bigint);
+SELECT pg_sub_uint64_overflow(0::bigint, 0::bigint);
+SELECT pg_sub_uint64_overflow(0::bigint, 1::bigint);
+SELECT pg_mul_uint64_overflow((-1)::bigint, 1::bigint);
+SELECT pg_mul_uint64_overflow(0::bigint, 1::bigint);
+SELECT pg_mul_uint64_overflow((-1)::bigint, (-1)::bigint);
+SELECT pg_mul_uint64_overflow((0)::bigint, (-1)::bigint);

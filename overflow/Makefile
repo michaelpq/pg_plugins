@@ -1,4 +1,5 @@
-MODULES = overflow
+MODULE_big = overflow
+OBJS = int.o overflow.o uint.o $(WIN32RES)
 
 EXTENSION = overflow
 DATA = overflow--1.0.sql
