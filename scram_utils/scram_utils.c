@@ -93,13 +93,13 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 		elog(ERROR, "Failed to generate random salt");
 
 	/* Build verifier */
-	verifier = scram_build_verifier(saltbuf, saltlen, iterations, password);
+	verifier = scram_build_secret(saltbuf, saltlen, iterations, password);
 
 	if (prep_password)
 		pfree(prep_password);
 
 	/* Verifier is built, so update pg_authid with it */
-	rel = heap_open(AuthIdRelationId, RowExclusiveLock);
+	rel = table_open(AuthIdRelationId, RowExclusiveLock);
 
 	oldtuple = SearchSysCache1(AUTHNAME, CStringGetDatum(username));
 	if (!HeapTupleIsValid(oldtuple))
@@ -124,7 +124,7 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 	/*
 	 * Close pg_authid, but keep lock till commit.
 	 */
-	heap_close(rel, NoLock);
+	table_close(rel, NoLock);
 
 	PG_RETURN_NULL();
 }
