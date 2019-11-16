@@ -40,7 +40,7 @@ typedef struct XLogReadBlockPrivate
 static int XLogReadPageBlock(XLogReaderState *xlogreader,
 							 XLogRecPtr targetPagePtr,
 							 int reqLen, XLogRecPtr targetRecPtr,
-							 char *readBuf, TimeLineID *pageTLI);
+							 char *readBuf);
 
 static void
 usage(const char *progname)
@@ -88,8 +88,7 @@ split_path(const char *path, char **dir, char **fname)
 /* XLogreader callback function, to read a WAL page */
 static int
 XLogReadPageBlock(XLogReaderState *xlogreader, XLogRecPtr targetPagePtr,
-				  int reqLen, XLogRecPtr targetRecPtr, char *readBuf,
-				  TimeLineID *pageTLI)
+				  int reqLen, XLogRecPtr targetRecPtr, char *readBuf)
 {
 	XLogReadBlockPrivate *private =
 		(XLogReadBlockPrivate *) xlogreader->private_data;
@@ -183,7 +182,8 @@ do_wal_parsing(void)
 
 	/* Set the first record to look at */
 	XLogSegNoOffsetToRecPtr(segno, 0, WalSegSz, first_record);
-	xlogreader = XLogReaderAllocate(WalSegSz, XLogReadPageBlock, &private);
+	xlogreader = XLogReaderAllocate(WalSegSz, NULL, XLogReadPageBlock,
+									&private);
 	first_record = XLogFindNextRecord(xlogreader, first_record);
 
 	/* Loop through all the records */
