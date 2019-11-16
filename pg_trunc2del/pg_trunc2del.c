@@ -62,7 +62,7 @@ trunc2del(PlannedStmt *pstmt,
 			 * run switch. As we are faking a TRUNCATE, it is as well important
 			 * to take a exclusive lock on the relation operated on.
 			 */
-			rel = heap_openrv(rv, AccessExclusiveLock);
+			rel = table_openrv(rv, AccessExclusiveLock);
 
 			SPI_connect();
 			initStringInfo(&buf);
@@ -83,7 +83,7 @@ trunc2del(PlannedStmt *pstmt,
 			SPI_finish();
 
 			/* keep lock until the end of transaction */
-			heap_close(rel, NoLock);
+			table_close(rel, NoLock);
 			return;
 		}
 		default:
