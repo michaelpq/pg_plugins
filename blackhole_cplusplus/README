@@ -1,0 +1,6 @@
+blackhole_cplusplus
+===================
+
+This module is a PostgreSQL extension template wanted as minimalistic
+as possible that can be used for other extension development in C++ as
+it has all the necessary basic infrastructure for a module development.

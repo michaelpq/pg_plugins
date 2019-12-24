@@ -1,0 +1,5 @@
+# blackhole C++ extension
+comment = 'Minimal Extension Template in C++'
+default_version = '1.0'
+module_pathname = '$libdir/blackhole_cplusplus'
+relocatable = true
