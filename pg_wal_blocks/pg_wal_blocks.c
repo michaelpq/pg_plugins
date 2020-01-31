@@ -186,16 +186,14 @@ do_wal_parsing(void)
 									&private);
 	first_record = XLogFindNextRecord(xlogreader, first_record);
 
+	XLogBeginRead(xlogreader, first_record);
 	/* Loop through all the records */
 	do
 	{
 		/* Move on to next record */
-		record = XLogReadRecord(xlogreader, first_record, &errormsg);
+		record = XLogReadRecord(xlogreader, &errormsg);
 		if (errormsg)
 			fprintf(stderr, "error reading xlog record: %s\n", errormsg);
-
-		/* after reading the first record, continue at next one */
-		first_record = InvalidXLogRecPtr;
 
 		/* extract block information for this record */
 		extract_block_info(xlogreader);
