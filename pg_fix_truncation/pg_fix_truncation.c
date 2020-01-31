@@ -69,7 +69,7 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 		XLogInsert(RM_SMGR_ID, XLOG_SMGR_TRUNCATE | XLR_SPECIAL_REL_UPDATE);
 	}
 
-	FreeSpaceMapTruncateRel(rel, tgt_blk);
+	FreeSpaceMapPrepareTruncateRel(rel, tgt_blk);
 
 	/*
 	 * Release the lock right away, and not at commit time.
