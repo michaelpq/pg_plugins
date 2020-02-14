@@ -4,7 +4,7 @@
  *		Logical decoding output plugin generating SQL queries based
  *		on things decoded.
  *
- * Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2020, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  decoder_raw/decoder_raw.c
