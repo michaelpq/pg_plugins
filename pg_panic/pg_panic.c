@@ -4,7 +4,7 @@
  *		Kick a random PANIC at server level to test robustness of an
  *		installation.
  *
- * Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2020, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_panic/pg_panic.c
