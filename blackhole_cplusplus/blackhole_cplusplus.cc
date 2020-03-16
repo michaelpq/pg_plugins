@@ -28,10 +28,14 @@ Datum
 blackhole_cplusplus(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_NULL();
+
+	StaticAssertStmt(true, "static assert test");
+	StaticAssertExpr(true, "expression assert test");
 }
+
+/* declaration out of file scope */
+StaticAssertDecl(true, "declaration assert test");
 
 #ifdef __cplusplus
 }
 #endif
-
-/* This space can be used for C++ code */
