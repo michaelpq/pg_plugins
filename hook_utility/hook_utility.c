@@ -30,7 +30,7 @@ static void dbrestrict_utility(PlannedStmt *pstmt,
 							   ParamListInfo params,
 							   QueryEnvironment *queryEnv,
 							   DestReceiver *dest,
-							   char *completionTag);
+							   QueryCompletion *qc);
 static void load_params(void);
 
 static
@@ -40,7 +40,7 @@ void dbrestrict_utility(PlannedStmt *pstmt,
 						ParamListInfo params,
 						QueryEnvironment *queryEnv,
 						DestReceiver *dest,
-						char *completionTag)
+						QueryCompletion *qc)
 {
 	Node	   *parsetree = pstmt->utilityStmt;
 
@@ -76,11 +76,11 @@ void dbrestrict_utility(PlannedStmt *pstmt,
 	if (prev_utility_hook)
 		(*prev_utility_hook) (pstmt, queryString,
 							  context, params, queryEnv,
-							  dest, completionTag);
+							  dest, qc);
 	else
 		standard_ProcessUtility(pstmt, queryString,
 								context, params, queryEnv,
-								dest, completionTag);
+								dest, qc);
 }
 
 static
