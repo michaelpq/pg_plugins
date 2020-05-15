@@ -28,7 +28,8 @@ void _PG_init(void);
 void _PG_fini(void);
 
 static PlannedStmt *
-panic_hook(Query *parse, int cursorOptions, ParamListInfo boundParams)
+panic_hook(Query *parse, const char *query_string,
+		   int cursorOptions, ParamListInfo boundParams)
 {
 	PlannedStmt *result;
 
@@ -37,9 +38,11 @@ panic_hook(Query *parse, int cursorOptions, ParamListInfo boundParams)
 		elog(PANIC, "Jinx! Bad luck for today.");
 
 	if (prev_planner_hook)
-		result = (*prev_planner_hook) (parse, cursorOptions, boundParams);
+		result = (*prev_planner_hook) (parse, query_string, cursorOptions,
+									   boundParams);
 	else
-		result = standard_planner(parse, cursorOptions, boundParams);
+		result = standard_planner(parse, query_string, cursorOptions,
+								  boundParams);
 
 	return result;
 }
