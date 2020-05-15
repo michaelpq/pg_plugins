@@ -36,7 +36,7 @@ trunc2del(PlannedStmt *pstmt,
 		  ParamListInfo params,
 		  QueryEnvironment *queryEnv,
 		  DestReceiver *dest,
-		  char *completionTag)
+		  QueryCompletion *qc)
 {
 	Node	*parsetree = pstmt->utilityStmt;
 
@@ -97,11 +97,11 @@ trunc2del(PlannedStmt *pstmt,
 	if (prev_utility_hook)
 		(*prev_utility_hook) (pstmt, queryString,
 							  context, params, queryEnv,
-							  dest, completionTag);
+							  dest, qc);
 	 else
 		 standard_ProcessUtility(pstmt, queryString,
 								 context, params, queryEnv,
-								 dest, completionTag);
+								 dest, qc);
 }
 
 void
