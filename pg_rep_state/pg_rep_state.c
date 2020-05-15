@@ -150,7 +150,7 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	bool		nulls[12];
 	WalRcvData *walrcv = WalRcv;
 	int			pid;
-	XLogRecPtr	receiveStart, receivedUpto, latestChunkStart, latestWalEnd;
+	XLogRecPtr	receiveStart, flushedUpto, latestChunkStart, latestWalEnd;
 	TimeLineID	receiveStartTLI, receivedTLI;
 	TimestampTz	lastMsgSendTime, lastMsgReceiptTime, latestWalEndTime;
 	char	   *slotname;
@@ -167,7 +167,7 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	pid = walrcv->pid;
 	receiveStart = walrcv->receiveStart;
 	receiveStartTLI = walrcv->receiveStartTLI;
-	receivedUpto = walrcv->receivedUpto;
+	flushedUpto = walrcv->flushedUpto;
 	receivedTLI = walrcv->receivedTLI;
 	latestChunkStart = walrcv->latestChunkStart;
 	lastMsgSendTime = walrcv->lastMsgSendTime;
@@ -197,7 +197,7 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 					   LSNOID, -1, 0);
 	TupleDescInitEntry(tupdesc, (AttrNumber) 4, "receive_start_tli",
 					   INT4OID, -1, 0);
-	TupleDescInitEntry(tupdesc, (AttrNumber) 5, "received_up_to_lsn",
+	TupleDescInitEntry(tupdesc, (AttrNumber) 5, "flushed_up_to_lsn",
 					   LSNOID, -1, 0);
 	TupleDescInitEntry(tupdesc, (AttrNumber) 6, "received_tli",
 					   INT4OID, -1, 0);
@@ -248,10 +248,10 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	else
 		values[2] = LSNGetDatum(receiveStart);
 	values[3] = Int32GetDatum(receiveStartTLI);
-	if (XLogRecPtrIsInvalid(receivedUpto))
+	if (XLogRecPtrIsInvalid(flushedUpto))
 		nulls[4] = true;
 	else
-		values[4] = LSNGetDatum(receivedUpto);
+		values[4] = LSNGetDatum(flushedUpto);
 	values[5] = Int32GetDatum(receivedTLI);
 	if (XLogRecPtrIsInvalid(latestChunkStart))
 		nulls[6] = true;
