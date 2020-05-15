@@ -395,14 +395,14 @@ write_jsonlog(ErrorData *edata)
 	/* Write to stderr, if enabled */
 	if ((Log_destination & LOG_DESTINATION_STDERR) != 0)
 	{
-		if (Logging_collector && redirection_done && !am_syslogger)
+		if (Logging_collector && redirection_done && MyBackendType != B_LOGGER)
 			write_pipe_chunks(buf.data, buf.len);
 		else
 			write_console(buf.data, buf.len);
 	}
 
 	/* If in the syslogger process, try to write messages direct to file */
-	if (am_syslogger)
+	if (MyBackendType == B_LOGGER)
 		write_syslogger_file(buf.data, buf.len, LOG_DESTINATION_STDERR);
 
 	/* Cleanup */
