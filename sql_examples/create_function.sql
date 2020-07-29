@@ -23,6 +23,25 @@ CREATE OR REPLACE FUNCTION create_tables(num_tables int)
 END
 $func$ LANGUAGE plpgsql;
 
+-- Create one table with many columns at once
+CREATE OR REPLACE FUNCTION create_cols(tabname text, num_cols int)
+RETURNS VOID AS
+$func$
+DECLARE
+  query text;
+BEGIN
+  query := 'CREATE TABLE ' || tabname || ' (';
+  FOR i IN 1..num_cols LOOP
+    query := query || 'a_' || i::text || ' int';
+    IF i != num_cols THEN
+      query := query || ', ';
+    END IF;
+  END LOOP;
+  query := query || ')';
+  EXECUTE format(query);
+END
+$func$ LANGUAGE plpgsql;
+
 -- Lock many tables at once
 CREATE OR REPLACE FUNCTION lock_tables(num_tables int)
   RETURNS VOID AS
