@@ -29,6 +29,12 @@
 #include "utils/guc.h"
 #include "utils/json.h"
 
+#if PG_VERSION_NUM > 130000
+	#define backend_type_is_logger (MyBackendType == B_LOGGER)
+#else
+	#define backend_type_is_logger (am_syslogger)
+#endif
+
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;
 
@@ -395,14 +401,14 @@ write_jsonlog(ErrorData *edata)
 	/* Write to stderr, if enabled */
 	if ((Log_destination & LOG_DESTINATION_STDERR) != 0)
 	{
-		if (Logging_collector && redirection_done && MyBackendType != B_LOGGER)
+		if (Logging_collector && redirection_done && !backend_type_is_logger)
 			write_pipe_chunks(buf.data, buf.len);
 		else
 			write_console(buf.data, buf.len);
 	}
 
 	/* If in the syslogger process, try to write messages direct to file */
-	if (MyBackendType == B_LOGGER)
+	if (backend_type_is_logger)
 		write_syslogger_file(buf.data, buf.len, LOG_DESTINATION_STDERR);
 
 	/* Cleanup */
