@@ -3,7 +3,7 @@
  * overflow.c
  *		Common routines for overflow checks
  *
- * Copyright (c) 1996-2020, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2021, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  overflow/overflow.c
