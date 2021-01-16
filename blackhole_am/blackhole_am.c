@@ -179,9 +179,8 @@ blackhole_tuple_satisfies_snapshot(Relation rel, TupleTableSlot *slot,
 }
 
 static TransactionId
-blackhole_compute_xid_horizon_for_tuples(Relation rel,
-										 ItemPointerData *tids,
-										 int nitems)
+blackhole_index_delete_tuples(Relation rel,
+							  TM_IndexDeleteOp *delstate)
 {
 	return InvalidTransactionId;
 }
@@ -471,7 +470,7 @@ static const TableAmRoutine blackhole_methods = {
 	.tuple_get_latest_tid = blackhole_get_latest_tid,
 	.tuple_tid_valid = blackhole_tuple_tid_valid,
 	.tuple_satisfies_snapshot = blackhole_tuple_satisfies_snapshot,
-	.compute_xid_horizon_for_tuples = blackhole_compute_xid_horizon_for_tuples,
+	.index_delete_tuples = blackhole_index_delete_tuples,
 
 	.relation_set_new_filenode = blackhole_relation_set_new_filenode,
 	.relation_nontransactional_truncate = blackhole_relation_nontransactional_truncate,
