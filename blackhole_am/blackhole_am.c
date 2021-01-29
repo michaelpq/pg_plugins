@@ -385,10 +385,14 @@ blackhole_estimate_rel_size(Relation rel, int32 *attr_widths,
 							double *allvisfrac)
 {
 	/* no data available */
-	*attr_widths = 0;
-	*tuples = 0;
-	*allvisfrac = 0;
-	*pages = 0;
+	if (attr_widths)
+		*attr_widths = 0;
+	if (pages)
+		*pages = 0;
+	if (tuples)
+		*tuples = 0;
+	if (allvisfrac)
+		*allvisfrac = 0;
 }
 
 
