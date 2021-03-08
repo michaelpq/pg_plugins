@@ -1,6 +1,0 @@
-sql_examples, examples of SQL
-=============================
-
-This saves a set of scripts, examples and test cases used while developing
-and debugging PostgreSQL. This is more a place where is saved everything
-useful and that needs to be kept a trace of, including pgbench scripts.
