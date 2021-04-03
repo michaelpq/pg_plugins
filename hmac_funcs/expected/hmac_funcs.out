@@ -1,0 +1,37 @@
+CREATE EXTENSION hmac_funcs;
+SELECT hmac_md5('The quick brown fox jumps over the lazy dog', 'key');
+              hmac_md5              
+------------------------------------
+ \x80070713463e7749b90c2dc24911e275
+(1 row)
+
+SELECT hmac_sha1('The quick brown fox jumps over the lazy dog', 'key');
+                 hmac_sha1                  
+--------------------------------------------
+ \xde7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9
+(1 row)
+
+SELECT hmac_sha224('The quick brown fox jumps over the lazy dog', 'key');
+                        hmac_sha224                         
+------------------------------------------------------------
+ \x88ff8b54675d39b8f72322e65ff945c52d96379988ada25639747e69
+(1 row)
+
+SELECT hmac_sha256('The quick brown fox jumps over the lazy dog', 'key');
+                            hmac_sha256                             
+--------------------------------------------------------------------
+ \xf7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8
+(1 row)
+
+SELECT hmac_sha384('The quick brown fox jumps over the lazy dog', 'key');
+                                            hmac_sha384                                             
+----------------------------------------------------------------------------------------------------
+ \xd7f4727e2c0b39ae0f1e40cc96f60242d5b7801841cea6fc592c5d3e1ae50700582a96cf35e1e554995fe4e03381c237
+(1 row)
+
+SELECT hmac_sha512('The quick brown fox jumps over the lazy dog', 'key');
+                                                            hmac_sha512                                                             
+------------------------------------------------------------------------------------------------------------------------------------
+ \xb42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a
+(1 row)
+

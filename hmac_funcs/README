@@ -1,0 +1,5 @@
+hmac_funcs
+==========
+
+This module is a PostgreSQL extension that includes HMAC functions
+for various cryptohash types.  Nya.

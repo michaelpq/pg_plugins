@@ -12,6 +12,7 @@ SUBDIRS = blackhole	\
 	hello_notify	\
 	hello_signal	\
 	hello_world	\
+	hmac_funcs	\
 	hook_utility	\
 	jsonlog		\
 	kill_idle	\
