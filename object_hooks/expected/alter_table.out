@@ -1,0 +1,36 @@
+--
+-- Tests for object access hook with ALTER TABLE
+--
+LOAD 'object_hooks';
+-- Create a heap2 table am handler with heapam handler
+CREATE ACCESS METHOD heap2 TYPE TABLE HANDLER heap_tableam_handler;
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
+CREATE TABLE object_hook_tab (a int PRIMARY KEY, b int);
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
+LINE 1: CREATE TABLE object_hook_tab (a int PRIMARY KEY, b int);
+                                        ^
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
+LINE 1: CREATE TABLE object_hook_tab (a int PRIMARY KEY, b int);
+                                                           ^
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
+ALTER TABLE object_hook_tab SET UNLOGGED;
+NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
+ALTER TABLE object_hook_tab SET LOGGED;
+NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
+ALTER TABLE object_hook_tab SET TABLESPACE pg_default;
+NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
+ALTER TABLE object_hook_tab SET ACCESS METHOD heap2;
+NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
+ALTER TABLE object_hook_tab SET ACCESS METHOD heap;
+NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
+-- Clean up
+DROP ACCESS METHOD heap2;
+NOTICE:  access: OAT_DROP type: access method, identity: heap2
+DROP TABLE object_hook_tab;
+NOTICE:  access: OAT_DROP type: index, identity: public.object_hook_tab_pkey
+NOTICE:  access: OAT_DROP type: table constraint, identity: object_hook_tab_pkey on public.object_hook_tab
+NOTICE:  access: OAT_DROP type: type, identity: public.object_hook_tab[]
+NOTICE:  access: OAT_DROP type: type, identity: public.object_hook_tab
+NOTICE:  access: OAT_DROP type: table, identity: public.object_hook_tab

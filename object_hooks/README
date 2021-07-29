@@ -1,0 +1,9 @@
+object_hooks
+============
+
+This module is a module aimed at providing test coverage for object type
+hooks defined as of catalog/objectaddress.h.
+
+Its installation can be done by adding this parameter in postgresql.conf:
+
+    shared_preload_libraries = 'object_hooks'
