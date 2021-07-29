@@ -13,6 +13,11 @@ ALTER TABLE object_hook_tab SET LOGGED;
 ALTER TABLE object_hook_tab SET TABLESPACE pg_default;
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap2;
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap;
+ALTER TABLE object_hook_tab ADD column c int;
+ALTER TABLE object_hook_tab DROP column c;
+CREATE SCHEMA popo;
+ALTER TABLE object_hook_tab SET SCHEMA popo;
+ALTER TABLE popo.object_hook_tab SET SCHEMA public;
 
 -- Clean up
 DROP ACCESS METHOD heap2;

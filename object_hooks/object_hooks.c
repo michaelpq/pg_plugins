@@ -17,15 +17,8 @@
 #include "postgres.h"
 #include "fmgr.h"
 
-#include "access/htup_details.h"
-#include "catalog/namespace.h"
+#include "catalog/dependency.h"
 #include "catalog/objectaccess.h"
-#include "catalog/objectaddress.h"
-#include "catalog/pg_class_d.h"
-#include "catalog/pg_proc_d.h"
-#include "catalog/pg_type.h"
-#include "utils/lsyscache.h"
-#include "utils/syscache.h"
 
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;
@@ -36,43 +29,6 @@ void _PG_fini(void);
 /* Hold previous logging hook */
 static object_access_hook_type prev_object_access_hook = NULL;
 
-static Oid
-get_type_namespace(Oid typid)
-{
-	HeapTuple   tp;
-
-	tp = SearchSysCache1(TYPEOID, ObjectIdGetDatum(typid));
-	if (HeapTupleIsValid(tp))
-	{
-		Form_pg_type typtup = (Form_pg_type) GETSTRUCT(tp);
-		Oid		result;
-
-		result = typtup->typnamespace;
-		ReleaseSysCache(tp);
-		return result;
-	}
-	else
-		return InvalidOid;
-}
-
-static char *
-get_type_name(Oid typid)
-{
-	HeapTuple   tp;
-
-	tp = SearchSysCache1(TYPEOID, ObjectIdGetDatum(typid));
-	if (HeapTupleIsValid(tp))
-	{
-		Form_pg_type typtup = (Form_pg_type) GETSTRUCT(tp);
-		char	   *result;
-
-		result = pstrdup(NameStr(typtup->typname));
-		ReleaseSysCache(tp);
-		return result;
-	}
-	else
-		return NULL;
-}
 
 /*
  * object_hooks_entry
@@ -96,46 +52,52 @@ object_hooks_access_entry(ObjectAccessType access,
 	address.objectId = objectId;
 	address.objectSubId = subId;
 
-	/* Skip any temporary objects or some special patterns */
-	if (classId == RelationRelationId)
+	switch (access)
 	{
-		char	   *relname;
+		case OAT_POST_CREATE:
+			{
+				ObjectAccessPostCreate *pc_arg = arg;
 
-		/* temporary relations */
-		if (isTempOrTempToastNamespace(get_rel_namespace(objectId)))
-			return;
+				/* leave if the change is internal */
+				if (pc_arg && pc_arg->is_internal)
+					return;
 
-		/*
-		 * Skip relations named pg_temp_N, coming from table rewrites
-		 * in ALTER TABLE for example.
-		 */
-		relname = get_rel_name(objectId);
-		if (relname && strncmp("pg_temp_", relname, 8) == 0)
-			return;
-	}
-	else if (classId == ProcedureRelationId)
-	{
-		/* temporary functions */
-		if (isTempOrTempToastNamespace(get_func_namespace(objectId)))
-			return;
-	}
-	else if (classId == TypeRelationId)
-	{
-		char	*typname;
+				accessname = "OAT_POST_CREATE";
+			}
+			break;
+		case OAT_DROP:
+			{
+				ObjectAccessDrop *drop_arg = (ObjectAccessDrop *) arg;
 
-		/* temporary types */
-		if (isTempOrTempToastNamespace(get_type_namespace(objectId)))
-			return;
+				/* leave if the change is internal */
+				if ((drop_arg->dropflags & PERFORM_DELETION_INTERNAL) != 0)
+					return;
 
-		/*
-		 * Skip types named pg_temp_N, coming from table rewrites
-		 * in ALTER TABLE for example.
-		 */
-		typname = get_type_name(objectId);
-		if (typname &&
-			(strncmp("pg_temp_", typname, 8) == 0 ||
-			 strncmp("_pg_temp_", typname, 9) == 0))
-			return;
+				accessname = "OAT_DROP";
+			}
+			break;
+		case OAT_POST_ALTER:
+			{
+				ObjectAccessPostAlter *pa_arg = arg;
+
+				/* leave if the change is internal */
+				if (pa_arg->is_internal)
+					goto finish;
+
+				accessname = "OAT_POST_ALTER";
+			}
+			break;
+		case OAT_NAMESPACE_SEARCH:
+			accessname = "OAT_NAMESPACE_SEARCH";
+			break;
+		case OAT_FUNCTION_EXECUTE:
+			accessname = "OAT_FUNCTION_EXECUTE";
+			break;
+		case OAT_TRUNCATE:
+			accessname = "OAT_TRUNCATE";
+			break;
+
+		/* no default to let the compiler warn about missing values */
 	}
 
 	/*
@@ -153,30 +115,6 @@ object_hooks_access_entry(ObjectAccessType access,
 
 	/* the object type can never be NULL */
 	type = getObjectTypeDescription(&address, true);
-
-	switch (access)
-	{
-		case OAT_POST_CREATE:
-			accessname = "OAT_POST_CREATE";
-			break;
-		case OAT_DROP:
-			accessname = "OAT_DROP";
-			break;
-		case OAT_POST_ALTER:
-			accessname = "OAT_POST_ALTER";
-			break;
-		case OAT_NAMESPACE_SEARCH:
-			accessname = "OAT_NAMESPACE_SEARCH";
-			break;
-		case OAT_FUNCTION_EXECUTE:
-			accessname = "OAT_FUNCTION_EXECUTE";
-			break;
-		case OAT_TRUNCATE:
-			accessname = "OAT_TRUNCATE";
-			break;
-
-		/* no default to let the compiler warn about missing values */
-	}
 
 	/* generate the log entry */
 	ereport(NOTICE,
