@@ -23,3 +23,20 @@ SELECT * FROM blackhole_tab;
 ---
 (0 rows)
 
+-- ALTER TABLE SET ACCESS METHOD
+ALTER TABLE blackhole_tab SET ACCESS METHOD heap;
+INSERT INTO blackhole_tab VALUES (1);
+SELECT * FROM blackhole_tab;
+ a 
+---
+ 1
+(1 row)
+
+ALTER TABLE blackhole_tab SET ACCESS METHOD blackhole_am;
+SELECT * FROM blackhole_tab;
+ a 
+---
+(0 rows)
+
+-- Clean up
+DROP TABLE blackhole_tab;
