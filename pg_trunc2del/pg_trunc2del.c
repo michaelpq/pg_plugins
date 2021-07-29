@@ -32,6 +32,7 @@ static ProcessUtility_hook_type prev_utility_hook = NULL;
 static void
 trunc2del(PlannedStmt *pstmt,
 		  const char *queryString,
+		  bool readOnlyTree,
 		  ProcessUtilityContext context,
 		  ParamListInfo params,
 		  QueryEnvironment *queryEnv,
@@ -95,11 +96,11 @@ trunc2del(PlannedStmt *pstmt,
 	 * or the in-core code path if the previous hook does not exist.
 	 */
 	if (prev_utility_hook)
-		(*prev_utility_hook) (pstmt, queryString,
+		(*prev_utility_hook) (pstmt, queryString, readOnlyTree,
 							  context, params, queryEnv,
 							  dest, qc);
 	 else
-		 standard_ProcessUtility(pstmt, queryString,
+		 standard_ProcessUtility(pstmt, queryString, readOnlyTree,
 								 context, params, queryEnv,
 								 dest, qc);
 }
