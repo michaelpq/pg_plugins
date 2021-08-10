@@ -10,9 +10,11 @@ CREATE ACCESS METHOD heap2 TYPE TABLE HANDLER heap_tableam_handler;
 CREATE TABLE object_hook_tab (a int PRIMARY KEY, b int);
 ALTER TABLE object_hook_tab SET UNLOGGED;
 ALTER TABLE object_hook_tab SET LOGGED;
-ALTER TABLE object_hook_tab SET TABLESPACE pg_default;
+ALTER TABLE object_hook_tab SET LOGGED; -- no-op
+ALTER TABLE object_hook_tab SET TABLESPACE pg_default; -- no-op
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap2;
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap;
+ALTER TABLE object_hook_tab SET ACCESS METHOD heap; -- no-op
 ALTER TABLE object_hook_tab ADD column c int;
 ALTER TABLE object_hook_tab DROP column c;
 CREATE SCHEMA popo;
