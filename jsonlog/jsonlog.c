@@ -22,15 +22,23 @@
 #include "access/xact.h"
 #include "access/transam.h"
 #include "lib/stringinfo.h"
+#if PG_VERSION_NUM >= 90300
 #include "postmaster/bgworker.h"
+#endif
 #include "postmaster/syslogger.h"
 #include "storage/proc.h"
 #include "tcop/tcopprot.h"
+#if PG_VERSION_NUM >= 140000
 #include "utils/backend_status.h"
+#endif
 #include "utils/elog.h"
 #include "utils/guc.h"
 #include "utils/json.h"
 #include "utils/ps_status.h"
+
+#if PG_VERSION_NUM < 90200
+#error Minimum version of PostgreSQL required is 9.2
+#endif
 
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;
@@ -434,6 +442,7 @@ write_jsonlog(ErrorData *edata)
 		appendJSONLiteral(&buf, "application_name",
 						  application_name, true);
 
+#if PG_VERSION_NUM >= 130000
 	/* backend type */
 	if (MyProcPid == PostmasterPid)
 		appendJSONLiteral(&buf, "backend_type", "postmaster", true);
@@ -441,7 +450,9 @@ write_jsonlog(ErrorData *edata)
 		appendJSONLiteral(&buf, "backend_type", MyBgworkerEntry->bgw_type, true);
 	else
 		appendJSONLiteral(&buf, "backend_type", GetBackendTypeDesc(MyBackendType), true);
+#endif
 
+#if PG_VERSION_NUM >= 90600
 	/* leader PID */
 	if (MyProc)
 	{
@@ -454,9 +465,12 @@ write_jsonlog(ErrorData *edata)
 		if (leader && leader->pid != MyProcPid)
 			appendStringInfo(&buf, "\"leader_pid\":%d,", leader->pid);
 	}
+#endif
 
+#if PG_VERSION_NUM >= 140000
 	/* query id */
 	appendStringInfo(&buf, "\"query_id\":%lld,", (long long) pgstat_get_my_query_id());
+#endif
 
 	/* Error message */
 	appendJSONLiteral(&buf, "message", edata->message, false);
@@ -468,14 +482,22 @@ write_jsonlog(ErrorData *edata)
 	/* Write to stderr, if enabled */
 	if ((Log_destination & LOG_DESTINATION_STDERR) != 0)
 	{
+#if PG_VERSION_NUM >= 130000
 		if (Logging_collector && redirection_done && MyBackendType != B_LOGGER)
+#else
+		if (redirection_done && !am_syslogger)
+#endif
 			write_pipe_chunks(buf.data, buf.len);
 		else
 			write_console(buf.data, buf.len);
 	}
 
 	/* If in the syslogger process, try to write messages direct to file */
+#if PG_VERSION_NUM >= 130000
 	if (MyBackendType == B_LOGGER)
+#else
+	if (am_syslogger)
+#endif
 		write_syslogger_file(buf.data, buf.len, LOG_DESTINATION_STDERR);
 
 	/* Cleanup */
