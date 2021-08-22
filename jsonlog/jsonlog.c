@@ -155,7 +155,7 @@ write_console(char *data, int len)
 	int		 rc;
 
 	Assert(len > 0);
-	rc = write(fd, data, PIPE_HEADER_SIZE + len);
+	rc = write(fd, data, len);
 	(void) rc;
 }
 
