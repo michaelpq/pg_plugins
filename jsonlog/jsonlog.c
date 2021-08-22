@@ -16,18 +16,22 @@
 #include <sys/time.h>
 
 #include "postgres.h"
-#include "libpq/libpq.h"
 #include "fmgr.h"
 #include "miscadmin.h"
+
 #include "access/xact.h"
 #include "access/transam.h"
 #include "lib/stringinfo.h"
+#include "libpq/libpq.h"
+#include "postmaster/bgworker.h"
 #include "postmaster/syslogger.h"
 #include "storage/proc.h"
 #include "tcop/tcopprot.h"
+#include "utils/backend_status.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
 #include "utils/json.h"
+#include "utils/ps_status.h"
 
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;
@@ -48,6 +52,7 @@ extern bool redirection_done;
 /* Log timestamp */
 #define FORMATTED_TS_LEN 128
 static char formatted_log_time[FORMATTED_TS_LEN];
+static char formatted_start_time[FORMATTED_TS_LEN];
 static pg_tz *utc_tz = NULL;
 
 static const char *error_severity(int elevel);
@@ -194,6 +199,34 @@ setup_formatted_log_time(void)
 }
 
 /*
+ * setup formatted_start_time
+ */
+static void
+setup_formatted_start_time(void)
+{
+	pg_time_t       stamp_time = (pg_time_t) MyStartTime;
+
+	/*
+	 * No need to do this one twice, its value being fixed for each
+	 * session.
+	 */
+	if (formatted_start_time[0] != '\0')
+		return;
+
+	/*
+	 * Load timezone only once.  This should not be necessary here as
+	 * setup_formatted_log_time() would have done that already, but just
+	 * play it safe.
+	 */
+	if (!utc_tz)
+		utc_tz = pg_tzset("UTC");
+
+	pg_strftime(formatted_start_time, FORMATTED_TS_LEN,
+				"%Y-%m-%dT%H:%M:%S.000Z",
+				pg_localtime(&stamp_time, utc_tz));
+}
+
+/*
  * appendJSONLiteral
  * Append to given StringInfo a JSON with a given key and a value
  * not yet made literal.
@@ -309,6 +342,26 @@ write_jsonlog(ErrorData *edata)
 		appendStringInfo(&buf, "\"session_id\":\"%lx.%x\",",
 						 (long) MyStartTime, MyProcPid);
 
+	/* PS display */
+	if (MyProcPort)
+	{
+		StringInfoData msgbuf;
+		const char *psdisp;
+		int                     displen;
+
+		initStringInfo(&msgbuf);
+
+		psdisp = get_ps_display(&displen);
+		appendBinaryStringInfo(&msgbuf, psdisp, displen);
+		appendJSONLiteral(&buf, "ps_display",
+						  msgbuf.data, true);
+		pfree(msgbuf.data);
+	}
+
+	/* session start timestamp */
+	setup_formatted_start_time();
+	appendJSONLiteral(&buf, "session_start", formatted_start_time, true);
+
 	/* Virtual transaction id */
 	/* keep VXID format in sync with lockfuncs.c */
 	if (MyProc != NULL && MyProc->backendId != InvalidBackendId)
@@ -340,8 +393,14 @@ write_jsonlog(ErrorData *edata)
 
 	/* Internal query */
 	if (edata->internalquery)
+	{
 		appendJSONLiteral(&buf, "internal_query",
 						  edata->internalquery, true);
+
+		/* if printed internal query, print internal pos too */
+		if (edata->internalpos > 0)
+			appendStringInfo(&buf, "\"internal_pos\":%d,", edata->internalpos);
+	}
 
 	/* Error context */
 	if (edata->context)
@@ -384,6 +443,30 @@ write_jsonlog(ErrorData *edata)
 	if (application_name && application_name[0] != '\0')
 		appendJSONLiteral(&buf, "application_name",
 						  application_name, true);
+
+	/* backend type */
+	if (MyProcPid == PostmasterPid)
+		appendJSONLiteral(&buf, "backend_type", "postmaster", true);
+	else if (MyBackendType == B_BG_WORKER)
+		appendJSONLiteral(&buf, "backend_type", MyBgworkerEntry->bgw_type, true);
+	else
+		appendJSONLiteral(&buf, "backend_type", GetBackendTypeDesc(MyBackendType), true);
+
+	/* leader PID */
+	if (MyProc)
+	{
+		PGPROC     *leader = MyProc->lockGroupLeader;
+
+		/*
+		 * Show the leader only for active parallel workers.  This leaves out
+		 * the leader of a parallel group.
+		 */
+		if (leader && leader->pid != MyProcPid)
+			appendStringInfo(&buf, "\"leader_pid\":%d,", leader->pid);
+	}
+
+	/* query id */
+	appendStringInfo(&buf, "\"query_id\":%lld,", (long long) pgstat_get_my_query_id());
 
 	/* Error message */
 	appendJSONLiteral(&buf, "message", edata->message, false);
