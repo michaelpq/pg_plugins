@@ -460,7 +460,6 @@ write_jsonlog(ErrorData *edata)
 		appendJSONLiteral(&buf, "backend_type", GetBackendTypeDesc(MyBackendType), true);
 #endif
 
-#if PG_VERSION_NUM >= 90600
 	/* leader PID */
 	if (MyProc)
 	{
@@ -473,7 +472,6 @@ write_jsonlog(ErrorData *edata)
 		if (leader && leader->pid != MyProcPid)
 			appendStringInfo(&buf, "\"leader_pid\":%d,", leader->pid);
 	}
-#endif
 
 #if PG_VERSION_NUM >= 140000
 	/* query id */
