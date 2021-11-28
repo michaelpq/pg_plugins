@@ -19,7 +19,7 @@ defined by hello_notify.database and LISTEN to the channel defined by
 hello_notify.channel_name.
 
 Another important thing to remember when using NOTIFY with background workers
-is to call ProcessCompletedNotifies after the transaction that sent the NOTIFY
-messages commits.
+is the notification messages are sent at transaction commit, hence the
+importance of CommitTransactionCommand().
 
-This worker is compatible with PostgreSQL 9.3 and newer versions.
+This worker is compatible with PostgreSQL 15 and newer versions.

@@ -138,7 +138,6 @@ hello_notify_main(Datum main_arg)
 	while (!got_sigterm)
 	{
 		int	ret;
-		bool process_notifies;
 
 		/* Take a nap... */
 		WaitLatch(&MyProc->procLatch,
@@ -182,20 +181,15 @@ hello_notify_main(Datum main_arg)
 		ret = SPI_execute(buf.data, false, 0);
 		if (ret != SPI_OK_SELECT)
 			elog(FATAL, "hello_notify: SPI_execute failed with error code %d", ret);
-		process_notifies = SPI_processed > 0;
 		elog(LOG, "hello_notify: executed " UINT64_FORMAT, SPI_processed);
 
 		/* Terminate transaction */
 		SPI_finish();
 		PopActiveSnapshot();
+
+		/* Notifications are sent by the transaction commit */
 		CommitTransactionCommand();
 
-		/*
-		 * Send out notifications. This is mandatory after previous
-		 * transaction has committed.
-		 */
-		if (process_notifies)
-			ProcessCompletedNotifies();
 		pgstat_report_activity(STATE_IDLE, NULL);
 	}
 
