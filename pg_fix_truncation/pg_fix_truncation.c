@@ -48,7 +48,7 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 		   errmsg("\"%s\" is not a table, materialized view, or TOAST table",
 				  RelationGetRelationName(rel))));
 
-	RelationOpenSmgr(rel);
+	(void) RelationGetSmgr(rel);
 	tgt_blk = RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM);
 
 	/*
