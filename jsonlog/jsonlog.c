@@ -130,10 +130,18 @@ write_pipe_chunks(char *data, int len)
 	p.proto.nuls[0] = p.proto.nuls[1] = '\0';
 	p.proto.pid = MyProcPid;
 
+#if PG_VERSION_NUM >= 150000
+	p.proto.flags = PIPE_PROTO_DEST_STDERR;
+#endif
+
 	/* write all but the last chunk */
 	while (len > PIPE_MAX_PAYLOAD)
 	{
+#if PG_VERSION_NUM >= 150000
+		/*  no need to set PIPE_PROTO_IS_LAST yet */
+#else
 		p.proto.is_last = 'f';
+#endif
 		p.proto.len = PIPE_MAX_PAYLOAD;
 		memcpy(p.proto.data, data, PIPE_MAX_PAYLOAD);
 		rc = write(fd, &p, PIPE_HEADER_SIZE + PIPE_MAX_PAYLOAD);
@@ -143,7 +151,11 @@ write_pipe_chunks(char *data, int len)
 	}
 
 	/* write the last chunk */
+#if PG_VERSION_NUM >= 150000
+	p.proto.flags |= PIPE_PROTO_IS_LAST;
+#else
 	p.proto.is_last = 't';
+#endif
 	p.proto.len = len;
 	memcpy(p.proto.data, data, len);
 	rc = write(fd, &p, PIPE_HEADER_SIZE + len);
