@@ -34,7 +34,7 @@ panic_hook(Query *parse, const char *query_string,
 	PlannedStmt *result;
 
 	/* should we panic for this query? */
-	if (random() < luck_factor * MAX_RANDOM_VALUE)
+	if (random() < luck_factor * PG_INT32_MAX)
 		elog(PANIC, "Jinx! Bad luck for today.");
 
 	if (prev_planner_hook)
