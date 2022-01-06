@@ -3,7 +3,7 @@
  * object_hooks.c
  *		Facility to test object type hooks.
  *
- * Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2022, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		object_hooks/object_hooks.c

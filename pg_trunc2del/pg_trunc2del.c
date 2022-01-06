@@ -3,7 +3,7 @@
  * pg_trunc2del.c
  *		Extension that executes TRUNCATE statements as DELETE statements.
  *
- * Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2022, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_trunc2del/pg_trunc2del.c

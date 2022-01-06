@@ -3,7 +3,7 @@
  * hmac_funcs.c
  *		Set of functions for HMAC.
  *
- * Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2022, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  hmac_funcs/hmac_funcs.c

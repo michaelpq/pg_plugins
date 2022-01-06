@@ -3,7 +3,7 @@
  * pg_statvfs.c
  *		Wrapper for system call to statvfs()
  *
- * Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2022, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_statvfs/pg_statvfs.c

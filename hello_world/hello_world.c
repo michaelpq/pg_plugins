@@ -3,7 +3,7 @@
  * hello_world.c
  *		bgworker logging hello world on server
  *
- * Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2022, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		hello_world/hello_world.c

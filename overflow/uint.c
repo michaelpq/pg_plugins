@@ -3,7 +3,7 @@
  * uint.c
  *		Overflow checks for unsigned integers
  *
- * Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2022, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  overflow/uint.c
