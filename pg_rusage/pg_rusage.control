@@ -1,0 +1,5 @@
+# pg_rusage extension
+comment = 'CPU measurements'
+default_version = '1.0'
+module_pathname = '$libdir/pg_rusage'
+relocatable = true

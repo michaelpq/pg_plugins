@@ -1,0 +1,6 @@
+pg_rusage
+=========
+
+This module is a PostgreSQL extension that can enable CPU measurements,
+with one SQL function to enable the measurement and one to disable it.
+When disabling, the existing accumulated results will show up.

@@ -23,6 +23,7 @@ SUBDIRS = blackhole	\
 	pg_fix_truncation	\
 	pg_panic	\
 	pg_rep_state	\
+	pg_rusage	\
 	pg_sasl_prepare	\
 	pg_statvfs	\
 	pg_swap_pages	\
