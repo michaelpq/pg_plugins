@@ -61,8 +61,8 @@ static char formatted_log_time[FORMATTED_TS_LEN];
 static char formatted_start_time[FORMATTED_TS_LEN];
 static pg_tz *utc_tz = NULL;
 
-static const char *error_severity(int elevel);
-static void write_jsonlog(ErrorData *edata);
+static const char *jsonlog_error_severity(int elevel);
+static void jsonlog_write_json(ErrorData *edata);
 
 /*
  * error_severity
@@ -70,7 +70,7 @@ static void write_jsonlog(ErrorData *edata);
  * Taken from elog.c.
  */
 static const char *
-error_severity(int elevel)
+jsonlog_error_severity(int elevel)
 {
 	const char *prefix;
 
@@ -114,12 +114,12 @@ error_severity(int elevel)
 }
 
 /*
- * write_pipe_chunks
+ * jsonlog_write_pipe_chunks
  * Send data to the syslogger using the chunked protocol. Taken from
  * elog.c and simplified as in this case everything is sent to stderr.
  */
 static void
-write_pipe_chunks(char *data, int len)
+jsonlog_write_pipe_chunks(char *data, int len)
 {
 	PipeProtoChunk	p;
 	int				fd = fileno(stderr);
@@ -163,11 +163,11 @@ write_pipe_chunks(char *data, int len)
 }
 
 /*
- * write_console
+ * jsonlog_write_console
  * Send data to stderr, there is nothing fancy here.
  */
 static void
-write_console(char *data, int len)
+jsonlog_write_console(char *data, int len)
 {
 	int		 fd = fileno(stderr);
 	int		 rc;
@@ -305,11 +305,11 @@ is_log_level_output(int elevel, int log_min_level)
 }
 
 /*
- * write_jsonlog
+ * jsonlog_write_json
  * Write logs in json format.
  */
 static void
-write_jsonlog(ErrorData *edata)
+jsonlog_write_json(ErrorData *edata)
 {
 	StringInfoData	buf;
 	TransactionId	txid = GetTopTransactionIdIfAny();
@@ -392,7 +392,7 @@ write_jsonlog(ErrorData *edata)
 
 	/* Error severity */
 	appendJSONLiteral(&buf, "error_severity",
-					  (char *) error_severity(edata->elevel), true);
+					  (char *) jsonlog_error_severity(edata->elevel), true);
 
 	/* SQL state code */
 	if (edata->sqlerrcode != ERRCODE_SUCCESSFUL_COMPLETION)
@@ -505,9 +505,9 @@ write_jsonlog(ErrorData *edata)
 #else
 		if (redirection_done && !am_syslogger)
 #endif
-			write_pipe_chunks(buf.data, buf.len);
+			jsonlog_write_pipe_chunks(buf.data, buf.len);
 		else
-			write_console(buf.data, buf.len);
+			jsonlog_write_console(buf.data, buf.len);
 	}
 
 	/* If in the syslogger process, try to write messages direct to file */
@@ -534,7 +534,7 @@ void
 _PG_init(void)
 {
 	prev_log_hook = emit_log_hook;
-	emit_log_hook = write_jsonlog;
+	emit_log_hook = jsonlog_write_json;
 }
 
 /*
