@@ -83,11 +83,14 @@ hmac_internal(pg_cryptohash_type type, bytea *input, bytea *key)
 
 	ctx = pg_hmac_create(type);
 	if (pg_hmac_init(ctx, keydata, keylen) < 0)
-		elog(ERROR, "could not initialize %s HMAC context", typestr);
+		elog(ERROR, "could not initialize %s HMAC context: %s", typestr,
+			 pg_hmac_error(ctx));
 	if (pg_hmac_update(ctx, data, len) < 0)
-		elog(ERROR, "could not update %s HMAC context", typestr);
+		elog(ERROR, "could not update %s HMAC context: %s", typestr,
+			 pg_hmac_error(ctx));
 	if (pg_hmac_final(ctx, buf, digest_length) < 0)
-		elog(ERROR, "could not finalize %s HMAC context", typestr);
+		elog(ERROR, "could not finalize %s HMAC context: %s", typestr,
+			 pg_hmac_error(ctx));
 	pg_hmac_free(ctx);
 
 	result = palloc(digest_length + VARHDRSZ);
