@@ -53,6 +53,7 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 	Datum		repl_val[Natts_pg_authid];
 	bool		repl_null[Natts_pg_authid];
 	bool		repl_repl[Natts_pg_authid];
+	const char *errstr = NULL;
 
 	if (!superuser())
 		ereport(ERROR,
@@ -93,7 +94,8 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 		elog(ERROR, "Failed to generate random salt");
 
 	/* Build verifier */
-	verifier = scram_build_secret(saltbuf, saltlen, iterations, password);
+	verifier = scram_build_secret(saltbuf, saltlen, iterations, password,
+								  &errstr);
 
 	if (prep_password)
 		pfree(prep_password);
