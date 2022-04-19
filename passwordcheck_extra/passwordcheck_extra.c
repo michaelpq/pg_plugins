@@ -76,6 +76,7 @@ check_password(const char *username,
 	char		encrypted[MD5_PASSWD_LEN + 1];
 	int			i;
 	int			password_flag = 0;
+	const char *errstr = NULL;
 
 	switch (password_type)
 	{
@@ -89,8 +90,8 @@ check_password(const char *username,
 			 *
 			 * We only check for username = password.
 			 */
-			if (!pg_md5_encrypt(username, username, namelen, encrypted))
-				elog(ERROR, "password encryption failed");
+			if (!pg_md5_encrypt(username, username, namelen, encrypted, &errstr))
+				elog(ERROR, "password encryption failed: %s", errstr);
 			if (strcmp(password, encrypted) == 0)
 				ereport(ERROR,
 						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),

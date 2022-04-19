@@ -14,6 +14,8 @@
 #include "postgres.h"
 #include "fmgr.h"
 
+#include "storage/proc.h"
+
 PG_MODULE_MAGIC;
 
 /*
@@ -24,5 +26,6 @@ PG_FUNCTION_INFO_V1(blackhole);
 Datum
 blackhole(PG_FUNCTION_ARGS)
 {
+	elog(WARNING, "sizeof %lu", sizeof(PGPROC));
 	PG_RETURN_NULL();
 }
