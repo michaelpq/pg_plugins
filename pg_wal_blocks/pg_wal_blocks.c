@@ -157,13 +157,14 @@ extract_block_info(XLogReaderState *record)
 {
 	int block_id;
 
-	for (block_id = 0; block_id <= record->max_block_id; block_id++)
+	for (block_id = 0; block_id <= XLogRecMaxBlockId(record); block_id++)
 	{
 		RelFileNode rnode;
 		ForkNumber forknum;
 		BlockNumber blkno;
 
-		if (!XLogRecGetBlockTag(record, block_id, &rnode, &forknum, &blkno))
+		if (!XLogRecGetBlockTagExtended(record, block_id, &rnode,
+										&forknum, &blkno, NULL))
 			continue;
 
 		/* We only care about the main fork */
@@ -221,6 +222,10 @@ do_wal_parsing(TimeLineID timeline)
 	{
 		/* Move on to next record */
 		record = XLogReadRecord(state, &errormsg);
+
+		if (record == NULL)
+			break;
+
 		if (errormsg)
 			fprintf(stderr, "error reading xlog record: %s\n", errormsg);
 
