@@ -107,6 +107,7 @@ void load_params(void)
 							   PGC_POSTMASTER,
 							   0, NULL, NULL, NULL);
 
+	MarkGUCPrefixReserved("hook_utility");
 }
 
 void

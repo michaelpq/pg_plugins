@@ -62,6 +62,8 @@ pg_panic_load_params(void)
 							 NULL,
 							 NULL,
 							 NULL);
+
+	MarkGUCPrefixReserved("pg_panic");
 }
 
 void

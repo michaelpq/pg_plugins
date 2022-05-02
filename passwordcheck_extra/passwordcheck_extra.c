@@ -281,6 +281,8 @@ passwordcheck_extra_load_params(void)
 							15, 1, 10000,
 							PGC_SUSET,
 							0, NULL, NULL, NULL);
+
+	MarkGUCPrefixReserved("passwordcheck_extra");
 }
 
 /*

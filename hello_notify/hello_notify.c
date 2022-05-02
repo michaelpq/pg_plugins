@@ -229,6 +229,8 @@ hello_notify_load_params(void)
 							60, 1, 3600,
 							PGC_SIGHUP,
 							0, NULL, NULL, NULL);
+
+	MarkGUCPrefixReserved("hello_notify");
 }
 
 /*

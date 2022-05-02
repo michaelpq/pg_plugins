@@ -567,6 +567,8 @@ receiver_raw_load_params(void)
 							 true,
 							 PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
+
+	MarkGUCPrefixReserved("receiver_raw");
 }
 
 /*

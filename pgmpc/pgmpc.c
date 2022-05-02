@@ -893,6 +893,8 @@ pgmpc_load_params(void)
 							10, 0, 300,
 							PGC_USERSET,
 							0, NULL, NULL, NULL);
+
+	MarkGUCPrefixReserved("pgmpc");
 }
 
 /*

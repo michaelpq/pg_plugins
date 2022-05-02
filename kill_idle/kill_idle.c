@@ -209,6 +209,8 @@ kill_idle_load_params(void)
 							NULL,
 							NULL,
 							NULL);
+
+	MarkGUCPrefixReserved("kill_idle");
 }
 
 /*
