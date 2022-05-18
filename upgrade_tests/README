@@ -1,0 +1,29 @@
+Facility for cross-version tests of pg_upgrade
+==============================================
+
+This sub-directory contains a set of full dumps of the regression database
+that can be used as a base for cross-version upgrade tests, using the new
+TAP facility introduced in v15~.  Those dumps are taken using pg_dumpall
+installed in their original version (e.g. a dump from PostgreSQL 12 has
+been taken with pg_dumpall from v12) so as they can be loaded in the past
+clustered data is upgraded from.  The dumps are named $BRANCH_NAME.dump,
+to point to the stable branch they are associated with.
+
+The dumps saved in this directory can be used as follows in the TAP test
+facility, invoked from src/bin/pg_upgrade/ of the new source repository:
+
+    export olddump=/path/to/dump/${OLD_BRANCH}.dump
+    export oldinstall=/path/to/install/$OLD_BRANCH
+    make check
+
+The dumps have been changed to work under the following assumptions to
+avoid any dependencies with a source code tree:
+
+  * autoinc and refint should be installed within postgresql/ as indicated
+  by "pg_config --libdir", so as they can be loaded in CREATE FUNCTION with
+  "$libdir/postgresql/library.so".
+  * regress.so, a library created in the code tree in src/test/regress/ is
+  not installed by PostgreSQL, but assumed to be in "$libdir/regress.so".
+
+At the end, this configuration is only dependent on an installation path
+and the dumps in this folder.
