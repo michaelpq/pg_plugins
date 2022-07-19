@@ -15,7 +15,7 @@
 #include "fmgr.h"
 
 #include "access/heapam.h"
-#include "access/xlog.h"
+#include "access/xloginsert.h"
 #include "catalog/storage_xlog.h"
 #include "storage/bufmgr.h"
 #include "storage/freespace.h"
@@ -60,7 +60,7 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 		xl_smgr_truncate xlrec;
 
 		xlrec.blkno = tgt_blk;
-		xlrec.rnode = rel->rd_node;
+		xlrec.rlocator = rel->rd_locator;
 		xlrec.flags = SMGR_TRUNCATE_FSM;
 
 		XLogBeginInsert();
