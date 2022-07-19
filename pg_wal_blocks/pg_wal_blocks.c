@@ -159,11 +159,11 @@ extract_block_info(XLogReaderState *record)
 
 	for (block_id = 0; block_id <= XLogRecMaxBlockId(record); block_id++)
 	{
-		RelFileNode rnode;
+		RelFileLocator rlocator;
 		ForkNumber forknum;
 		BlockNumber blkno;
 
-		if (!XLogRecGetBlockTagExtended(record, block_id, &rnode,
+		if (!XLogRecGetBlockTagExtended(record, block_id, &rlocator,
 										&forknum, &blkno, NULL))
 			continue;
 
@@ -176,7 +176,7 @@ extract_block_info(XLogReaderState *record)
 		 * TODO: more advanced logic (really needed?)
 		 */
 		fprintf(stderr, "Block touched: dboid = %u, relid = %u, block = %u\n",
-				rnode.dbNode, rnode.relNode, blkno);
+				rlocator.dbOid, rlocator.relNumber, blkno);
 	}
 }
 
