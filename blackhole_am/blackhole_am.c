@@ -265,11 +265,11 @@ blackhole_finish_bulk_insert(Relation relation, int options)
  */
 
 static void
-blackhole_relation_set_new_filenode(Relation rel,
-									const RelFileNode *newrnode,
-									char persistence,
-									TransactionId *freezeXid,
-									MultiXactId *minmulti)
+blackhole_relation_set_new_filelocator(Relation rel,
+									   const RelFileLocator *newrnode,
+									   char persistence,
+									   TransactionId *freezeXid,
+									   MultiXactId *minmulti)
 {
 	/* nothing to do */
 }
@@ -281,7 +281,7 @@ blackhole_relation_nontransactional_truncate(Relation rel)
 }
 
 static void
-blackhole_copy_data(Relation rel, const RelFileNode *newrnode)
+blackhole_copy_data(Relation rel, const RelFileLocator *newrnode)
 {
 	/* there is no data */
 }
@@ -476,7 +476,7 @@ static const TableAmRoutine blackhole_methods = {
 	.tuple_satisfies_snapshot = blackhole_tuple_satisfies_snapshot,
 	.index_delete_tuples = blackhole_index_delete_tuples,
 
-	.relation_set_new_filenode = blackhole_relation_set_new_filenode,
+	.relation_set_new_filelocator = blackhole_relation_set_new_filelocator,
 	.relation_nontransactional_truncate = blackhole_relation_nontransactional_truncate,
 	.relation_copy_data = blackhole_copy_data,
 	.relation_copy_for_cluster = blackhole_copy_for_cluster,
