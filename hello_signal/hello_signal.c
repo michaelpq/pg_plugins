@@ -100,7 +100,7 @@ _PG_init(void)
 	BackgroundWorker worker;
 
 	MemSet(&worker, 0, sizeof(BackgroundWorker));
-	worker.bgw_flags = 0;
+	worker.bgw_flags = BGWORKER_SHMEM_ACCESS;
 	worker.bgw_start_time = BgWorkerStart_PostmasterStart;
 	snprintf(worker.bgw_library_name, BGW_MAXLEN, "hello_signal");
 	snprintf(worker.bgw_function_name, BGW_MAXLEN, "hello_main");
