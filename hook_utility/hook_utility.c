@@ -20,7 +20,7 @@ void _PG_init(void);
 void _PG_fini(void);
 
 /* Hardcoded values of parameters that interact with the hook */
-static char *hook_dbname = "postres";
+static char *hook_dbname = "postgres";
 static char *hook_username = "postgres";
 static ProcessUtility_hook_type prev_utility_hook = NULL;
 

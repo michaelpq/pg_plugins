@@ -546,7 +546,7 @@ receiver_raw_load_params(void)
 							   "Replication slot used for logical changes.",
 							   "Default value is \"slot\".",
 							   &receiver_conn_string,
-							   "replication=database dbname=postgres",
+							   "replication=database dbname=postgres application_name=receiver_raw",
 							   PGC_POSTMASTER,
 							   0, NULL, NULL, NULL);
 
