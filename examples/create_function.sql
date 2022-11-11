@@ -24,7 +24,7 @@ END
 $func$ LANGUAGE plpgsql;
 
 -- Create one table with many columns at once
-CREATE OR REPLACE FUNCTION create_cols(tabname text, num_cols int)
+CREATE OR REPLACE FUNCTION create_table_cols(tabname text, num_cols int)
 RETURNS VOID AS
 $func$
 DECLARE
@@ -39,6 +39,43 @@ BEGIN
   END LOOP;
   query := query || ')';
   EXECUTE format(query);
+END
+$func$ LANGUAGE plpgsql;
+
+-- Create one index with many expressions at once
+CREATE OR REPLACE FUNCTION create_index_exprs(indname text,
+  tabname text,
+  num_cols int)
+RETURNS VOID AS
+$func$
+DECLARE
+  query text;
+BEGIN
+  query := 'CREATE INDEX ' || indname || ' ON ' || tabname || ' (';
+  FOR i IN 1..num_cols LOOP
+    query := query || '(' || 'a_' || i::text || ' / 1)';
+    IF i != num_cols THEN
+      query := query || ', ';
+    END IF;
+  END LOOP;
+  query := query || ')';
+  EXECUTE format(query);
+END
+$func$ LANGUAGE plpgsql;
+
+-- Create many indexes at once with expressions
+CREATE OR REPLACE FUNCTION create_index_multi_exprs(indname text,
+  num_inds int, tabname text, num_cols int)
+RETURNS VOID AS
+$func$
+DECLARE
+  query text;
+BEGIN
+  FOR i IN 1..num_inds LOOP
+    query := 'SELECT create_index_exprs(' || quote_literal(indname || '_' || i) ||
+      ',' || quote_literal(tabname) || ',' || num_cols || ')';
+    EXECUTE format(query);
+  END LOOP;
 END
 $func$ LANGUAGE plpgsql;
 
