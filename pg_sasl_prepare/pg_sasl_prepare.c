@@ -4,7 +4,7 @@
  *		Wrapper on top of upstream implementation of SASLprep, changing
  *		a UTF-8 string into a prepared string for a SCRAM exchange.
  *
- * Copyright (c) 1996-2022, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2023, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_sasl_prepare/pg_sasl_prepare.c

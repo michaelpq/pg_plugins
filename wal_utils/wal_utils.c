@@ -3,7 +3,7 @@
  * wal_utils.c
  *		Set of tools and utilities for handling of WAL-related data.
  *
- * Copyright (c) 1996-2022, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2023, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  wal_utils/wal_utils.c

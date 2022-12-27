@@ -6,7 +6,7 @@
  *		gnu_get_libc_version():
  *		http://man7.org/linux/man-pages/man3/gnu_get_libc_version.3.html
  *
- * Copyright (c) 1996-2022, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2023, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		pg_mark_glibc/pg_mark_glibc.c

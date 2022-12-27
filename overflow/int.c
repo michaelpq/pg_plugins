@@ -3,7 +3,7 @@
  * int.c
  *		Overflow checks for signed integers
  *
- * Copyright (c) 1996-2022, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2023, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  overflow/int.c
