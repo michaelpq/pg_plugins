@@ -23,4 +23,24 @@ INSERT INTO parent_tab VALUES (generate_series(30,39));
 CREATE TABLE parent_list (id int) PARTITION BY LIST (id);
 CREATE TABLE child_list PARTITION OF parent_list
      FOR VALUES IN (1, 2);
-INSERT INTO parent_list VALUES (1), (2);
+-- Create one partition with a long list of incremented values, to emulate
+-- large tuple sizes of pg_class with the partition bound definition.
+CREATE OR REPLACE FUNCTION create_long_list(tabname text, tabparent text,
+  num_vals int)
+RETURNS VOID AS
+$func$
+DECLARE
+  query text;
+BEGIN
+  query := 'CREATE TABLE ' || tabname ||
+           ' PARTITION OF ' || tabparent || ' FOR VALUES IN (';
+  FOR i IN 1..num_vals LOOP
+    query := query || i;
+    IF i != num_vals THEN
+      query := query || ', ';
+    END IF;
+  END LOOP;
+  query := query || ')';
+  EXECUTE format(query);
+END
+$func$ LANGUAGE plpgsql;
