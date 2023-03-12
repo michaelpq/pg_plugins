@@ -40,10 +40,11 @@ hmac_internal(pg_cryptohash_type type, bytea *input, bytea *key)
 	const uint8 *data;
 	const uint8 *keydata;
 	const char *typestr = NULL;
-	size_t      len, keylen;
+	size_t		len,
+				keylen;
 	pg_hmac_ctx *ctx;
 	unsigned char *buf;
-	bytea      *result;
+	bytea	   *result;
 	int			digest_length = 0;
 
 	switch (type)

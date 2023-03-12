@@ -41,7 +41,7 @@ typedef struct BlackholeScanDescData
 	TableScanDescData rs_base;	/* AM independent part of the descriptor */
 
 	/* Add more fields here as needed by the AM. */
-} BlackholeScanDescData;
+}			BlackholeScanDescData;
 typedef struct BlackholeScanDescData *BlackholeScanDesc;
 
 static const TableAmRoutine blackhole_methods;
@@ -56,8 +56,8 @@ static const TupleTableSlotOps *
 blackhole_slot_callbacks(Relation relation)
 {
 	/*
-	 * Here you would most likely want to invent your own set of
-	 * slot callbacks for your AM.
+	 * Here you would most likely want to invent your own set of slot
+	 * callbacks for your AM.
 	 */
 	return &TTSOpsMinimalTuple;
 }
@@ -73,7 +73,7 @@ blackhole_scan_begin(Relation relation, Snapshot snapshot,
 					 ParallelTableScanDesc parallel_scan,
 					 uint32 flags)
 {
-	BlackholeScanDesc	scan;
+	BlackholeScanDesc scan;
 
 	scan = (BlackholeScanDesc) palloc(sizeof(BlackholeScanDescData));
 
@@ -83,12 +83,14 @@ blackhole_scan_begin(Relation relation, Snapshot snapshot,
 	scan->rs_base.rs_flags = flags;
 	scan->rs_base.rs_parallel = parallel_scan;
 
-	return (TableScanDesc) scan;                                                                                                                                           }
+	return (TableScanDesc) scan;
+}
 
 static void
 blackhole_scan_end(TableScanDesc sscan)
 {
 	BlackholeScanDesc scan = (BlackholeScanDesc) sscan;
+
 	pfree(scan);
 }
 
@@ -173,7 +175,7 @@ blackhole_tuple_tid_valid(TableScanDesc scan, ItemPointer tid)
 
 static bool
 blackhole_tuple_satisfies_snapshot(Relation rel, TupleTableSlot *slot,
-								  Snapshot snapshot)
+								   Snapshot snapshot)
 {
 	return false;
 }

@@ -24,8 +24,8 @@ static double luck_factor = 0.001;
 
 planner_hook_type prev_planner_hook = NULL;
 
-void _PG_init(void);
-void _PG_fini(void);
+void		_PG_init(void);
+void		_PG_fini(void);
 
 static PlannedStmt *
 panic_hook(Query *parse, const char *query_string,

@@ -36,7 +36,7 @@
 PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
-void _PG_init(void);
+void		_PG_init(void);
 PGDLLEXPORT void receiver_raw_main(Datum main_arg) pg_attribute_noreturn();
 
 /* Signal handling */
@@ -47,7 +47,7 @@ static volatile sig_atomic_t got_sighup = false;
 static char *receiver_database = "postgres";
 static char *receiver_slot = "slot";
 static char *receiver_conn_string = "replication=database dbname=postgres application_name=receiver_raw";
-static int receiver_idle_time = 100;
+static int	receiver_idle_time = 100;
 static bool receiver_sync_mode = true;
 
 /* Worker name */
@@ -65,7 +65,8 @@ static int64 fe_recvint64(char *buf);
 static void
 receiver_raw_sigterm(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sigterm = true;
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
@@ -75,7 +76,8 @@ receiver_raw_sigterm(SIGNAL_ARGS)
 static void
 receiver_raw_sighup(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sighup = true;
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
@@ -89,7 +91,7 @@ static bool
 sendFeedback(PGconn *conn, int64 now)
 {
 	char		replybuf[1 + 8 + 8 + 8 + 8 + 1];
-	int		 len = 0;
+	int			len = 0;
 
 	ereport(LOG, (errmsg("%s: confirming write up to %X/%X, "
 						 "flush to %X/%X (slot custom_slot), "
@@ -104,13 +106,13 @@ sendFeedback(PGconn *conn, int64 now)
 
 	replybuf[len] = 'r';
 	len += 1;
-	fe_sendint64(output_written_lsn, &replybuf[len]);   /* write */
+	fe_sendint64(output_written_lsn, &replybuf[len]);	/* write */
 	len += 8;
-	fe_sendint64(output_fsync_lsn, &replybuf[len]);	 /* flush */
+	fe_sendint64(output_fsync_lsn, &replybuf[len]); /* flush */
 	len += 8;
 	fe_sendint64(output_applied_lsn, &replybuf[len]);	/* apply */
 	len += 8;
-	fe_sendint64(now, &replybuf[len]);  /* sendTime */
+	fe_sendint64(now, &replybuf[len]);	/* sendTime */
 	len += 8;
 
 	/* No reply requested from server */
@@ -133,7 +135,7 @@ sendFeedback(PGconn *conn, int64 now)
 static void
 fe_sendint64(int64 i, char *buf)
 {
-	uint32	  n32;
+	uint32		n32;
 
 	/* High order half first, since we're doing MSB-first */
 	n32 = (uint32) (i >> 32);
@@ -152,9 +154,9 @@ fe_sendint64(int64 i, char *buf)
 static int64
 fe_recvint64(char *buf)
 {
-	int64	   result;
-	uint32	  h32;
-	uint32	  l32;
+	int64		result;
+	uint32		h32;
+	uint32		l32;
 
 	memcpy(&h32, buf, 4);
 	memcpy(&l32, buf + 4, 4);
@@ -171,7 +173,7 @@ fe_recvint64(char *buf)
 static int64
 feGetCurrentTimestamp(void)
 {
-	int64	   result;
+	int64		result;
 	struct timeval tp;
 
 	gettimeofday(&tp, NULL);
@@ -188,7 +190,7 @@ static void
 feTimestampDifference(int64 start_time, int64 stop_time,
 					  long *secs, int *microsecs)
 {
-	int64	   diff = stop_time - start_time;
+	int64		diff = stop_time - start_time;
 
 	if (diff <= 0)
 	{
@@ -207,8 +209,8 @@ receiver_raw_main(Datum main_arg)
 {
 	/* Variables for replication connection */
 	PQExpBuffer query;
-	PGconn *conn;
-	PGresult *res;
+	PGconn	   *conn;
+	PGresult   *res;
 
 	/* Register functions for SIGTERM/SIGHUP management */
 	pqsignal(SIGHUP, receiver_raw_sighup);
@@ -251,9 +253,11 @@ receiver_raw_main(Datum main_arg)
 
 	while (!got_sigterm)
 	{
-		int rc, hdr_len;
+		int			rc,
+					hdr_len;
+
 		/* Buffer for COPY data */
-		char	*copybuf = NULL;
+		char	   *copybuf = NULL;
 
 		/* Wait necessary amount of time */
 		rc = WaitLatch(&MyProc->procLatch,
@@ -286,8 +290,8 @@ receiver_raw_main(Datum main_arg)
 		}
 
 		/*
-		 * Begin a transaction before applying any changes. All the changes
-		 * of the same batch are applied within the same transaction.
+		 * Begin a transaction before applying any changes. All the changes of
+		 * the same batch are applied within the same transaction.
 		 */
 		SetCurrentStatementStartTimestamp();
 		StartTransactionCommand();
@@ -299,16 +303,16 @@ receiver_raw_main(Datum main_arg)
 		 */
 		while (true)
 		{
-			XLogRecPtr  walEnd, walStart;
+			XLogRecPtr	walEnd,
+						walStart;
 
 			rc = PQgetCopyData(conn, &copybuf, 1);
 			if (rc <= 0)
 				break;
 
 			/*
-			 * Check message received from server:
-			 * - 'k', keepalive message
-			 * - 'w', check for streaming header
+			 * Check message received from server: - 'k', keepalive message -
+			 * 'w', check for streaming header
 			 */
 			if (copybuf[0] == 'k')
 			{
@@ -316,11 +320,11 @@ receiver_raw_main(Datum main_arg)
 				bool		replyRequested;
 
 				/*
-				 * Parse the keepalive message, enclosed in the CopyData message.
-				 * We just check if the server requested a reply, and ignore the
-				 * rest.
+				 * Parse the keepalive message, enclosed in the CopyData
+				 * message. We just check if the server requested a reply, and
+				 * ignore the rest.
 				 */
-				pos = 1;	/* skip msgtype 'k' */
+				pos = 1;		/* skip msgtype 'k' */
 
 				/*
 				 * In this message is the latest WAL position that server has
@@ -332,8 +336,8 @@ receiver_raw_main(Datum main_arg)
 									 worker_name,
 									 (uint32) (walEnd >> 32),
 									 (uint32) walEnd)));
-				pos += 8;	/* read walEnd */
-				pos += 8;	/* skip sendTime */
+				pos += 8;		/* read walEnd */
+				pos += 8;		/* skip sendTime */
 				if (rc < pos + 1)
 				{
 					ereport(LOG, (errmsg("%s: streaming header too small: %d",
@@ -348,13 +352,13 @@ receiver_raw_main(Datum main_arg)
 				output_applied_lsn = output_written_lsn;
 
 				/*
-				 * If the server requested an immediate reply, send one.
-				 * If sync mode is sent reply in all cases to ensure that
-				 * server knows how far replay has been done.
+				 * If the server requested an immediate reply, send one. If
+				 * sync mode is sent reply in all cases to ensure that server
+				 * knows how far replay has been done.
 				 */
 				if (replyRequested || receiver_sync_mode)
 				{
-					int64 now = feGetCurrentTimestamp();
+					int64		now = feGetCurrentTimestamp();
 
 					/* Leave is feedback is not sent properly */
 					if (!sendFeedback(conn, now))
@@ -386,11 +390,11 @@ receiver_raw_main(Datum main_arg)
 			/* Log some useful information */
 			ereport(LOG, (errmsg("%s: received from server, walStart %X/%X, "
 								 "and walEnd %X/%X",
-						 worker_name,
-						 (uint32) (walStart >> 32),
-						 (uint32) walStart,
-						 (uint32) (walEnd >> 32),
-						 (uint32) walEnd)));
+								 worker_name,
+								 (uint32) (walStart >> 32),
+								 (uint32) walStart,
+								 (uint32) (walEnd >> 32),
+								 (uint32) walEnd)));
 
 			/* Apply change to database */
 			pgstat_report_activity(STATE_RUNNING, copybuf + hdr_len);
@@ -433,14 +437,14 @@ receiver_raw_main(Datum main_arg)
 			 * response back to the client.
 			 */
 			int			r;
-			fd_set	  input_mask;
-			int64	   message_target = 0;
-			int64	   fsync_target = 0;
+			fd_set		input_mask;
+			int64		message_target = 0;
+			int64		fsync_target = 0;
 			struct timeval timeout;
 			struct timeval *timeoutptr = NULL;
-			int64	   targettime;
+			int64		targettime;
 			long		secs;
-			int		 usecs;
+			int			usecs;
 			int64		now;
 
 			FD_ZERO(&input_mask);
@@ -538,9 +542,9 @@ receiver_raw_load_params(void)
 							   0, NULL, NULL, NULL);
 
 	/*
-	 * Connection string used to connect to remote source.
-	 * Note: This could be made far better as if user does not set
-	 * replication START_REPLICATION will simply fail :)
+	 * Connection string used to connect to remote source. Note: This could be
+	 * made far better as if user does not set replication START_REPLICATION
+	 * will simply fail :)
 	 */
 	DefineCustomStringVariable("receiver_raw.conn_string",
 							   "Replication slot used for logical changes.",

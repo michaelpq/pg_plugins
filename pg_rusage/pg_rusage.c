@@ -19,7 +19,7 @@
 PG_MODULE_MAGIC;
 
 /* Initial snapshot */
-static PGRUsage    ru0 = {0};
+static PGRUsage ru0 = {0};
 
 PG_FUNCTION_INFO_V1(pg_rusage_reset);
 PG_FUNCTION_INFO_V1(pg_rusage_print);
@@ -34,7 +34,8 @@ pg_rusage_reset(PG_FUNCTION_ARGS)
 Datum
 pg_rusage_print(PG_FUNCTION_ARGS)
 {
-	const char	*result = pg_rusage_show(&ru0);
+	const char *result = pg_rusage_show(&ru0);
+
 	elog(WARNING, "pg_rusage_print %s", result);
 	PG_RETURN_VOID();
 }

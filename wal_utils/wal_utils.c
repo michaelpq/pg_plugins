@@ -137,7 +137,7 @@ Datum
 archive_parse_history(PG_FUNCTION_ARGS)
 {
 	char	   *history_buf = TextDatumGetCString(PG_GETARG_DATUM(0));
-	TupleDesc   tupdesc;
+	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;
 	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext per_query_ctx;
@@ -234,21 +234,21 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 	TimeLineID	target_tli;
 	XLogRecPtr	target_lsn;
 	char	   *history_buf;
-	ReturnSetInfo  *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
-	MemoryContext	per_query_ctx;
-	MemoryContext	oldcontext;
-	TupleDesc		tupdesc;
+	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
+	MemoryContext per_query_ctx;
+	MemoryContext oldcontext;
+	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;
-	List		   *entries = NIL;
-	ListCell	   *entry;
+	List	   *entries = NIL;
+	ListCell   *entry;
 	TimeLineHistoryEntry *history;
-	bool			history_match = false;
-	XLogRecPtr		current_seg_lsn;
-	TimeLineID		current_tli;
-	char			xlogfname[MAXFNAMELEN];
-	Datum			values[1];
-	bool			nulls[1];
-	XLogSegNo		logSegNo;
+	bool		history_match = false;
+	XLogRecPtr	current_seg_lsn;
+	TimeLineID	current_tli;
+	char		xlogfname[MAXFNAMELEN];
+	Datum		values[1];
+	bool		nulls[1];
+	XLogSegNo	logSegNo;
 
 	/* Sanity checks for arguments */
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
@@ -318,8 +318,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 					 errmsg("timeline history found empty after parsing")));
 
 		/*
-		 * Check that the target data is newer than the last entry in the history
-		 * file. Better safe than sorry.
+		 * Check that the target data is newer than the last entry in the
+		 * history file. Better safe than sorry.
 		 */
 		history = (TimeLineHistoryEntry *) llast(entries);
 		if (history->tli >= target_tli)
@@ -327,7 +327,7 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 					 errmsg("timeline of last history entry %u newer than or "
 							"equal to target timeline %u",
-						history->tli, target_tli)));
+							history->tli, target_tli)));
 		if (history->end > target_lsn)
 			ereport(ERROR,
 					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -336,9 +336,10 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 							(uint32) history->end,
 							(uint32) (target_lsn >> 32),
 							(uint32) target_lsn)));
+
 		/*
-		 * Check that origin and target are direct parents, we already know that
-		 * the target fits with the history file.
+		 * Check that origin and target are direct parents, we already know
+		 * that the target fits with the history file.
 		 */
 		foreach(entry, entries)
 		{
@@ -359,8 +360,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 					 errmsg("origin data not a direct parent of target")));
 
 		/*
-		 * Abuse this variable as temporary storage, we want the beginning
-		 * of the last, target timeline to match the end of the last timeline
+		 * Abuse this variable as temporary storage, we want the beginning of
+		 * the last, target timeline to match the end of the last timeline
 		 * tracked in the history file.
 		 */
 		current_seg_lsn = history->end;
@@ -389,9 +390,9 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 	/*
 	 * Fill in the data by finding all segments between the origin and the
 	 * target. First segment is the one of the origin LSN, with origin
-	 * timeline. Note that when jumping to a new timeline, Postgres
-	 * switches immediately to a new segment with the new timeline, giving
-	 * up on the last, partial segment.
+	 * timeline. Note that when jumping to a new timeline, Postgres switches
+	 * immediately to a new segment with the new timeline, giving up on the
+	 * last, partial segment.
 	 */
 
 	/* Begin tracking at the beginning of the next segment */
@@ -416,8 +417,8 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 			tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 
 			/*
-			 * Add equivalent of one segment, and just track the beginning
-			 * of it.
+			 * Add equivalent of one segment, and just track the beginning of
+			 * it.
 			 */
 			current_seg_lsn += wal_segment_size;
 			current_seg_lsn -= current_seg_lsn % wal_segment_size;
@@ -550,8 +551,7 @@ archive_get_data(PG_FUNCTION_ARGS)
 	pfree(filename);
 
 	/*
-	 * Read the file, the whole file is read if bytes_to_read is
-	 * negative.
+	 * Read the file, the whole file is read if bytes_to_read is negative.
 	 */
 	if (bytes_to_read < 0)
 	{

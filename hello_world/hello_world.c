@@ -24,7 +24,8 @@
 PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
-void _PG_init(void);
+void		_PG_init(void);
+
 /* Main loop of process */
 PGDLLEXPORT void hello_main(Datum main_arg) pg_attribute_noreturn();
 
@@ -39,7 +40,8 @@ static volatile sig_atomic_t got_sigterm = false;
 static void
 hello_sigterm(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sigterm = true;
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
@@ -68,7 +70,7 @@ hello_main(Datum main_arg)
 				  PG_WAIT_EXTENSION);
 		ResetLatch(&MyProc->procLatch);
 
-		elog(LOG, "Hello World!"); /* Say Hello to the world */
+		elog(LOG, "Hello World!");	/* Say Hello to the world */
 	}
 	proc_exit(0);
 }

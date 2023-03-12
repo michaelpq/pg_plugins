@@ -39,10 +39,10 @@ PG_FUNCTION_INFO_V1(pg_statvfs);
 static char *
 convert_and_check_filename(text *arg)
 {
-	char       *filename;
+	char	   *filename;
 
 	filename = text_to_cstring(arg);
-	canonicalize_path(filename);    /* filename can change length here */
+	canonicalize_path(filename);	/* filename can change length here */
 
 	if (is_absolute_path(filename))
 	{
@@ -85,8 +85,8 @@ pg_statvfs(PG_FUNCTION_ARGS)
 	bool		nulls[11];
 	struct statvfs fsdata;
 	char	   *path;
-	Datum       flags[16];
-	int         nflags = 0;
+	Datum		flags[16];
+	int			nflags = 0;
 
 	if (!superuser())
 		ereport(ERROR,
@@ -144,9 +144,9 @@ pg_statvfs(PG_FUNCTION_ARGS)
 	values[8] = Int64GetDatum(fsdata.f_fsid);
 	values[9] = Int64GetDatum(fsdata.f_namemax);
 	values[10] = PointerGetDatum(
-					construct_array(flags, nflags, TEXTOID, -1, false, 'i'));
+								 construct_array(flags, nflags, TEXTOID, -1, false, 'i'));
 
 	/* Returns the record as Datum */
 	PG_RETURN_DATUM(
-		HeapTupleGetDatum(heap_form_tuple(tupdesc, values, nulls)));
+					HeapTupleGetDatum(heap_form_tuple(tupdesc, values, nulls)));
 }

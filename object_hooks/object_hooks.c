@@ -23,8 +23,8 @@
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;
 
-void _PG_init(void);
-void _PG_fini(void);
+void		_PG_init(void);
+void		_PG_fini(void);
 
 /* Hold previous logging hook */
 static object_access_hook_type prev_object_access_hook = NULL;
@@ -97,13 +97,13 @@ object_hooks_access_entry(ObjectAccessType access,
 			accessname = "OAT_TRUNCATE";
 			break;
 
-		/* no default to let the compiler warn about missing values */
+			/* no default to let the compiler warn about missing values */
 	}
 
 	/*
 	 * Generate a LOG entry based on the information passed around, for
-	 * regression tests.  First fetch some information about the object,
-	 * and just leave if it does not exist.
+	 * regression tests.  First fetch some information about the object, and
+	 * just leave if it does not exist.
 	 */
 
 	identity = getObjectIdentity(&address, true);

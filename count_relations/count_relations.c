@@ -33,7 +33,7 @@
 
 PG_MODULE_MAGIC;
 
-void _PG_init(void);
+void		_PG_init(void);
 PGDLLEXPORT void count_relations_main(Datum main_arg) pg_attribute_noreturn();
 
 static volatile sig_atomic_t got_sigterm = false;
@@ -73,8 +73,8 @@ count_relations_main(Datum main_arg)
 
 	while (!got_sigterm)
 	{
-		int		ret;
-		StringInfoData	buf;
+		int			ret;
+		StringInfoData buf;
 
 		/*
 		 * Background workers mustn't call usleep() or any direct equivalent:
@@ -106,12 +106,12 @@ count_relations_main(Datum main_arg)
 
 		if (SPI_processed > 0)
 		{
-			int32	count;
-			bool	isnull;
+			int32		count;
+			bool		isnull;
 
 			count = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
-												 SPI_tuptable->tupdesc,
-												 1, &isnull));
+												SPI_tuptable->tupdesc,
+												1, &isnull));
 			elog(LOG, "Currently %d relations in database",
 				 count);
 		}
@@ -130,7 +130,7 @@ count_relations_main(Datum main_arg)
 void
 _PG_init(void)
 {
-	BackgroundWorker	worker;
+	BackgroundWorker worker;
 
 	/* register the worker processes */
 	MemSet(&worker, 0, sizeof(BackgroundWorker));

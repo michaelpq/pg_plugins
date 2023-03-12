@@ -51,15 +51,16 @@ get_raw_page(PG_FUNCTION_ARGS)
 	bool		with_hole = PG_GETARG_BOOL(2);
 	bytea	   *raw_page;
 	Relation	rel;
-	char	    raw_page_data[BLCKSZ];
+	char		raw_page_data[BLCKSZ];
 	Buffer		buf;
 	TupleDesc	tupdesc;
-	Datum       result;
+	Datum		result;
 	Datum		values[2];
 	bool		nulls[2];
 	HeapTuple	tuple;
 	PageHeader	page_header;
-	int16		hole_offset, hole_length;
+	int16		hole_offset,
+				hole_length;
 
 	if (!superuser())
 		ereport(ERROR,
@@ -118,8 +119,8 @@ get_raw_page(PG_FUNCTION_ARGS)
 	hole_offset = page_header->pd_lower;
 
 	/*
-	 * If hole is wanted in the page returned, fill it with zeros.
-	 * If not, copy to the return buffer the page without the hole.
+	 * If hole is wanted in the page returned, fill it with zeros. If not,
+	 * copy to the return buffer the page without the hole.
 	 */
 	if (with_hole)
 	{
@@ -160,10 +161,10 @@ get_raw_page(PG_FUNCTION_ARGS)
 Datum
 compress_data(PG_FUNCTION_ARGS)
 {
-	bytea	*raw_data = PG_GETARG_BYTEA_P(0);
-	bytea   *res;
-	int32	compressed_len;
-	char	*compressed_data;
+	bytea	   *raw_data = PG_GETARG_BYTEA_P(0);
+	bytea	   *res;
+	int32		compressed_len;
+	char	   *compressed_data;
 	PGLZ_Strategy strategy;
 
 	memcpy(&strategy, (PGLZ_Strategy *) PGLZ_strategy_always,
@@ -208,10 +209,10 @@ compress_data(PG_FUNCTION_ARGS)
 Datum
 decompress_data(PG_FUNCTION_ARGS)
 {
-	bytea  *compress_data = PG_GETARG_BYTEA_P(0);
-	int16	raw_len = PG_GETARG_INT16(1);
-	bytea  *res;
-	char   *uncompress_buffer;
+	bytea	   *compress_data = PG_GETARG_BYTEA_P(0);
+	int16		raw_len = PG_GETARG_INT16(1);
+	bytea	   *res;
+	char	   *uncompress_buffer;
 
 	uncompress_buffer = palloc(raw_len);
 	if (pglz_decompress(VARDATA(compress_data),
@@ -236,7 +237,7 @@ decompress_data(PG_FUNCTION_ARGS)
 Datum
 bytea_size(PG_FUNCTION_ARGS)
 {
-	bytea  *data = PG_GETARG_BYTEA_P(0);
+	bytea	   *data = PG_GETARG_BYTEA_P(0);
 
 	PG_RETURN_INT32(VARSIZE(data) - VARHDRSZ);
 }

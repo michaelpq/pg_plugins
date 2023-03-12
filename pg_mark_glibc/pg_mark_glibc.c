@@ -45,8 +45,8 @@ usage(const char *progname)
 static void
 write_marker_file(void)
 {
-	FILE       *marker_file;
-	char       *path;
+	FILE	   *marker_file;
+	char	   *path;
 
 	path = psprintf("%s/%s", DataDir, marker_file_name);
 
@@ -73,8 +73,8 @@ main(int argc, char **argv)
 		{"verbose", no_argument, NULL, 'v'},
 		{NULL, 0, NULL, 0}
 	};
-	int		c;
-	int		option_index;
+	int			c;
+	int			option_index;
 
 	progname = get_progname(argv[0]);
 

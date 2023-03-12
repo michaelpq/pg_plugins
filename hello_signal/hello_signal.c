@@ -25,7 +25,7 @@
 PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
-void _PG_init(void);
+void		_PG_init(void);
 PGDLLEXPORT void hello_main(Datum main_arg) pg_attribute_noreturn();
 
 /* SIGTERM handling */
@@ -38,7 +38,8 @@ static char *worker_name = "hello signal worker";
 static void
 hello_sigterm(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sigterm = true;
 	SetLatch(MyLatch);
 	errno = save_errno;
@@ -47,7 +48,8 @@ hello_sigterm(SIGNAL_ARGS)
 static void
 hello_sighup(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sighup = true;
 	SetLatch(MyLatch);
 	errno = save_errno;

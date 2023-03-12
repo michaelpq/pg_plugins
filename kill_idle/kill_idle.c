@@ -30,7 +30,7 @@
 PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
-void _PG_init(void);
+void		_PG_init(void);
 PGDLLEXPORT void kill_idle_main(Datum main_arg) pg_attribute_noreturn();
 
 /* Signal handling */
@@ -38,7 +38,7 @@ static volatile sig_atomic_t got_sigterm = false;
 static volatile sig_atomic_t got_sighup = false;
 
 /* GUC variables */
-static int kill_max_idle_time = 5;
+static int	kill_max_idle_time = 5;
 
 /* Worker name */
 static char *worker_name = "kill_idle";
@@ -46,7 +46,8 @@ static char *worker_name = "kill_idle";
 static void
 kill_idle_sigterm(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sigterm = true;
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
@@ -56,7 +57,8 @@ kill_idle_sigterm(SIGNAL_ARGS)
 static void
 kill_idle_sighup(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
+
 	got_sighup = true;
 	if (MyProc)
 		SetLatch(&MyProc->procLatch);
@@ -67,11 +69,11 @@ static void
 kill_idle_build_query(StringInfoData *buf)
 {
 	appendStringInfo(buf, "SELECT pid, pg_terminate_backend(pid) "
-			   "AS status, usename, datname, client_addr "
-			   "FROM pg_stat_activity "
-			   "WHERE now() - state_change > interval '%d s' AND "
-			   "state = 'idle' AND "
-			   "pid != pg_backend_pid();",
+					 "AS status, usename, datname, client_addr "
+					 "FROM pg_stat_activity "
+					 "WHERE now() - state_change > interval '%d s' AND "
+					 "state = 'idle' AND "
+					 "pid != pg_backend_pid();",
 					 kill_max_idle_time);
 }
 
@@ -96,7 +98,8 @@ kill_idle_main(Datum main_arg)
 
 	while (!got_sigterm)
 	{
-		int ret, i;
+		int			ret,
+					i;
 
 		/* Wait necessary amount of time */
 		WaitLatch(&MyProc->procLatch,
@@ -108,7 +111,8 @@ kill_idle_main(Datum main_arg)
 		/* Process signals */
 		if (got_sighup)
 		{
-			int old_interval;
+			int			old_interval;
+
 			/* Save old value of kill interval */
 			old_interval = kill_max_idle_time;
 
@@ -153,11 +157,11 @@ kill_idle_main(Datum main_arg)
 		/* Do some processing and log stuff disconnected */
 		for (i = 0; i < SPI_processed; i++)
 		{
-			int32 pidValue;
-			bool isnull;
-			char *datname = NULL;
-			char *usename = NULL;
-			char *client_addr = NULL;
+			int32		pidValue;
+			bool		isnull;
+			char	   *datname = NULL;
+			char	   *usename = NULL;
+			char	   *client_addr = NULL;
 
 			/* Fetch values */
 			pidValue = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],

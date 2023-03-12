@@ -34,8 +34,10 @@ pg_swap_pages(PG_FUNCTION_ARGS)
 	uint32		blkno1 = PG_GETARG_UINT32(1);
 	uint32		blkno2 = PG_GETARG_UINT32(2);
 	Relation	rel;
-	Buffer		buf1, buf2;
-	Page		page1, page2;
+	Buffer		buf1,
+				buf2;
+	Page		page1,
+				page2;
 	char		raw_page[BLCKSZ];
 	GenericXLogState *state;
 

@@ -42,8 +42,8 @@
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;
 
-void _PG_init(void);
-void _PG_fini(void);
+void		_PG_init(void);
+void		_PG_fini(void);
 
 /* Hold previous logging hook */
 static emit_log_hook_type prev_log_hook = NULL;
@@ -121,9 +121,9 @@ jsonlog_error_severity(int elevel)
 static void
 jsonlog_write_pipe_chunks(char *data, int len)
 {
-	PipeProtoChunk	p;
-	int				fd = fileno(stderr);
-	int				rc;
+	PipeProtoChunk p;
+	int			fd = fileno(stderr);
+	int			rc;
 
 	Assert(len > 0);
 
@@ -138,7 +138,7 @@ jsonlog_write_pipe_chunks(char *data, int len)
 	while (len > PIPE_MAX_PAYLOAD)
 	{
 #if PG_VERSION_NUM >= 150000
-		/*  no need to set PIPE_PROTO_IS_LAST yet */
+		/* no need to set PIPE_PROTO_IS_LAST yet */
 #else
 		p.proto.is_last = 'f';
 #endif
@@ -169,8 +169,8 @@ jsonlog_write_pipe_chunks(char *data, int len)
 static void
 jsonlog_write_console(char *data, int len)
 {
-	int		 fd = fileno(stderr);
-	int		 rc;
+	int			fd = fileno(stderr);
+	int			rc;
 
 	Assert(len > 0);
 	rc = write(fd, data, len);
@@ -181,24 +181,22 @@ static void
 setup_formatted_log_time(void)
 {
 	struct timeval tv;
-	pg_time_t   stamp_time;
+	pg_time_t	stamp_time;
 	char		msbuf[8];
 
 	gettimeofday(&tv, NULL);
 	stamp_time = (pg_time_t) tv.tv_sec;
 
 	/*
-	 * Note: we ignore log_timezone as JSON is meant to be
-	 * machine-readable so load arbitrarily UTC. Users can use tools to
-	 * display the timestamps in their local time zone. jq in particular
-	 * can only handle timestamps with the iso-8601 "Z" suffix
-	 * representing UTC.
+	 * Note: we ignore log_timezone as JSON is meant to be machine-readable so
+	 * load arbitrarily UTC. Users can use tools to display the timestamps in
+	 * their local time zone. jq in particular can only handle timestamps with
+	 * the iso-8601 "Z" suffix representing UTC.
 	 *
-	 * Note that JSON does not specify the format of dates and
-	 * timestamps, however Javascript enforces a somewhat-widely spread
-	 * format like what is done in Date's toJSON. The main reasons to
-	 * do so are that this is conform to ISO 8601 and that this is
-	 * rather established.
+	 * Note that JSON does not specify the format of dates and timestamps,
+	 * however Javascript enforces a somewhat-widely spread format like what
+	 * is done in Date's toJSON. The main reasons to do so are that this is
+	 * conform to ISO 8601 and that this is rather established.
 	 *
 	 * Take care to leave room for milliseconds which we paste in.
 	 */
@@ -222,19 +220,18 @@ setup_formatted_log_time(void)
 static void
 setup_formatted_start_time(void)
 {
-	pg_time_t       stamp_time = (pg_time_t) MyStartTime;
+	pg_time_t	stamp_time = (pg_time_t) MyStartTime;
 
 	/*
-	 * No need to do this one twice, its value being fixed for each
-	 * session.
+	 * No need to do this one twice, its value being fixed for each session.
 	 */
 	if (formatted_start_time[0] != '\0')
 		return;
 
 	/*
 	 * Load timezone only once.  This should not be necessary here as
-	 * setup_formatted_log_time() would have done that already, but just
-	 * play it safe.
+	 * setup_formatted_log_time() would have done that already, but just play
+	 * it safe.
 	 */
 	if (!utc_tz)
 		utc_tz = pg_tzset("UTC");
@@ -259,8 +256,8 @@ appendJSONLiteral(StringInfo buf, const char *key, const char *value,
 	Assert(key && value);
 
 	/*
-	 * Call in-core function able to generate wanted strings, there is
-	 * no need to reinvent the wheel.
+	 * Call in-core function able to generate wanted strings, there is no need
+	 * to reinvent the wheel.
 	 */
 	escape_json(&literal_json, value);
 
@@ -311,12 +308,11 @@ is_log_level_output(int elevel, int log_min_level)
 static void
 jsonlog_write_json(ErrorData *edata)
 {
-	StringInfoData	buf;
-	TransactionId	txid = GetTopTransactionIdIfAny();
+	StringInfoData buf;
+	TransactionId txid = GetTopTransactionIdIfAny();
 
 	/*
-	 * Disable logs to server, we don't want duplicate entries in
-	 * the server.
+	 * Disable logs to server, we don't want duplicate entries in the server.
 	 */
 	edata->output_to_server = false;
 
@@ -365,7 +361,7 @@ jsonlog_write_json(ErrorData *edata)
 	{
 		StringInfoData msgbuf;
 		const char *psdisp;
-		int                     displen;
+		int			displen;
 
 		initStringInfo(&msgbuf);
 
@@ -475,7 +471,7 @@ jsonlog_write_json(ErrorData *edata)
 	/* leader PID */
 	if (MyProc)
 	{
-		PGPROC     *leader = MyProc->lockGroupLeader;
+		PGPROC	   *leader = MyProc->lockGroupLeader;
 
 		/*
 		 * Show the leader only for active parallel workers.  This leaves out

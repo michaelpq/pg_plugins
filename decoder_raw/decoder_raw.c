@@ -33,8 +33,8 @@
 PG_MODULE_MAGIC;
 
 /* These must be available to pg_dlsym() */
-extern void		_PG_init(void);
-extern void		_PG_output_plugin_init(OutputPluginCallbacks *cb);
+extern void _PG_init(void);
+extern void _PG_output_plugin_init(OutputPluginCallbacks *cb);
 
 /*
  * Structure storing the plugin specifications and options.
@@ -43,7 +43,7 @@ typedef struct
 {
 	MemoryContext context;
 	bool		include_transaction;
-} DecoderRawData;
+}			DecoderRawData;
 
 static void decoder_raw_startup(LogicalDecodingContext *ctx,
 								OutputPluginOptions *opt,
@@ -81,7 +81,7 @@ _PG_output_plugin_init(OutputPluginCallbacks *cb)
 /* initialize this plugin */
 static void
 decoder_raw_startup(LogicalDecodingContext *ctx, OutputPluginOptions *opt,
-				  bool is_init)
+					bool is_init)
 {
 	ListCell   *option;
 	DecoderRawData *data;
@@ -175,7 +175,7 @@ decoder_raw_begin_txn(LogicalDecodingContext *ctx, ReorderBufferTXN *txn)
 /* COMMIT callback */
 static void
 decoder_raw_commit_txn(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
-					 XLogRecPtr commit_lsn)
+					   XLogRecPtr commit_lsn)
 {
 	DecoderRawData *data = ctx->output_plugin_private;
 
@@ -219,6 +219,7 @@ print_literal(StringInfo s, Oid typid, char *outputstr)
 		case FLOAT4OID:
 		case FLOAT8OID:
 		case NUMERICOID:
+
 			/*
 			 * Numeric can have NaN. Float can have Nan, Infinity and
 			 * -Infinity. These need to be quoted.
@@ -256,13 +257,13 @@ print_literal(StringInfo s, Oid typid, char *outputstr)
 static void
 print_relname(StringInfo s, Relation rel)
 {
-	Form_pg_class	class_form = RelationGetForm(rel);
+	Form_pg_class class_form = RelationGetForm(rel);
 
 	appendStringInfoString(s,
-		quote_qualified_identifier(
-				get_namespace_name(
-						   get_rel_namespace(RelationGetRelid(rel))),
-			NameStr(class_form->relname)));
+						   quote_qualified_identifier(
+													  get_namespace_name(
+																		 get_rel_namespace(RelationGetRelid(rel))),
+													  NameStr(class_form->relname)));
 }
 
 /*
@@ -271,8 +272,8 @@ print_relname(StringInfo s, Relation rel)
 static void
 print_value(StringInfo s, Datum origval, Oid typid, bool isnull)
 {
-	Oid					typoutput;
-	bool				typisvarlena;
+	Oid			typoutput;
+	bool		typisvarlena;
 
 	/* Query output function */
 	getTypeOutputInfo(typid,
@@ -299,6 +300,7 @@ print_value(StringInfo s, Datum origval, Oid typid, bool isnull)
 	{
 		/* Definitely detoasted Datum */
 		Datum		val;
+
 		val = PointerGetDatum(PG_DETOAST_DATUM(origval));
 		print_literal(s, typid, OidOutputFunctionCall(typoutput, val));
 	}
@@ -314,10 +316,10 @@ print_where_clause_item(StringInfo s,
 						int natt,
 						bool *first_column)
 {
-	Form_pg_attribute	attr;
-	Datum				origval;
-	bool				isnull;
-	TupleDesc			tupdesc = RelationGetDescr(relation);
+	Form_pg_attribute attr;
+	Datum		origval;
+	bool		isnull;
+	TupleDesc	tupdesc = RelationGetDescr(relation);
 
 	attr = TupleDescAttr(tupdesc, natt - 1);
 
@@ -350,9 +352,9 @@ print_where_clause(StringInfo s,
 				   HeapTuple oldtuple,
 				   HeapTuple newtuple)
 {
-	TupleDesc		tupdesc = RelationGetDescr(relation);
-	int				natt;
-	bool			first_column = true;
+	TupleDesc	tupdesc = RelationGetDescr(relation);
+	int			natt;
+	bool		first_column = true;
 
 	Assert(relation->rd_rel->relreplident == REPLICA_IDENTITY_DEFAULT ||
 		   relation->rd_rel->relreplident == REPLICA_IDENTITY_FULL ||
@@ -365,21 +367,21 @@ print_where_clause(StringInfo s,
 	/* Generate WHERE clause using new values of REPLICA IDENTITY */
 	if (OidIsValid(relation->rd_replidindex))
 	{
-		Relation    indexRel;
+		Relation	indexRel;
 		int			key;
 
 		/* Use all the values associated with the index */
 		indexRel = index_open(relation->rd_replidindex, AccessShareLock);
 		for (key = 0; key < indexRel->rd_index->indnatts; key++)
 		{
-			int	relattr = indexRel->rd_index->indkey.values[key];
+			int			relattr = indexRel->rd_index->indkey.values[key];
 
 			/*
-			 * For a relation having REPLICA IDENTITY set at DEFAULT
-			 * or INDEX, if one of the columns used for tuple selectivity
-			 * is changed, the old tuple data is not NULL and need to
-			 * be used for tuple selectivity. If no such columns are
-			 * updated, old tuple data is NULL.
+			 * For a relation having REPLICA IDENTITY set at DEFAULT or INDEX,
+			 * if one of the columns used for tuple selectivity is changed,
+			 * the old tuple data is not NULL and need to be used for tuple
+			 * selectivity. If no such columns are updated, old tuple data is
+			 * NULL.
 			 */
 			print_where_clause_item(s, relation,
 									oldtuple ? oldtuple : newtuple,
@@ -410,10 +412,10 @@ decoder_raw_insert(StringInfo s,
 				   Relation relation,
 				   HeapTuple tuple)
 {
-	TupleDesc		tupdesc = RelationGetDescr(relation);
-	int				natt;
-	bool			first_column = true;
-	StringInfo		values = makeStringInfo();
+	TupleDesc	tupdesc = RelationGetDescr(relation);
+	int			natt;
+	bool		first_column = true;
+	StringInfo	values = makeStringInfo();
 
 	/* Initialize string info for values */
 	initStringInfo(values);
@@ -426,9 +428,9 @@ decoder_raw_insert(StringInfo s,
 	/* Build column names and values */
 	for (natt = 0; natt < tupdesc->natts; natt++)
 	{
-		Form_pg_attribute	attr;
-		Datum				origval;
-		bool				isnull;
+		Form_pg_attribute attr;
+		Datum		origval;
+		bool		isnull;
 
 		attr = TupleDescAttr(tupdesc, natt);
 
@@ -474,9 +476,8 @@ decoder_raw_delete(StringInfo s,
 	print_relname(s, relation);
 
 	/*
-	 * Here the same tuple is used as old and new values, selectivity will
-	 * be properly reduced by relation uses DEFAULT or INDEX as REPLICA
-	 * IDENTITY.
+	 * Here the same tuple is used as old and new values, selectivity will be
+	 * properly reduced by relation uses DEFAULT or INDEX as REPLICA IDENTITY.
 	 */
 	print_where_clause(s, relation, tuple, tuple);
 	appendStringInfoString(s, ";");
@@ -492,9 +493,9 @@ decoder_raw_update(StringInfo s,
 				   HeapTuple oldtuple,
 				   HeapTuple newtuple)
 {
-	TupleDesc		tupdesc = RelationGetDescr(relation);
-	int				natt;
-	bool			first_column = true;
+	TupleDesc	tupdesc = RelationGetDescr(relation);
+	int			natt;
+	bool		first_column = true;
 
 	/* If there are no new values, simply leave as there is nothing to do */
 	if (newtuple == NULL)
@@ -507,11 +508,11 @@ decoder_raw_update(StringInfo s,
 	appendStringInfo(s, " SET ");
 	for (natt = 0; natt < tupdesc->natts; natt++)
 	{
-		Form_pg_attribute	attr;
-		Datum				origval;
-		bool				isnull;
-		Oid					typoutput;
-		bool				typisvarlena;
+		Form_pg_attribute attr;
+		Datum		origval;
+		bool		isnull;
+		Oid			typoutput;
+		bool		typisvarlena;
 
 		attr = TupleDescAttr(tupdesc, natt);
 
@@ -559,12 +560,12 @@ decoder_raw_update(StringInfo s,
  */
 static void
 decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
-				 Relation relation, ReorderBufferChange *change)
+				   Relation relation, ReorderBufferChange *change)
 {
 	DecoderRawData *data;
-	MemoryContext	old;
-	char			replident = relation->rd_rel->relreplident;
-	bool			is_rel_non_selective;
+	MemoryContext old;
+	char		replident = relation->rd_rel->relreplident;
+	bool		is_rel_non_selective;
 
 	data = ctx->output_plugin_private;
 
@@ -598,10 +599,10 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 		case REORDER_BUFFER_CHANGE_UPDATE:
 			if (!is_rel_non_selective)
 			{
-				HeapTuple oldtuple = change->data.tp.oldtuple != NULL ?
-					&change->data.tp.oldtuple->tuple : NULL;
-				HeapTuple newtuple = change->data.tp.newtuple != NULL ?
-					&change->data.tp.newtuple->tuple : NULL;
+				HeapTuple	oldtuple = change->data.tp.oldtuple != NULL ?
+				&change->data.tp.oldtuple->tuple : NULL;
+				HeapTuple	newtuple = change->data.tp.newtuple != NULL ?
+				&change->data.tp.newtuple->tuple : NULL;
 
 				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_update(ctx->out,

@@ -36,13 +36,14 @@ static struct mpd_status *mpd_status = NULL;
 
 /* Connection parameters */
 static char *mpd_host = "localhost";
-static int mpd_port = 6600;
+static int	mpd_port = 6600;
 static char *mpd_password;
+
 /* Timeout for connection obtention in seconds, 0 = infinite */
-static int mpd_timeout = 10;
+static int	mpd_timeout = 10;
 
 /* Entry point of library loading */
-void _PG_init(void);
+void		_PG_init(void);
 
 /* Utility functions */
 static void pgmpc_init(void);
@@ -157,8 +158,8 @@ pgmpc_init_setof_single(FunctionCallInfo fcinfo,
 						TupleDesc *tupdesc,
 						Tuplestorestate **tupstore)
 {
-	char **argnames;
-	Oid	argtypes[1];
+	char	  **argnames;
+	Oid			argtypes[1];
 
 	/* Initialize content and do the work */
 	argtypes[0] = argtype;
@@ -185,7 +186,7 @@ pgmpc_init_setof(FunctionCallInfo fcinfo,
 	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext per_query_ctx;
 	MemoryContext oldcontext;
-	int i;
+	int			i;
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -240,10 +241,9 @@ pgmpc_status(PG_FUNCTION_ARGS)
 	MemSet(nulls, true, sizeof(nulls));
 
 	/*
-	 * Send all necessary commands at once to avoid unnecessary round
-	 * trips. The following information is obtained in an aync way:
-	 * - current status of server
-	 * - current song run on server
+	 * Send all necessary commands at once to avoid unnecessary round trips.
+	 * The following information is obtained in an aync way: - current status
+	 * of server - current song run on server
 	 */
 	if (!mpd_command_list_begin(mpd_conn, true) ||
 		!mpd_send_status(mpd_conn) ||
@@ -276,28 +276,28 @@ pgmpc_status(PG_FUNCTION_ARGS)
 			const char *album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
 			unsigned int elapsed_time = mpd_status_get_elapsed_time(mpd_status);
 			unsigned int total_time = mpd_status_get_total_time(mpd_status);
-			int song_pos = mpd_status_get_song_pos(mpd_status) + 1;
-			int volume = mpd_status_get_volume(mpd_status);
+			int			song_pos = mpd_status_get_song_pos(mpd_status) + 1;
+			int			volume = mpd_status_get_volume(mpd_status);
 
 			/* Build tuple using this information */
 			if (title)
 			{
 				nulls[0] = false;
-				values[0] =  CStringGetTextDatum(title);
+				values[0] = CStringGetTextDatum(title);
 			}
 			else
 				nulls[0] = true;
 			if (artist)
 			{
 				nulls[1] = false;
-				values[1] =  CStringGetTextDatum(artist);
+				values[1] = CStringGetTextDatum(artist);
 			}
 			else
 				nulls[1] = true;
 			if (album)
 			{
 				nulls[2] = false;
-				values[2] =  CStringGetTextDatum(album);
+				values[2] = CStringGetTextDatum(album);
 			}
 			else
 				nulls[2] = true;
@@ -336,9 +336,10 @@ Datum
 pgmpc_play(PG_FUNCTION_ARGS)
 {
 	pgmpc_init();
+
 	/*
-	 * Enforce disabling of pause. We could here check for the server
-	 * status before doing anything but is it worth the round trip?
+	 * Enforce disabling of pause. We could here check for the server status
+	 * before doing anything but is it worth the round trip?
 	 */
 	if (!mpd_run_pause(mpd_conn, false))
 		pgmpc_print_error();
@@ -354,9 +355,10 @@ Datum
 pgmpc_pause(PG_FUNCTION_ARGS)
 {
 	pgmpc_init();
+
 	/*
-	 * Enforce pause to be set in all cases. Subsequent calls
-	 * to this function result still in a pause state.
+	 * Enforce pause to be set in all cases. Subsequent calls to this function
+	 * result still in a pause state.
 	 */
 	if (!mpd_run_pause(mpd_conn, true))
 		pgmpc_print_error();
@@ -399,7 +401,7 @@ pgmpc_prev(PG_FUNCTION_ARGS)
 Datum
 pgmpc_update(PG_FUNCTION_ARGS)
 {
-	char *path = NULL;
+	char	   *path = NULL;
 
 	/* Get optional path if defined */
 	if (PG_NARGS() == 1 && !PG_ARGISNULL(0))
@@ -420,7 +422,7 @@ pgmpc_update(PG_FUNCTION_ARGS)
 Datum
 pgmpc_random(PG_FUNCTION_ARGS)
 {
-	bool is_random;
+	bool		is_random;
 
 	pgmpc_init();
 
@@ -444,7 +446,7 @@ pgmpc_random(PG_FUNCTION_ARGS)
 Datum
 pgmpc_repeat(PG_FUNCTION_ARGS)
 {
-	bool is_repeat;
+	bool		is_repeat;
 
 	pgmpc_init();
 
@@ -468,7 +470,7 @@ pgmpc_repeat(PG_FUNCTION_ARGS)
 Datum
 pgmpc_single(PG_FUNCTION_ARGS)
 {
-	bool is_single;
+	bool		is_single;
 
 	pgmpc_init();
 
@@ -492,7 +494,7 @@ pgmpc_single(PG_FUNCTION_ARGS)
 Datum
 pgmpc_consume(PG_FUNCTION_ARGS)
 {
-	bool is_consume;
+	bool		is_consume;
 
 	pgmpc_init();
 
@@ -539,9 +541,9 @@ pgmpc_set_volume(PG_FUNCTION_ARGS)
 Datum
 pgmpc_ls(PG_FUNCTION_ARGS)
 {
-	TupleDesc   tupdesc;
+	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;
-	char *path = NULL;
+	char	   *path = NULL;
 
 	if (PG_NARGS() == 1 && !PG_ARGISNULL(0))
 		path = text_to_cstring(PG_GETARG_TEXT_PP(0));
@@ -559,7 +561,7 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	/* Now get all the songs and send them back to caller */
 	while (true)
 	{
-		Datum       values[1];
+		Datum		values[1];
 		bool		nulls[1];
 		struct mpd_song *song = mpd_recv_song(mpd_conn);
 
@@ -582,6 +584,7 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	if (mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS)
 	{
 		const char *message = mpd_connection_get_error_message(mpd_conn);
+
 		pgmpc_reset();
 		ereport(ERROR,
 				(errcode(ERRCODE_SYSTEM_ERROR),
@@ -606,10 +609,10 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 Datum
 pgmpc_playlist(PG_FUNCTION_ARGS)
 {
-	TupleDesc   tupdesc;
+	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;
-	char *playlist = NULL;
-	bool ret;
+	char	   *playlist = NULL;
+	bool		ret;
 
 	if (PG_NARGS() == 1 && !PG_ARGISNULL(0))
 		playlist = text_to_cstring(PG_GETARG_TEXT_PP(0));
@@ -630,7 +633,7 @@ pgmpc_playlist(PG_FUNCTION_ARGS)
 	/* Now get all the songs and send them back to caller */
 	while (true)
 	{
-		Datum       values[1];
+		Datum		values[1];
 		bool		nulls[1];
 		struct mpd_song *song = mpd_recv_song(mpd_conn);
 
@@ -653,6 +656,7 @@ pgmpc_playlist(PG_FUNCTION_ARGS)
 	if (mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS)
 	{
 		const char *message = mpd_connection_get_error_message(mpd_conn);
+
 		pgmpc_reset();
 		ereport(ERROR,
 				(errcode(ERRCODE_SYSTEM_ERROR),
@@ -676,7 +680,7 @@ pgmpc_playlist(PG_FUNCTION_ARGS)
 Datum
 pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 {
-	TupleDesc   tupdesc;
+	TupleDesc	tupdesc;
 	Tuplestorestate *tupstore;
 
 	/* Initialize function context */
@@ -692,7 +696,7 @@ pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 	/* Now get all the songs and send them back to caller */
 	while (true)
 	{
-		Datum       values[1];
+		Datum		values[1];
 		bool		nulls[1];
 		struct mpd_playlist *playlist = mpd_recv_playlist(mpd_conn);
 
@@ -715,6 +719,7 @@ pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 	if (mpd_connection_get_error(mpd_conn) != MPD_ERROR_SUCCESS)
 	{
 		const char *message = mpd_connection_get_error_message(mpd_conn);
+
 		pgmpc_reset();
 		ereport(ERROR,
 				(errcode(ERRCODE_SYSTEM_ERROR),
@@ -738,7 +743,7 @@ pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 Datum
 pgmpc_add(PG_FUNCTION_ARGS)
 {
-	char *path;
+	char	   *path;
 
 	if (PG_ARGISNULL(0))
 		ereport(ERROR,
@@ -751,8 +756,8 @@ pgmpc_add(PG_FUNCTION_ARGS)
 	/* User needs to specify a path */
 	if (path == NULL)
 
-	/* Now run the command */
-	pgmpc_init();
+		/* Now run the command */
+		pgmpc_init();
 	if (!mpd_run_add(mpd_conn, path))
 		pgmpc_print_error();
 	pgmpc_reset();
@@ -766,7 +771,7 @@ pgmpc_add(PG_FUNCTION_ARGS)
 Datum
 pgmpc_load(PG_FUNCTION_ARGS)
 {
-	char *playlist;
+	char	   *playlist;
 
 	/* User needs to specify a playlist */
 	if (PG_ARGISNULL(0))
@@ -791,7 +796,7 @@ pgmpc_load(PG_FUNCTION_ARGS)
 Datum
 pgmpc_save(PG_FUNCTION_ARGS)
 {
-	char *playlist;
+	char	   *playlist;
 
 	/* User needs to specify a playlist */
 	if (PG_ARGISNULL(0))
@@ -817,7 +822,7 @@ pgmpc_save(PG_FUNCTION_ARGS)
 Datum
 pgmpc_rm(PG_FUNCTION_ARGS)
 {
-	char *playlist;
+	char	   *playlist;
 
 	/* User needs to specify a playlist */
 	if (PG_ARGISNULL(0))

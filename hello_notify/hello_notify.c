@@ -31,7 +31,7 @@
 
 PG_MODULE_MAGIC;
 
-void _PG_init(void);
+void		_PG_init(void);
 PGDLLEXPORT void hello_notify_main(Datum main_arg) pg_attribute_noreturn();
 
 /* Worker name */
@@ -42,7 +42,7 @@ static volatile sig_atomic_t got_sigterm = false;
 static volatile sig_atomic_t got_sighup = false;
 
 /* GUC variables */
-static int notify_nap_time = 60;
+static int	notify_nap_time = 60;
 static char *notify_database = NULL;
 static char *notify_channel = NULL;
 
@@ -54,7 +54,7 @@ static char *notify_channel = NULL;
 static void
 hello_notify_sigterm(SIGNAL_ARGS)
 {
-	int save_errno = errno;
+	int			save_errno = errno;
 
 	got_sigterm = true;
 	if (MyProc)
@@ -90,8 +90,8 @@ hello_notify_build_query(StringInfoData *buf)
 		return;
 
 	/*
-	 * Build query depending on nap time and channel name. A notification
-	 * is only sent to queries running for longer than naptime.
+	 * Build query depending on nap time and channel name. A notification is
+	 * only sent to queries running for longer than naptime.
 	 */
 	appendStringInfo(buf, "\
 		SELECT pg_notify('%s', row_to_json(q)::text)\
@@ -132,12 +132,12 @@ hello_notify_main(Datum main_arg)
 	hello_notify_build_query(&buf);
 
 	elog(LOG, "hello_notify: Started on db %s with interval %d seconds",
-			 notify_database, notify_nap_time);
+		 notify_database, notify_nap_time);
 
 	/* Main processing loop */
 	while (!got_sigterm)
 	{
-		int	ret;
+		int			ret;
 
 		/* Take a nap... */
 		WaitLatch(&MyProc->procLatch,
@@ -158,8 +158,7 @@ hello_notify_main(Datum main_arg)
 		}
 
 		/*
-		 * Handle signal SIGTERM if it has come up after entering this
-		 * loop.
+		 * Handle signal SIGTERM if it has come up after entering this loop.
 		 */
 		if (got_sigterm)
 		{
@@ -201,8 +200,8 @@ static void
 hello_notify_load_params(void)
 {
 	/*
-	 * Defines database where to connect and send the NOTIFY requests,
-	 * needs to remain constant after worker startup.
+	 * Defines database where to connect and send the NOTIFY requests, needs
+	 * to remain constant after worker startup.
 	 */
 	DefineCustomStringVariable("hello_notify.database",
 							   "Database where NOTIFY is sent.",

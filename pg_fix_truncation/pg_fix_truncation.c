@@ -36,7 +36,7 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 {
 	Oid			relid = PG_GETARG_OID(0);
 	Relation	rel;
-	BlockNumber	tgt_blk;
+	BlockNumber tgt_blk;
 
 	rel = relation_open(relid, AccessExclusiveLock);
 
@@ -45,15 +45,15 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 		rel->rd_rel->relkind != RELKIND_TOASTVALUE)
 		ereport(ERROR,
 				(errcode(ERRCODE_WRONG_OBJECT_TYPE),
-		   errmsg("\"%s\" is not a table, materialized view, or TOAST table",
-				  RelationGetRelationName(rel))));
+				 errmsg("\"%s\" is not a table, materialized view, or TOAST table",
+						RelationGetRelationName(rel))));
 
 	(void) RelationGetSmgr(rel);
 	tgt_blk = RelationGetNumberOfBlocksInFork(rel, MAIN_FORKNUM);
 
 	/*
-	 * WAL-log the truncation before actually doing it. This will prevent
-	 * torn pages if there is a crash in-between.
+	 * WAL-log the truncation before actually doing it. This will prevent torn
+	 * pages if there is a crash in-between.
 	 */
 	if (RelationNeedsWAL(rel))
 	{
@@ -72,8 +72,8 @@ pg_truncate_fsm(PG_FUNCTION_ARGS)
 	FreeSpaceMapPrepareTruncateRel(rel, tgt_blk);
 
 	/*
-	 * Release the lock right away, and not at commit time.
-	 * See similar comments in pg_visibility...
+	 * Release the lock right away, and not at commit time. See similar
+	 * comments in pg_visibility...
 	 */
 	relation_close(rel, AccessExclusiveLock);
 

@@ -41,7 +41,7 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	MemoryContext per_query_ctx;
 	MemoryContext oldcontext;
-	int i;
+	int			i;
 
 	if (!superuser())
 		ereport(ERROR,
@@ -121,7 +121,7 @@ pg_syncrep_state(PG_FUNCTION_ARGS)
 		else if (proc->syncRepState == SYNC_REP_WAIT_COMPLETE)
 			values[1] = CStringGetTextDatum("wait complete");
 		else
-			Assert(false); /* should not happen */
+			Assert(false);		/* should not happen */
 
 		if (XLogRecPtrIsInvalid(proc->waitLSN))
 			nulls[2] = true;
@@ -150,12 +150,18 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 	bool		nulls[12];
 	WalRcvData *walrcv = WalRcv;
 	int			pid;
-	XLogRecPtr	receiveStart, flushedUpto, latestChunkStart, latestWalEnd;
-	TimeLineID	receiveStartTLI, receivedTLI;
-	TimestampTz	lastMsgSendTime, lastMsgReceiptTime, latestWalEndTime;
+	XLogRecPtr	receiveStart,
+				flushedUpto,
+				latestChunkStart,
+				latestWalEnd;
+	TimeLineID	receiveStartTLI,
+				receivedTLI;
+	TimestampTz lastMsgSendTime,
+				lastMsgReceiptTime,
+				latestWalEndTime;
 	char	   *slotname;
 	bool		ready_to_display;
-	WalRcvState	walRcvState;
+	WalRcvState walRcvState;
 
 	if (!superuser())
 		ereport(ERROR,
@@ -280,5 +286,5 @@ pg_wal_receiver_state(PG_FUNCTION_ARGS)
 
 	/* Returns the record as Datum */
 	PG_RETURN_DATUM(HeapTupleGetDatum(
-						  heap_form_tuple(tupdesc, values, nulls)));
+									  heap_form_tuple(tupdesc, values, nulls)));
 }

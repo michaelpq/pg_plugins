@@ -15,15 +15,16 @@
 #define NUM_LOOPS 100
 
 /* this function is run by the second thread */
-void *conn_thread_func(void *num_ptr)
+void *
+conn_thread_func(void *num_ptr)
 {
 	/* increment x to 100 */
-	int num_thread;
+	int			num_thread;
 	const char *conninfo_nossl = "host=localhost sslmode=disable";
 	const char *conninfo_ssl = "host=localhost sslmode=require";
 	const char *conninfo;
-	PGconn *conn;
-	int count;
+	PGconn	   *conn;
+	int			count;
 
 	num_thread = *((int *) num_ptr);
 
@@ -52,11 +53,13 @@ void *conn_thread_func(void *num_ptr)
 	return NULL;
 }
 
-int main()
+int
+main()
 {
-	int count = 0;
+	int			count = 0;
+
 	/* this variable is the reference to the other 100 threads */
-	pthread_t conn_thread[NUM_THREADS];
+	pthread_t	conn_thread[NUM_THREADS];
 
 	if (PQisthreadsafe() == 0)
 	{

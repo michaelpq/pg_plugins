@@ -47,7 +47,8 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 	char	   *prep_password = NULL;
 	char	   *saltbuf;
 	char	   *verifier;
-	HeapTuple	oldtuple, newtuple;
+	HeapTuple	oldtuple,
+				newtuple;
 	TupleDesc	dsc;
 	Relation	rel;
 	Datum		repl_val[Natts_pg_authid];

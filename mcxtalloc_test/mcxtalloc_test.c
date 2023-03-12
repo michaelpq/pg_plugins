@@ -30,8 +30,8 @@ PG_FUNCTION_INFO_V1(mcxtalloc_extended);
 Datum
 mcxtalloc(PG_FUNCTION_ARGS)
 {
-	Size	alloc_size = PG_GETARG_UINT32(0);
-	char   *ptr;
+	Size		alloc_size = PG_GETARG_UINT32(0);
+	char	   *ptr;
 
 	ptr = MemoryContextAlloc(CurrentMemoryContext, alloc_size);
 	Assert(ptr != NULL);
@@ -47,8 +47,8 @@ mcxtalloc(PG_FUNCTION_ARGS)
 Datum
 mcxtalloc_huge(PG_FUNCTION_ARGS)
 {
-	Size	alloc_size = PG_GETARG_UINT32(0);
-	char   *ptr;
+	Size		alloc_size = PG_GETARG_UINT32(0);
+	char	   *ptr;
 
 	ptr = MemoryContextAllocHuge(CurrentMemoryContext, alloc_size);
 	Assert(ptr != NULL);
@@ -65,9 +65,10 @@ mcxtalloc_huge(PG_FUNCTION_ARGS)
 Datum
 mcxtalloc_zero_cmp(PG_FUNCTION_ARGS)
 {
-	Size	alloc_size = PG_GETARG_UINT32(0);
-	char   *ptr1, *ptr2;
-	bool	res = false;
+	Size		alloc_size = PG_GETARG_UINT32(0);
+	char	   *ptr1,
+			   *ptr2;
+	bool		res = false;
 
 	ptr1 = MemoryContextAllocZero(CurrentMemoryContext, alloc_size);
 	ptr2 = MemoryContextAllocExtended(CurrentMemoryContext, alloc_size,
@@ -91,12 +92,12 @@ mcxtalloc_zero_cmp(PG_FUNCTION_ARGS)
 Datum
 mcxtalloc_extended(PG_FUNCTION_ARGS)
 {
-	Size	alloc_size = PG_GETARG_UINT32(0);
-	bool	is_huge = PG_GETARG_BOOL(1);
-	bool	is_no_oom = PG_GETARG_BOOL(2);
-	bool	is_zero = PG_GETARG_BOOL(3);
-	int		flags = 0;
-	char   *ptr;
+	Size		alloc_size = PG_GETARG_UINT32(0);
+	bool		is_huge = PG_GETARG_BOOL(1);
+	bool		is_no_oom = PG_GETARG_BOOL(2);
+	bool		is_zero = PG_GETARG_BOOL(3);
+	int			flags = 0;
+	char	   *ptr;
 
 	if (is_huge)
 		flags |= MCXT_ALLOC_HUGE;

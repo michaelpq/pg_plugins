@@ -24,7 +24,7 @@ const char *progname;
 /* Global parameters */
 static bool verbose = false;
 static char *full_path = NULL;
-static uint32 WalSegSz = DEFAULT_XLOG_SEG_SIZE;	/* should be settable */
+static uint32 WalSegSz = DEFAULT_XLOG_SEG_SIZE; /* should be settable */
 
 /* Data regarding input WAL to parse */
 static XLogSegNo segno = 0;
@@ -32,13 +32,13 @@ static XLogSegNo segno = 0;
 /* Structures for XLOG reader callback */
 typedef struct XLogReadBlockPrivate
 {
-	const char	   *full_path;
-	TimeLineID		timeline;
-} XLogReadBlockPrivate;
-static int XLogReadPageBlock(XLogReaderState *xlogreader,
-							 XLogRecPtr targetPagePtr,
-							 int reqLen, XLogRecPtr targetRecPtr,
-							 char *readBuf);
+	const char *full_path;
+	TimeLineID	timeline;
+}			XLogReadBlockPrivate;
+static int	XLogReadPageBlock(XLogReaderState *xlogreader,
+							  XLogRecPtr targetPagePtr,
+							  int reqLen, XLogRecPtr targetRecPtr,
+							  char *readBuf);
 
 static void
 usage(const char *progname)
@@ -72,7 +72,7 @@ split_path(const char *path, char **dir, char **fname)
 	if (sep != NULL)
 	{
 		*dir = pg_strdup(path);
-		(*dir)[(sep - path) + 1] = '\0';        /* no strndup */
+		(*dir)[(sep - path) + 1] = '\0';	/* no strndup */
 		*fname = pg_strdup(sep + 1);
 	}
 	/* local directory */
@@ -88,7 +88,7 @@ XLogOpenSegment(XLogReaderState *state, XLogSegNo nextSegNo,
 				TimeLineID *tli_p)
 {
 	XLogReadBlockPrivate *private =
-		(XLogReadBlockPrivate *) state->private_data;
+	(XLogReadBlockPrivate *) state->private_data;
 
 	state->seg.ws_file = open(private->full_path, O_RDONLY | PG_BINARY, 0);
 	if (state->seg.ws_file < 0)
@@ -115,17 +115,17 @@ XLogReadPageBlock(XLogReaderState *state, XLogRecPtr targetPagePtr,
 				  int reqLen, XLogRecPtr targetRecPtr, char *readBuf)
 {
 	XLogReadBlockPrivate *private =
-		(XLogReadBlockPrivate *) state->private_data;
+	(XLogReadBlockPrivate *) state->private_data;
 	WALReadError errinfo;
 
 	/*
-	 * Note that WalRead() is in charge of opening the segment to read and
-	 * it will trigger the callback to open a segment.
+	 * Note that WalRead() is in charge of opening the segment to read and it
+	 * will trigger the callback to open a segment.
 	 */
 	if (!WALRead(state, readBuf, targetPagePtr, XLOG_BLCKSZ,
 				 private->timeline, &errinfo))
 	{
-		char        fname[MAXPGPATH];
+		char		fname[MAXPGPATH];
 		WALOpenSegment *seg = &errinfo.wre_seg;
 
 		XLogFileName(fname, seg->ws_tli, seg->ws_segno,
@@ -155,12 +155,12 @@ XLogReadPageBlock(XLogReaderState *state, XLogRecPtr targetPagePtr,
 static void
 extract_block_info(XLogReaderState *record)
 {
-	int block_id;
+	int			block_id;
 
 	for (block_id = 0; block_id <= XLogRecMaxBlockId(record); block_id++)
 	{
 		RelFileLocator rlocator;
-		ForkNumber forknum;
+		ForkNumber	forknum;
 		BlockNumber blkno;
 
 		if (!XLogRecGetBlockTagExtended(record, block_id, &rlocator,
@@ -172,8 +172,8 @@ extract_block_info(XLogReaderState *record)
 			continue;
 
 		/*
-		 * Print information of block touched.
-		 * TODO: more advanced logic (really needed?)
+		 * Print information of block touched. TODO: more advanced logic
+		 * (really needed?)
 		 */
 		fprintf(stderr, "Block touched: dboid = %u, relid = %u, block = %u\n",
 				rlocator.dbOid, rlocator.relNumber, blkno);
@@ -190,9 +190,9 @@ do_wal_parsing(TimeLineID timeline)
 	XLogReadBlockPrivate private;
 	XLogRecord *record;
 	XLogReaderState *state;
-	char *errormsg;
-	XLogRecPtr first_record;
-	XLogRecPtr next_record;
+	char	   *errormsg;
+	XLogRecPtr	first_record;
+	XLogRecPtr	next_record;
 
 	private.full_path = full_path;
 	private.timeline = timeline;
@@ -245,8 +245,8 @@ main(int argc, char **argv)
 		{"verbose", no_argument, NULL, 'v'},
 		{NULL, 0, NULL, 0}
 	};
-	int		c;
-	int		option_index;
+	int			c;
+	int			option_index;
 	TimeLineID	timeline;
 
 	progname = get_progname(argv[0]);
