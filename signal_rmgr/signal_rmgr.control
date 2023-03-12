@@ -1,0 +1,4 @@
+comment = 'signal_rmgr - send signals through WAL'
+default_version = '1.0'
+module_pathname = '$libdir/signal_rmgr'
+relocatable = true
