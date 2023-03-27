@@ -18,6 +18,7 @@
 #include "common/md5.h"
 #include "common/sha1.h"
 #include "common/sha2.h"
+#include "varatt.h"
 
 PG_MODULE_MAGIC;
 
