@@ -226,7 +226,8 @@ blackhole_multi_insert(Relation relation, TupleTableSlot **slots,
 static TM_Result
 blackhole_tuple_delete(Relation relation, ItemPointer tid, CommandId cid,
 					   Snapshot snapshot, Snapshot crosscheck, bool wait,
-					   TM_FailureData *tmfd, bool changingPart)
+					   TM_FailureData *tmfd, bool changingPart,
+					   LazyTupleTableSlot *lockedSlot)
 {
 	/* nothing to do, so it is always OK */
 	return TM_Ok;
@@ -238,7 +239,9 @@ blackhole_tuple_update(Relation relation, ItemPointer otid,
 					   TupleTableSlot *slot, CommandId cid,
 					   Snapshot snapshot, Snapshot crosscheck,
 					   bool wait, TM_FailureData *tmfd,
-					   LockTupleMode *lockmode, bool *update_indexes)
+					   LockTupleMode *lockmode,
+					   TU_UpdateIndexes *update_indexes,
+					   LazyTupleTableSlot *lockedSlot)
 {
 	/* nothing to do, so it is always OK */
 	return TM_Ok;
