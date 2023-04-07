@@ -8,6 +8,7 @@ SUBDIRS = blackhole	\
 	blackhole_am	\
 	compress_test	\
 	count_relations	\
+	custom_wal	\
 	decoder_raw	\
 	hello_notify	\
 	hello_signal	\
@@ -16,6 +17,7 @@ SUBDIRS = blackhole	\
 	hook_utility	\
 	jsonlog		\
 	kill_idle	\
+	lwlock_test	\
 	mcxtalloc_test	\
 	object_hooks	\
 	overflow	\
