@@ -1,0 +1,7 @@
+custom_wal
+==========
+
+This module is PostgreSQL extension, aimed to be a thin wrapper on top
+of LogLogicalMessage() to generate a custom number of WAL records of a
+custom size.
+

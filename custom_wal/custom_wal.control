@@ -1,0 +1,5 @@
+# custom_wal extension
+comment = 'Generate custom WAL records'
+default_version = '1.0'
+module_pathname = '$libdir/custom_wal'
+relocatable = true
