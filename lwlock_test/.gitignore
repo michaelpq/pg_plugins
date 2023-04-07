@@ -1,0 +1,3 @@
+# Ignore test paths
+/results/
+/tmp_check/

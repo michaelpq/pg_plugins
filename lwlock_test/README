@@ -1,0 +1,38 @@
+lwlock_test
+===========
+
+This module is a PostgreSQL extension that tests routines related to
+LWLocks.
+
+The routines related LWLocks and variable values changing are:
+
+  * LWLockUpdateVar()
+  * LWLockReleaseClearVar()
+  * LWLockWaitForVar()
+
+These are mapped to the following SQL functions, that should be used on
+two separate backends to have each backend contact each other and play
+a common game of ping-pong using two variable updated and two LWLocks
+in shared memory:
+
+  * lwlock_test_acquire(), to be used on backend 1, to acquire the first lock.
+  * lwlock_test_release(), to be used on backend 1, to release the first lock.
+  * lwlock_test_update(), to be used on backend 1, to update the variable of
+  the first lock, and wait at the same time for variable updates from the
+  second lock.
+  * lwlock_test_wait(), to be used on backend 2, to acquire the second lock(),
+  wait for the updates of the first lock, and communicate back.  Looping until
+  the loops expected are all consumed.  This returns the number of updates
+  received, which should be the same as the number of updates done.
+
+These would be used as followed, where N > 1:
+
+    Backend 1: SELECT lwlock_test_acquire();
+    Backend 2: SELECT lwlock_test_wait(N);
+    Backend 1: SELECT lwlock_test_update(N);
+    Backend 1: SELECT lwlock_test_release();
+
+This extension needs to be loaded in shared_preload_libraries to register
+the LWLocks used in the function calls:
+
+  shared_preload_libraries = 'lwlock_test'

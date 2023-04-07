@@ -1,0 +1,4 @@
+comment = 'lwlock_test - Tests for LWLocks'
+default_version = '1.0'
+module_pathname = '$libdir/lwlock_test'
+relocatable = true
