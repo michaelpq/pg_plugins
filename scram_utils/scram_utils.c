@@ -66,8 +66,8 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 	{
 		ereport(WARNING,
 				(errmsg("Incorrect iteration number, defaulting to %d",
-						SCRAM_DEFAULT_ITERATIONS)));
-		iterations = SCRAM_DEFAULT_ITERATIONS;
+						SCRAM_SHA_256_DEFAULT_ITERATIONS)));
+		iterations = SCRAM_SHA_256_DEFAULT_ITERATIONS;
 	}
 
 	if (saltlen <= 0)
@@ -95,8 +95,9 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 		elog(ERROR, "Failed to generate random salt");
 
 	/* Build verifier */
-	verifier = scram_build_secret(saltbuf, saltlen, iterations, password,
-								  &errstr);
+	verifier = scram_build_secret(PG_SHA256, SCRAM_SHA_256_KEY_LEN,
+								  saltbuf, saltlen, iterations,
+								  password, &errstr);
 
 	if (prep_password)
 		pfree(prep_password);
