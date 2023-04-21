@@ -1,0 +1,6 @@
+hint_parser
+===========
+
+This module is a PostgreSQL extension that provides a way to extract query
+hints included as comments in SQL queries, with a format similar to
+pg_hint_plan.  This includes its own flex parser.

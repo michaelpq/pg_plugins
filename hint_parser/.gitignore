@@ -1,0 +1,8 @@
+# Generated files
+hint_gram.c
+hint_gram.h
+hint_scanner.c
+
+# Generated subdirectories
+/results/
+/tmp_check/

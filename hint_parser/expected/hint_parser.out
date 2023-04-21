@@ -1,0 +1,43 @@
+CREATE EXTENSION hint_parser;
+-- Hints with correct format
+SELECT hint_parser('i(i)');
+WARNING:  Hint found: name i contents i
+ hint_parser 
+-------------
+ 
+(1 row)
+
+SELECT hint_parser('hint1(content1)hint2(content2)');
+WARNING:  Hint found: name hint1 contents content1
+WARNING:  Hint found: name hint2 contents content2
+ hint_parser 
+-------------
+ 
+(1 row)
+
+SELECT hint_parser('hint1( content1 ) hint2  ( content2 )');
+WARNING:  Hint found: name hint1 contents content1
+WARNING:  Hint found: name hint2 contents content2
+ hint_parser 
+-------------
+ 
+(1 row)
+
+SELECT hint_parser('  hint1 ( content1 ) h2 (c2) h3 (c3 )');
+WARNING:  Hint found: name hint1 contents content1
+WARNING:  Hint found: name h2 contents c2
+WARNING:  Hint found: name h3 contents c3
+ hint_parser 
+-------------
+ 
+(1 row)
+
+-- Broken hints
+SELECT hint_parser('');
+ERROR:  syntax error at end of input
+SELECT hint_parser('I');
+ERROR:  syntax error at end of input
+SELECT hint_parser('I (AA) I2');
+ERROR:  syntax error at end of input
+SELECT hint_parser('I( II ) I2( I099 ) I3 (UUKA');
+ERROR:  syntax error at end of input

@@ -1,0 +1,5 @@
+# hint_parser extension
+comment = 'Query hint parser'
+default_version = '1.0'
+module_pathname = '$libdir/hint_parser'
+relocatable = true
