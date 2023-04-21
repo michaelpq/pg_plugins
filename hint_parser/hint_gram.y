@@ -45,8 +45,9 @@ static HintConfigData *create_hint_item(const char *hint_name,
 }
 
 %token <str> NAME
+%token <str> FULL_HINT
 
-%type <list> hint_list
+%type <list> hint_list hint_set_list hint_set
 
 %type <str> hint_name hint_content
 %type <item> hint_item
@@ -56,8 +57,16 @@ static HintConfigData *create_hint_item(const char *hint_name,
 
 %%
 result:
-		hint_list				{ hint_parse_result = $1; }
+		hint_set_list					{ hint_parse_result = $1; }
+;
+
+hint_set_list:
+		hint_set			{ $$ = $1; }
+		| hint_set_list hint_set { $$ = list_union($1, $2); }
 	;
+
+hint_set:
+		'/' '*' '+' hint_list '*' '/'	{ $$ = $4; }
 
 hint_list:
 		hint_item					{ $$ = list_make1($1); }

@@ -64,6 +64,9 @@ space			[ \t\n\r\f\v]
 			return NAME;
 		}
 
+"/"		{ return '/'; }
+"*"		{ return '*'; }
+"+"		{ return '+'; }
 "("		{ return '('; }
 ")"		{ return ')'; }
 
