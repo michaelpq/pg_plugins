@@ -16,6 +16,7 @@
 #include "hint_parser.h"
 
 #include "fmgr.h"
+#include "funcapi.h"
 #include "utils/builtins.h"
 
 PG_MODULE_MAGIC;
@@ -25,19 +26,29 @@ PG_MODULE_MAGIC;
  */
 PG_FUNCTION_INFO_V1(hint_parser);
 
+/*
+ * hint_parser
+ *
+ * Parse and return as a SRF all the hints found in a given string.  The
+ * content given in input should be extracted from a query.
+ */
 Datum
 hint_parser(PG_FUNCTION_ARGS)
 {
-	char	   *query = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	char	   *string = text_to_cstring(PG_GETARG_TEXT_PP(0));
 	int			parse_rc;
 	ListCell   *item;
 	List	   *hints = NIL;
+	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 
+	InitMaterializedSRF(fcinfo, 0);
+
+	/* Results from the parsing */
 	hint_parse_result = NULL;
 	hint_parse_error_msg = NULL;
 
 	/* Parse the query */
-	hint_scanner_init(query);
+	hint_scanner_init(string);
 	parse_rc = hint_yyparse();
 	hint_scanner_finish();
 
@@ -51,14 +62,19 @@ hint_parser(PG_FUNCTION_ARGS)
 
 	hints = hint_parse_result;
 
-	/* Grab and print all the items parsed */
+	/* Grab and store all the hint items */
 	foreach(item, hints)
 	{
 		HintConfigData *hint = lfirst(item);
+		Datum		values[2];
+		bool		nulls[2];
 
-		elog(WARNING, "Hint found: name %s contents %s",
-			 hint->name, hint->contents);
+		values[0] = CStringGetTextDatum(hint->name);
+		values[1] = CStringGetTextDatum(hint->contents);
+		memset(nulls, 0, sizeof(nulls));
+
+		tuplestore_putvalues(rsinfo->setResult, rsinfo->setDesc, values, nulls);
 	}
 
-	PG_RETURN_VOID();
+	return (Datum) 0;
 }

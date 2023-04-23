@@ -4,7 +4,9 @@
 \echo Use "CREATE EXTENSION hint_parser" to load this file. \quit
 
 -- Entry point to parse a query string and extract a list of hints from it.
-CREATE FUNCTION hint_parser(text)
-RETURNS void
+CREATE FUNCTION hint_parser(IN string text,
+  OUT hint text,
+  OUT contents text)
+RETURNS SETOF record
 AS 'MODULE_PATHNAME'
 LANGUAGE C;
