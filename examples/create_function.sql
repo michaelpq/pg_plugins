@@ -23,6 +23,18 @@ CREATE OR REPLACE FUNCTION create_tables(num_tables int)
 END
 $func$ LANGUAGE plpgsql;
 
+-- drop many tables at once, to be used in pair with create_tables()
+CREATE OR REPLACE FUNCTION drop_tables(num_tables int)
+  RETURNS VOID AS
+  $func$
+  BEGIN
+  FOR i IN 1..num_tables LOOP
+    EXECUTE format('
+      DROP TABLE IF EXISTS %I', 't_' || i);
+  END LOOP;
+END
+$func$ LANGUAGE plpgsql;
+
 -- Create one table with many columns at once
 CREATE OR REPLACE FUNCTION create_table_cols(tabname text, num_cols int)
 RETURNS VOID AS
