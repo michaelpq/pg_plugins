@@ -100,12 +100,16 @@ kill_idle_main(Datum main_arg)
 	{
 		int			ret,
 					i;
+		static uint32 wait_event_info = 0;
+
+		if (wait_event_info == 0)
+			wait_event_info = WaitEventExtensionNew("kill_idle_main");
 
 		/* Wait necessary amount of time */
 		WaitLatch(&MyProc->procLatch,
 				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
 				  kill_max_idle_time * 1000L,
-				  PG_WAIT_EXTENSION);
+				  wait_event_info);
 		ResetLatch(&MyProc->procLatch);
 
 		/* Process signals */

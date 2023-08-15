@@ -63,11 +63,16 @@ hello_main(Datum main_arg)
 	BackgroundWorkerUnblockSignals();
 	while (!got_sigterm)
 	{
+		static uint32 wait_event_info = 0;
+
+		if (wait_event_info == 0)
+			wait_event_info = WaitEventExtensionNew("hello_main");
+
 		/* Wait 10s */
 		WaitLatch(&MyProc->procLatch,
 				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
 				  10000L,
-				  PG_WAIT_EXTENSION);
+				  wait_event_info);
 		ResetLatch(&MyProc->procLatch);
 
 		elog(LOG, "Hello World!");	/* Say Hello to the world */

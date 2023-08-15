@@ -75,6 +75,10 @@ count_relations_main(Datum main_arg)
 	{
 		int			ret;
 		StringInfoData buf;
+		static uint32 wait_event_info = 0;
+
+		if (wait_event_info == 0)
+			wait_event_info = WaitEventExtensionNew("count_relations_main");
 
 		/*
 		 * Background workers mustn't call usleep() or any direct equivalent:
@@ -85,7 +89,7 @@ count_relations_main(Datum main_arg)
 		WaitLatch(&MyProc->procLatch,
 				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
 				  1000L,
-				  PG_WAIT_EXTENSION);
+				  wait_event_info);
 		ResetLatch(&MyProc->procLatch);
 
 		StartTransactionCommand();

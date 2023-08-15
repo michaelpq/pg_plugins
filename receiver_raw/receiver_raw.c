@@ -255,9 +255,13 @@ receiver_raw_main(Datum main_arg)
 	{
 		int			rc,
 					hdr_len;
+		static uint32 wait_event_info = 0;
 
 		/* Buffer for COPY data */
 		char	   *copybuf = NULL;
+
+		if (wait_event_info == 0)
+			wait_event_info = WaitEventExtensionNew("receiver_raw_main");
 
 		/* Wait necessary amount of time */
 		rc = WaitLatch(&MyProc->procLatch,

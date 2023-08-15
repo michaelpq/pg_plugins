@@ -67,11 +67,16 @@ hello_main(Datum main_arg)
 
 	while (true)
 	{
+		static uint32 wait_event_info = 0;
+
+		if (wait_event_info == 0)
+			wait_event_info = WaitEventExtensionNew("hello_signal_main");
+
 		/* Wait 1s */
 		WaitLatch(MyLatch,
 				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
 				  1000L,
-				  PG_WAIT_EXTENSION);
+				  wait_event_info);
 		ResetLatch(MyLatch);
 
 		/* Process signals */

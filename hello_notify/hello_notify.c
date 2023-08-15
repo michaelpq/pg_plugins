@@ -138,12 +138,16 @@ hello_notify_main(Datum main_arg)
 	while (!got_sigterm)
 	{
 		int			ret;
+		static uint32 wait_event_info = 0;
+
+		if (wait_event_info == 0)
+			wait_event_info = WaitEventExtensionNew("hello_notify_main");
 
 		/* Take a nap... */
 		WaitLatch(&MyProc->procLatch,
 				  WL_LATCH_SET | WL_TIMEOUT | WL_EXIT_ON_PM_DEATH,
 				  notify_nap_time * 1000,
-				  PG_WAIT_EXTENSION);
+				  wait_event_info);
 		ResetLatch(&MyProc->procLatch);
 
 		/* Handle signal SIGHUP */
