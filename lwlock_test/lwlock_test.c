@@ -34,8 +34,8 @@ typedef struct lwtSharedState
 {
 	LWLock		*updater;		/* LWLock used by first backend */
 	LWLock		*waiter;		/* LWLock used by second backend */
-	uint64		updater_var;	/* Variable updated by first backend */
-	uint64		waiter_var;		/* Variable updated by second backend */
+	pg_atomic_uint64	updater_var;	/* Variable updated by first backend */
+	pg_atomic_uint64	waiter_var;		/* Variable updated by second backend */
 } lwtSharedState;
 
 /* Links to shared memory state */
@@ -101,8 +101,8 @@ lwt_shmem_startup(void)
 
 		lwt->updater = &(locks[0].lock);
 		lwt->waiter = &(locks[1].lock);
-		lwt->updater_var = 0;
-		lwt->waiter_var = 0;
+		pg_atomic_init_u64(&lwt->updater_var, 0);
+		pg_atomic_init_u64(&lwt->waiter_var, 0);
 	}
 
 	LWLockRelease(AddinShmemInitLock);
@@ -183,12 +183,15 @@ lwlock_test_update(PG_FUNCTION_ARGS)
 
 	for (count = 0; count < loops; count++)
 	{
+		uint64	updater_var;
+
 		/* increment updater_var by 1 */
 #ifdef LWLOCK_TEST_DEBUG
 		elog(WARNING, "lwlock_test_update: updating updater_var");
 #endif
+		updater_var = pg_atomic_read_u64(&lwt->updater_var) + 1;
 		LWLockUpdateVar(lwt->updater, &lwt->updater_var,
-						lwt->updater_var + 1);
+						updater_var);
 
 		/* now make sure that the waiter has received the update */
 		if (LWLockWaitForVar(lwt->waiter,
@@ -238,6 +241,8 @@ lwlock_test_wait(PG_FUNCTION_ARGS)
 
 	while (true)
 	{
+		uint64	waiter_var;
+
 #ifdef LWLOCK_TEST_DEBUG
 		elog(WARNING, "lwlock_test_wait: beginning");
 #endif
@@ -271,8 +276,9 @@ lwlock_test_wait(PG_FUNCTION_ARGS)
 #ifdef LWLOCK_TEST_DEBUG
 		elog(WARNING, "lwlock_test_wait: updating waiter_var");
 #endif
+		waiter_var = pg_atomic_read_u64(&lwt->waiter_var) + 1;
 		LWLockUpdateVar(lwt->waiter, &lwt->waiter_var,
-						lwt->waiter_var + 1);
+						waiter_var);
 
 		if (updates_done >= waits_to_do)
 			break;
