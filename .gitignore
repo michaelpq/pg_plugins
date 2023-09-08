@@ -1,6 +1,10 @@
 # Object files
 *.o
 
+# Coverage files
+*.gcno
+*.gcda
+
 # Libraries
 *.lib
 *.a
