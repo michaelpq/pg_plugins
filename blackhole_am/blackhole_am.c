@@ -31,6 +31,8 @@
 #include "commands/vacuum.h"
 #include "executor/tuptable.h"
 
+#define BLAM_NOTICE() elog(NOTICE, "calling function %s", __func__)
+
 PG_MODULE_MAGIC;
 
 PG_FUNCTION_INFO_V1(blackhole_am_handler);
@@ -55,6 +57,8 @@ static const TableAmRoutine blackhole_methods;
 static const TupleTableSlotOps *
 blackhole_slot_callbacks(Relation relation)
 {
+	BLAM_NOTICE();
+
 	/*
 	 * Here you would most likely want to invent your own set of slot
 	 * callbacks for your AM.
@@ -75,6 +79,8 @@ blackhole_scan_begin(Relation relation, Snapshot snapshot,
 {
 	BlackholeScanDesc scan;
 
+	BLAM_NOTICE();
+
 	scan = (BlackholeScanDesc) palloc(sizeof(BlackholeScanDescData));
 
 	scan->rs_base.rs_rd = relation;
@@ -91,6 +97,8 @@ blackhole_scan_end(TableScanDesc sscan)
 {
 	BlackholeScanDesc scan = (BlackholeScanDesc) sscan;
 
+	BLAM_NOTICE();
+
 	pfree(scan);
 }
 
@@ -98,6 +106,8 @@ static void
 blackhole_scan_rescan(TableScanDesc sscan, ScanKey key, bool set_params,
 					  bool allow_strat, bool allow_sync, bool allow_pagemode)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -105,6 +115,8 @@ static bool
 blackhole_scan_getnextslot(TableScanDesc sscan, ScanDirection direction,
 						   TupleTableSlot *slot)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 	return false;
 }
@@ -117,18 +129,24 @@ blackhole_scan_getnextslot(TableScanDesc sscan, ScanDirection direction,
 static IndexFetchTableData *
 blackhole_index_fetch_begin(Relation rel)
 {
+	BLAM_NOTICE();
+
 	return NULL;
 }
 
 static void
 blackhole_index_fetch_reset(IndexFetchTableData *scan)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do here */
 }
 
 static void
 blackhole_index_fetch_end(IndexFetchTableData *scan)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do here */
 }
 
@@ -139,6 +157,8 @@ blackhole_index_fetch_tuple(struct IndexFetchTableData *scan,
 							TupleTableSlot *slot,
 							bool *call_again, bool *all_dead)
 {
+	BLAM_NOTICE();
+
 	/* there is no data */
 	return 0;
 }
@@ -156,6 +176,8 @@ blackhole_fetch_row_version(Relation relation,
 							Snapshot snapshot,
 							TupleTableSlot *slot)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 	return false;
 }
@@ -164,12 +186,16 @@ static void
 blackhole_get_latest_tid(TableScanDesc sscan,
 						 ItemPointer tid)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
 static bool
 blackhole_tuple_tid_valid(TableScanDesc scan, ItemPointer tid)
 {
+	BLAM_NOTICE();
+
 	return false;
 }
 
@@ -177,6 +203,8 @@ static bool
 blackhole_tuple_satisfies_snapshot(Relation rel, TupleTableSlot *slot,
 								   Snapshot snapshot)
 {
+	BLAM_NOTICE();
+
 	return false;
 }
 
@@ -184,6 +212,8 @@ static TransactionId
 blackhole_index_delete_tuples(Relation rel,
 							  TM_IndexDeleteOp *delstate)
 {
+	BLAM_NOTICE();
+
 	return InvalidTransactionId;
 }
 
@@ -196,6 +226,8 @@ static void
 blackhole_tuple_insert(Relation relation, TupleTableSlot *slot,
 					   CommandId cid, int options, BulkInsertState bistate)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -205,6 +237,8 @@ blackhole_tuple_insert_speculative(Relation relation, TupleTableSlot *slot,
 								   BulkInsertState bistate,
 								   uint32 specToken)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -212,6 +246,8 @@ static void
 blackhole_tuple_complete_speculative(Relation relation, TupleTableSlot *slot,
 									 uint32 spekToken, bool succeeded)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -220,6 +256,8 @@ blackhole_multi_insert(Relation relation, TupleTableSlot **slots,
 					   int ntuples, CommandId cid, int options,
 					   BulkInsertState bistate)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -228,6 +266,8 @@ blackhole_tuple_delete(Relation relation, ItemPointer tid, CommandId cid,
 					   Snapshot snapshot, Snapshot crosscheck, bool wait,
 					   TM_FailureData *tmfd, bool changingPart)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do, so it is always OK */
 	return TM_Ok;
 }
@@ -241,6 +281,8 @@ blackhole_tuple_update(Relation relation, ItemPointer otid,
 					   LockTupleMode *lockmode,
 					   TU_UpdateIndexes *update_indexes)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do, so it is always OK */
 	return TM_Ok;
 }
@@ -251,6 +293,8 @@ blackhole_tuple_lock(Relation relation, ItemPointer tid, Snapshot snapshot,
 					 LockWaitPolicy wait_policy, uint8 flags,
 					 TM_FailureData *tmfd)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do, so it is always OK */
 	return TM_Ok;
 }
@@ -258,6 +302,8 @@ blackhole_tuple_lock(Relation relation, ItemPointer tid, Snapshot snapshot,
 static void
 blackhole_finish_bulk_insert(Relation relation, int options)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -274,18 +320,24 @@ blackhole_relation_set_new_filelocator(Relation rel,
 									   TransactionId *freezeXid,
 									   MultiXactId *minmulti)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
 static void
 blackhole_relation_nontransactional_truncate(Relation rel)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
 static void
 blackhole_copy_data(Relation rel, const RelFileLocator *newrnode)
 {
+	BLAM_NOTICE();
+
 	/* there is no data */
 }
 
@@ -299,6 +351,8 @@ blackhole_copy_for_cluster(Relation OldTable, Relation NewTable,
 						   double *tups_vacuumed,
 						   double *tups_recently_dead)
 {
+	BLAM_NOTICE();
+
 	/* no data, so nothing to do */
 }
 
@@ -306,6 +360,8 @@ static void
 blackhole_vacuum(Relation onerel, VacuumParams *params,
 				 BufferAccessStrategy bstrategy)
 {
+	BLAM_NOTICE();
+
 	/* no data, so nothing to do */
 }
 
@@ -313,6 +369,8 @@ static bool
 blackhole_scan_analyze_next_block(TableScanDesc scan, BlockNumber blockno,
 								  BufferAccessStrategy bstrategy)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no point to analyze next block */
 	return false;
 }
@@ -322,6 +380,8 @@ blackhole_scan_analyze_next_tuple(TableScanDesc scan, TransactionId OldestXmin,
 								  double *liverows, double *deadrows,
 								  TupleTableSlot *slot)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no point to analyze next tuple */
 	return false;
 }
@@ -339,6 +399,8 @@ blackhole_index_build_range_scan(Relation tableRelation,
 								 void *callback_state,
 								 TableScanDesc scan)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no tuples */
 	return 0;
 }
@@ -350,6 +412,8 @@ blackhole_index_validate_scan(Relation tableRelation,
 							  Snapshot snapshot,
 							  ValidateIndexState *state)
 {
+	BLAM_NOTICE();
+
 	/* nothing to do */
 }
 
@@ -362,6 +426,8 @@ blackhole_index_validate_scan(Relation tableRelation,
 static uint64
 blackhole_relation_size(Relation rel, ForkNumber forkNumber)
 {
+	BLAM_NOTICE();
+
 	/* there is nothing */
 	return 0;
 }
@@ -372,6 +438,8 @@ blackhole_relation_size(Relation rel, ForkNumber forkNumber)
 static bool
 blackhole_relation_needs_toast_table(Relation rel)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no toast table needed */
 	return false;
 }
@@ -387,6 +455,8 @@ blackhole_estimate_rel_size(Relation rel, int32 *attr_widths,
 							BlockNumber *pages, double *tuples,
 							double *allvisfrac)
 {
+	BLAM_NOTICE();
+
 	/* no data available */
 	if (attr_widths)
 		*attr_widths = 0;
@@ -408,6 +478,8 @@ static bool
 blackhole_scan_bitmap_next_block(TableScanDesc scan,
 								 TBMIterateResult *tbmres)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no point to scan next block */
 	return false;
 }
@@ -417,6 +489,8 @@ blackhole_scan_bitmap_next_tuple(TableScanDesc scan,
 								 TBMIterateResult *tbmres,
 								 TupleTableSlot *slot)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no point to scan next tuple */
 	return false;
 }
@@ -425,6 +499,8 @@ static bool
 blackhole_scan_sample_next_block(TableScanDesc scan,
 								 SampleScanState *scanstate)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no point to scan next block for sampling */
 	return false;
 }
@@ -434,6 +510,8 @@ blackhole_scan_sample_next_tuple(TableScanDesc scan,
 								 SampleScanState *scanstate,
 								 TupleTableSlot *slot)
 {
+	BLAM_NOTICE();
+
 	/* no data, so no point to scan next tuple for sampling */
 	return false;
 }
@@ -504,5 +582,7 @@ static const TableAmRoutine blackhole_methods = {
 Datum
 blackhole_am_handler(PG_FUNCTION_ARGS)
 {
+	BLAM_NOTICE();
+
 	PG_RETURN_POINTER(&blackhole_methods);
 }
