@@ -15,6 +15,7 @@ LINE 1: CREATE TABLE object_hook_tab (a int PRIMARY KEY, b int);
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 ALTER TABLE object_hook_tab SET UNLOGGED;
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 ALTER TABLE object_hook_tab SET LOGGED;
@@ -35,7 +36,6 @@ NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
 ALTER TABLE object_hook_tab DROP column c;
 NOTICE:  access: OAT_DROP type: table column, identity: public.object_hook_tab.c
 CREATE SCHEMA popo;
-NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 ALTER TABLE object_hook_tab SET SCHEMA popo;
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
