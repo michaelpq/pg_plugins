@@ -32,6 +32,7 @@ SUBDIRS = blackhole	\
 	pg_swap_pages	\
 	pg_trunc2del	\
 	pg_wal_blocks	\
+	pgmpc		\
 	receiver_raw	\
 	scram_utils	\
 	wal_utils
