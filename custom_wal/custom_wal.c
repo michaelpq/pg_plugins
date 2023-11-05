@@ -21,7 +21,8 @@ PG_MODULE_MAGIC;
 /*
  * Wrapper function on top of LogLogicalMessage() to generate custom
  * WAL records.  This uses two parameters: the number of records to
- * generate and the record size.
+ * generate and the record size.  A flush is enforced once after all
+ * the records are generated.
  */
 PG_FUNCTION_INFO_V1(custom_wal);
 Datum
@@ -31,6 +32,7 @@ custom_wal(PG_FUNCTION_ARGS)
 	int		record_number = PG_GETARG_INT32(1);
 	char   *message;
 	int		count;
+	XLogRecPtr lsn;
 
 	message = palloc0(sizeof(char) * record_size);
 	for (count = 0; count < record_size; count++)
@@ -40,8 +42,10 @@ custom_wal(PG_FUNCTION_ARGS)
 	for (count = 0; count < record_number; count++)
 	{
 		/* The first argument is a prefix, keep it minimal */
-		LogLogicalMessage("", message, record_size, false);
+		lsn = LogLogicalMessage("", message, record_size, false, false);
 	}
+
+	XLogFlush(lsn);
 
 	pfree(message);
 	PG_RETURN_VOID();
