@@ -3,7 +3,7 @@
  * pg_rusage.c
  *		Set of functions to snapshot CPU usage.
  *
- * Copyright (c) 1996-2023, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2024, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_rusage/pg_rusage.c

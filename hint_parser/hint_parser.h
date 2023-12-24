@@ -2,7 +2,7 @@
  *
  * hint_parser.h
  *
- * Copyright (c) 1996-2023, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2024, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  hint_parser/hint_parser.h

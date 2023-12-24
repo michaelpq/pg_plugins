@@ -3,7 +3,7 @@
  * pg_rep_state.c
  *		Fetch backend status regarding synchronous replication.
  *
- * Copyright (c) 1996-2023, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2024, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  pg_rep_state/pg_rep_state.c
