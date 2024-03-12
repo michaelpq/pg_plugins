@@ -201,9 +201,6 @@ archive_parse_history(PG_FUNCTION_ARGS)
 		tuplestore_putvalues(tupstore, tupdesc, values, nulls);
 	}
 
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
 	return (Datum) 0;
 }
 
@@ -434,9 +431,6 @@ archive_build_segment_list(PG_FUNCTION_ARGS)
 	nulls[0] = false;
 	values[0] = CStringGetTextDatum(xlogfname);
 	tuplestore_putvalues(tupstore, tupdesc, values, nulls);
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
 }

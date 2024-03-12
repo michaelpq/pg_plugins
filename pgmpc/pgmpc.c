@@ -595,9 +595,6 @@ pgmpc_ls(PG_FUNCTION_ARGS)
 	/* Clean up */
 	pgmpc_reset();
 
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
 	return (Datum) 0;
 }
 
@@ -667,9 +664,6 @@ pgmpc_playlist(PG_FUNCTION_ARGS)
 	/* Clean up */
 	pgmpc_reset();
 
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
-
 	return (Datum) 0;
 }
 
@@ -729,9 +723,6 @@ pgmpc_lsplaylists(PG_FUNCTION_ARGS)
 
 	/* Clean up */
 	pgmpc_reset();
-
-	/* clean up and return the tuplestore */
-	tuplestore_donestoring(tupstore);
 
 	return (Datum) 0;
 }
