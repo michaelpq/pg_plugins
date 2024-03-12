@@ -592,17 +592,15 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_insert(ctx->out,
 								   relation,
-								   &change->data.tp.newtuple->tuple);
+								   change->data.tp.newtuple);
 				OutputPluginWrite(ctx, true);
 			}
 			break;
 		case REORDER_BUFFER_CHANGE_UPDATE:
 			if (!is_rel_non_selective)
 			{
-				HeapTuple	oldtuple = change->data.tp.oldtuple != NULL ?
-				&change->data.tp.oldtuple->tuple : NULL;
-				HeapTuple	newtuple = change->data.tp.newtuple != NULL ?
-				&change->data.tp.newtuple->tuple : NULL;
+				HeapTuple	oldtuple = change->data.tp.oldtuple;
+				HeapTuple	newtuple = change->data.tp.newtuple;
 
 				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_update(ctx->out,
@@ -618,7 +616,7 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 				OutputPluginPrepareWrite(ctx, true);
 				decoder_raw_delete(ctx->out,
 								   relation,
-								   &change->data.tp.oldtuple->tuple);
+								   change->data.tp.oldtuple);
 				OutputPluginWrite(ctx, true);
 			}
 			break;
