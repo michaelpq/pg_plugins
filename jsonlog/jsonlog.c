@@ -378,9 +378,15 @@ jsonlog_write_json(ErrorData *edata)
 
 	/* Virtual transaction id */
 	/* keep VXID format in sync with lockfuncs.c */
+#if PG_VERSION_NUM >= 170000
 	if (MyProc != NULL && MyProc->vxid.procNumber != INVALID_PROC_NUMBER)
 		appendStringInfo(&buf, "\"vxid\":\"%d/%u\",",
 						 MyProc->vxid.procNumber, MyProc->vxid.lxid);
+#else
+	if (MyProc != NULL && MyProc->backendId != InvalidBackendId)
+		appendStringInfo(&buf, "\"vxid\":\"%d/%u\",",
+						 MyProc->backendId, MyProc->lxid);
+#endif
 
 	/* Transaction id */
 	if (txid != InvalidTransactionId)
