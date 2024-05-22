@@ -8,3 +8,11 @@ CREATE FUNCTION blackhole()
 RETURNS text
 AS 'MODULE_PATHNAME'
 LANGUAGE C;
+
+-- This is an example of SRF function, using a tuplestore.
+CREATE FUNCTION blackhole_srf_tuplestore(IN num int,
+  OUT id int,
+  OUT data text)
+RETURNS SETOF record
+AS 'MODULE_PATHNAME'
+LANGUAGE C;
