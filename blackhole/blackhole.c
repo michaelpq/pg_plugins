@@ -105,6 +105,8 @@ blackhole_value_per_call(PG_FUNCTION_ARGS)
 		snprintf(buf, 32, "data %lld", (long long) funcctx->call_cntr);
 		values[1] = CStringGetTextDatum(buf);
 
+		memset(nulls, 0, sizeof(nulls));
+
 		tuple = heap_form_tuple(funcctx->tuple_desc, values, nulls);
 		result = HeapTupleGetDatum(tuple);
 		SRF_RETURN_NEXT(funcctx, result);
