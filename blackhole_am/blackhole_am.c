@@ -366,8 +366,7 @@ blackhole_vacuum(Relation onerel, VacuumParams *params,
 }
 
 static bool
-blackhole_scan_analyze_next_block(TableScanDesc scan, BlockNumber blockno,
-								  BufferAccessStrategy bstrategy)
+blackhole_scan_analyze_next_block(TableScanDesc scan, ReadStream *stream)
 {
 	BLAM_NOTICE();
 
