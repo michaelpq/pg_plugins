@@ -48,6 +48,9 @@ void		_PG_fini(void);
 /* Hold previous logging hook */
 static emit_log_hook_type prev_log_hook = NULL;
 
+/* GUC variables */
+static char *jsonlog_service = NULL;
+
 /*
  * Track if redirection to syslogger can happen. This uses the same method
  * as postmaster.c and syslogger.c, this flag being updated by the postmaster
@@ -329,6 +332,10 @@ jsonlog_write_json(ErrorData *edata)
 	setup_formatted_log_time();
 	appendJSONLiteral(&buf, "timestamp", formatted_log_time, true);
 
+	/* Service, if enabled */
+	if (jsonlog_service != NULL)
+		appendJSONLiteral(&buf, "service", jsonlog_service, true);
+
 	/* Username */
 	if (MyProcPort && MyProcPort->user_name)
 		appendJSONLiteral(&buf, "user", MyProcPort->user_name, true);
@@ -535,6 +542,17 @@ jsonlog_write_json(ErrorData *edata)
 void
 _PG_init(void)
 {
+	/*
+	 * Define an optional service name to be enitted with the rest of the keys.
+	 */
+	DefineCustomStringVariable("jsonlog.service",
+							   "SErvice identifier (optional).",
+							   "Default is to not emit a service",
+							   &jsonlog_service,
+							   NULL,
+							   PGC_SIGHUP,
+							   0, NULL, NULL, NULL);
+
 	prev_log_hook = emit_log_hook;
 	emit_log_hook = jsonlog_write_json;
 }
