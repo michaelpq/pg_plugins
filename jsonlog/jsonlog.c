@@ -49,7 +49,8 @@ void		_PG_fini(void);
 static emit_log_hook_type prev_log_hook = NULL;
 
 /* GUC variables */
-static char *jsonlog_service = NULL;
+static char *jsonlog_service_key = "component";
+static char *jsonlog_service_value = NULL;
 
 /*
  * Track if redirection to syslogger can happen. This uses the same method
@@ -333,8 +334,9 @@ jsonlog_write_json(ErrorData *edata)
 	appendJSONLiteral(&buf, "timestamp", formatted_log_time, true);
 
 	/* Service identifier */
-	if (jsonlog_service != NULL)
-		appendJSONLiteral(&buf, "service", jsonlog_service, true);
+	if (jsonlog_service_key != NULL && jsonlog_service_value != NULL)
+		appendJSONLiteral(&buf, jsonlog_service_key, jsonlog_service_value,
+						 true);
 
 	/* Username */
 	if (MyProcPort && MyProcPort->user_name)
@@ -542,10 +544,17 @@ jsonlog_write_json(ErrorData *edata)
 void
 _PG_init(void)
 {
-	DefineCustomStringVariable("jsonlog.service",
+	DefineCustomStringVariable("jsonlog.service_key",
+							   "Service key identifier.",
+							   "Default is \"component\"",
+							   &jsonlog_service_key,
+							   "component",
+							   PGC_SIGHUP,
+							   0, NULL, NULL, NULL);
+	DefineCustomStringVariable("jsonlog.service_value",
 							   "Service identifier.",
-							   "Default is to not emit a service name",
-							   &jsonlog_service,
+							   "Default is to not emit a service",
+							   &jsonlog_service_value,
 							   NULL,
 							   PGC_SIGHUP,
 							   0, NULL, NULL, NULL);

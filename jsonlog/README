@@ -15,5 +15,8 @@ log entries.
 
 The following GUC parameter is available:
 
-- jsonlog.service, to optionally add a key/value pair with "service" as key
-  and the GUC's value as..  Value.
+- jsonlog.service_key, to optionally emit a key/value pair with this GUC's
+  value as Key.  Default is "component".
+- jsonlog.service_value, to optionally emit a key/value pair with this GUC's
+  value as Value.  Default is NULL, which disables the emission of the
+  key/value.
