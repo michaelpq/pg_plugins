@@ -20,13 +20,13 @@
 
 #include "getopt_long.h"
 
-const char *progname;
+static const char *progname;
 
 /* Global parameters */
 static char *DataDir = NULL;
 
 /* Garker file holding glibc version */
-const char *marker_file_name = "GLIBC_VERSION";
+static const char *marker_file_name = "GLIBC_VERSION";
 
 static void
 usage(const char *progname)

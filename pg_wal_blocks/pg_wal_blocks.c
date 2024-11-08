@@ -19,7 +19,7 @@
 
 #define PG_WAL_BLOCKS_VERSION "0.1"
 
-const char *progname;
+static const char *progname;
 
 /* Global parameters */
 static bool verbose = false;
