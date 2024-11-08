@@ -475,7 +475,10 @@ blackhole_estimate_rel_size(Relation rel, int32 *attr_widths,
 
 static bool
 blackhole_scan_bitmap_next_block(TableScanDesc scan,
-								 TBMIterateResult *tbmres)
+								 BlockNumber *blockno,
+								 bool *recheck,
+								 uint64 *lossy_pages,
+								 uint64 *exact_pages)
 {
 	BLAM_NOTICE();
 
@@ -485,7 +488,6 @@ blackhole_scan_bitmap_next_block(TableScanDesc scan,
 
 static bool
 blackhole_scan_bitmap_next_tuple(TableScanDesc scan,
-								 TBMIterateResult *tbmres,
 								 TupleTableSlot *slot)
 {
 	BLAM_NOTICE();
