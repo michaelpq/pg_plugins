@@ -4,7 +4,7 @@
  *		Set of functions to test low-level routines in change of doing
  *		memory allocation in a given memory context.
  *
- * Copyright (c) 1996-2024, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2025, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  mcxtalloc_test/mcxtalloc_test.c

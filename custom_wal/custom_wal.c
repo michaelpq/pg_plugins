@@ -3,7 +3,7 @@
  * custom_wal.c
  *		SQL function to generate custom WAL records.
  *
- * Copyright (c) 1996-2024, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2025, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  custom_wal/custom_wal.c

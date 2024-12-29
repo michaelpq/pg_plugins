@@ -3,7 +3,7 @@
  * hook_utility.c
  *		Use utility hook to restrict operations on a couple of DDL queries.
  *
- * Copyright (c) 1996-2024, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2025, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		hook_utility/hook_utility.c
