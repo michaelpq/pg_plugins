@@ -45,7 +45,7 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 	int			iterations = PG_GETARG_INT32(2);
 	int			saltlen = PG_GETARG_INT32(3);
 	char	   *prep_password = NULL;
-	char	   *saltbuf;
+	uint8	   *saltbuf;
 	char	   *verifier;
 	HeapTuple	oldtuple,
 				newtuple;
@@ -90,7 +90,7 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 		password = (const char *) prep_password;
 
 	/* Generate a random salt */
-	saltbuf = palloc(sizeof(char) * saltlen);
+	saltbuf = palloc(sizeof(uint8) * saltlen);
 	if (!pg_strong_random(saltbuf, saltlen))
 		elog(ERROR, "Failed to generate random salt");
 
