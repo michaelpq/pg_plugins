@@ -22,7 +22,7 @@ PG_MODULE_MAGIC;
 
 static double luck_factor = 0.001;
 
-planner_hook_type prev_planner_hook = NULL;
+static planner_hook_type prev_planner_hook = NULL;
 
 void		_PG_init(void);
 void		_PG_fini(void);
