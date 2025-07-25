@@ -32,7 +32,7 @@
 PG_MODULE_MAGIC;
 
 void		_PG_init(void);
-PGDLLEXPORT void hello_notify_main(Datum main_arg) pg_attribute_noreturn();
+PGDLLEXPORT pg_noreturn void hello_notify_main(Datum main_arg);
 
 /* Worker name */
 static const char *hello_notify_name = "hello_notify";

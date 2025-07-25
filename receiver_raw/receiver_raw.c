@@ -37,7 +37,7 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void		_PG_init(void);
-PGDLLEXPORT void receiver_raw_main(Datum main_arg) pg_attribute_noreturn();
+PGDLLEXPORT pg_noreturn void receiver_raw_main(Datum main_arg);
 
 /* Signal handling */
 static volatile sig_atomic_t got_sigterm = false;

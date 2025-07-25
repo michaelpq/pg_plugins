@@ -26,7 +26,7 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void		_PG_init(void);
-PGDLLEXPORT void hello_main(Datum main_arg) pg_attribute_noreturn();
+PGDLLEXPORT pg_noreturn void hello_main(Datum main_arg);
 
 /* SIGTERM handling */
 static volatile sig_atomic_t got_sigterm = false;

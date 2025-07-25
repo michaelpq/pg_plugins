@@ -27,7 +27,7 @@ PG_MODULE_MAGIC;
 void		_PG_init(void);
 
 /* Main loop of process */
-PGDLLEXPORT void hello_main(Datum main_arg) pg_attribute_noreturn();
+PGDLLEXPORT pg_noreturn void hello_main(Datum main_arg);
 
 /* Signal handling */
 static volatile sig_atomic_t got_sigterm = false;
