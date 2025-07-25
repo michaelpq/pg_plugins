@@ -15,6 +15,10 @@
 
 #include "nodes/pg_list.h"
 
+/* silence -Wmissing-variable-declarations */
+extern int hint_yychar;
+extern int hint_yynerrs;
+
 typedef struct HintConfigData
 {
 	char	   *name;
