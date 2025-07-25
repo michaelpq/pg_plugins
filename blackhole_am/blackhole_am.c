@@ -357,7 +357,7 @@ blackhole_copy_for_cluster(Relation OldTable, Relation NewTable,
 }
 
 static void
-blackhole_vacuum(Relation onerel, VacuumParams *params,
+blackhole_vacuum(Relation onerel, const VacuumParams params,
 				 BufferAccessStrategy bstrategy)
 {
 	BLAM_NOTICE();
@@ -474,21 +474,11 @@ blackhole_estimate_rel_size(Relation rel, int32 *attr_widths,
  */
 
 static bool
-blackhole_scan_bitmap_next_block(TableScanDesc scan,
-								 BlockNumber *blockno,
+blackhole_scan_bitmap_next_tuple(TableScanDesc scan,
+								 TupleTableSlot *slot,
 								 bool *recheck,
 								 uint64 *lossy_pages,
 								 uint64 *exact_pages)
-{
-	BLAM_NOTICE();
-
-	/* no data, so no point to scan next block */
-	return false;
-}
-
-static bool
-blackhole_scan_bitmap_next_tuple(TableScanDesc scan,
-								 TupleTableSlot *slot)
 {
 	BLAM_NOTICE();
 
@@ -573,7 +563,6 @@ static const TableAmRoutine blackhole_methods = {
 
 	.relation_estimate_size = blackhole_estimate_rel_size,
 
-	.scan_bitmap_next_block = blackhole_scan_bitmap_next_block,
 	.scan_bitmap_next_tuple = blackhole_scan_bitmap_next_tuple,
 	.scan_sample_next_block = blackhole_scan_sample_next_block,
 	.scan_sample_next_tuple = blackhole_scan_sample_next_tuple
