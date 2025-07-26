@@ -39,7 +39,6 @@ Developer
 The set of modules present in this repository have been written and are
 being maintained by Michael Paquier.
 
-- Twitter: http://twitter.com/michaelpq
 - Blog: http://paquier.xyz
 
 Bug Report: <https://github.com/michaelpq/pg_plugins/>.
