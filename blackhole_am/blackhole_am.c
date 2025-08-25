@@ -43,7 +43,7 @@ typedef struct BlackholeScanDescData
 	TableScanDescData rs_base;	/* AM independent part of the descriptor */
 
 	/* Add more fields here as needed by the AM. */
-}			BlackholeScanDescData;
+} BlackholeScanDescData;
 typedef struct BlackholeScanDescData *BlackholeScanDesc;
 
 static const TableAmRoutine blackhole_methods;

@@ -34,7 +34,7 @@ typedef struct XLogReadBlockPrivate
 {
 	const char *full_path;
 	TimeLineID	timeline;
-}			XLogReadBlockPrivate;
+} XLogReadBlockPrivate;
 static int	XLogReadPageBlock(XLogReaderState *xlogreader,
 							  XLogRecPtr targetPagePtr,
 							  int reqLen, XLogRecPtr targetRecPtr,
@@ -88,7 +88,7 @@ XLogOpenSegment(XLogReaderState *state, XLogSegNo nextSegNo,
 				TimeLineID *tli_p)
 {
 	XLogReadBlockPrivate *private =
-	(XLogReadBlockPrivate *) state->private_data;
+		(XLogReadBlockPrivate *) state->private_data;
 
 	state->seg.ws_file = open(private->full_path, O_RDONLY | PG_BINARY, 0);
 	if (state->seg.ws_file < 0)
@@ -115,7 +115,7 @@ XLogReadPageBlock(XLogReaderState *state, XLogRecPtr targetPagePtr,
 				  int reqLen, XLogRecPtr targetRecPtr, char *readBuf)
 {
 	XLogReadBlockPrivate *private =
-	(XLogReadBlockPrivate *) state->private_data;
+		(XLogReadBlockPrivate *) state->private_data;
 	WALReadError errinfo;
 
 	/*

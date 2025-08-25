@@ -32,10 +32,10 @@ PG_MODULE_MAGIC;
  */
 typedef struct lwtSharedState
 {
-	LWLock		*updater;		/* LWLock used by first backend */
-	LWLock		*waiter;		/* LWLock used by second backend */
-	pg_atomic_uint64	updater_var;	/* Variable updated by first backend */
-	pg_atomic_uint64	waiter_var;		/* Variable updated by second backend */
+	LWLock	   *updater;		/* LWLock used by first backend */
+	LWLock	   *waiter;			/* LWLock used by second backend */
+	pg_atomic_uint64 updater_var;	/* Variable updated by first backend */
+	pg_atomic_uint64 waiter_var;	/* Variable updated by second backend */
 } lwtSharedState;
 
 /* Links to shared memory state */
@@ -171,10 +171,10 @@ lwlock_test_release(PG_FUNCTION_ARGS)
 Datum
 lwlock_test_update(PG_FUNCTION_ARGS)
 {
-	int		loops = PG_GETARG_INT32(0);
-	int		count = 0;
-	uint64	oldval = 0;
-	uint64	newval = 0;
+	int			loops = PG_GETARG_INT32(0);
+	int			count = 0;
+	uint64		oldval = 0;
+	uint64		newval = 0;
 
 	if (lwt == NULL)
 		ereport(ERROR,
@@ -183,7 +183,7 @@ lwlock_test_update(PG_FUNCTION_ARGS)
 
 	for (count = 0; count < loops; count++)
 	{
-		uint64	updater_var;
+		uint64		updater_var;
 
 		/* increment updater_var by 1 */
 #ifdef LWLOCK_TEST_DEBUG
@@ -227,10 +227,10 @@ lwlock_test_update(PG_FUNCTION_ARGS)
 Datum
 lwlock_test_wait(PG_FUNCTION_ARGS)
 {
-	int		waits_to_do = PG_GETARG_INT32(0);
-	uint64	oldval = 0;
-	uint64	newval = 0;
-	int		updates_done = 0;
+	int			waits_to_do = PG_GETARG_INT32(0);
+	uint64		oldval = 0;
+	uint64		newval = 0;
+	int			updates_done = 0;
 
 	if (lwt == NULL)
 		ereport(ERROR,
@@ -241,7 +241,7 @@ lwlock_test_wait(PG_FUNCTION_ARGS)
 
 	while (true)
 	{
-		uint64	waiter_var;
+		uint64		waiter_var;
 
 #ifdef LWLOCK_TEST_DEBUG
 		elog(WARNING, "lwlock_test_wait: beginning");

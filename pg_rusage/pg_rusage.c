@@ -19,7 +19,10 @@
 PG_MODULE_MAGIC;
 
 /* Initial snapshot */
-static PGRUsage ru0 = {0};
+static PGRUsage ru0 =
+{
+	0
+};
 
 PG_FUNCTION_INFO_V1(pg_rusage_reset);
 PG_FUNCTION_INFO_V1(pg_rusage_print);

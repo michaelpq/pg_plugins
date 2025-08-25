@@ -39,7 +39,7 @@ typedef struct xl_signal_smgr
 	int			signal;
 	Size		reason_size;	/* size of the reason given for signal */
 	char		reason[FLEXIBLE_ARRAY_MEMBER];	/* payload */
-}			xl_signal_rmgr;
+} xl_signal_rmgr;
 
 #define SizeOfSignalRmgr	(offsetof(xl_signal_rmgr, reason))
 #define XLOG_SIGNAL_RMGR	0x00

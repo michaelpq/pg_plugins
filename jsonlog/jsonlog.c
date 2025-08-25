@@ -336,7 +336,7 @@ jsonlog_write_json(ErrorData *edata)
 	/* Service identifier, if service key is set */
 	if (jsonlog_service_key && jsonlog_service_key[0] != '\0')
 		appendJSONLiteral(&buf, jsonlog_service_key, jsonlog_service_value,
-						 true);
+						  true);
 
 	/* Username */
 	if (MyProcPort && MyProcPort->user_name)

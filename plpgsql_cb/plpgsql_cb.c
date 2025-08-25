@@ -37,7 +37,8 @@ static void plpgsql_cb_stmt_end(PLpgSQL_execstate *estate,
 								PLpgSQL_stmt *stmt);
 
 static PLpgSQL_plugin
-			plugin_funcs = {
+			plugin_funcs =
+{
 	plpgsql_cb_func_setup,
 	plpgsql_cb_func_beg,
 	plpgsql_cb_func_end,
@@ -87,7 +88,7 @@ _PG_init(void)
 {
 	/* Set up a rendezvous point with instrumentation plugin */
 	PLpgSQL_plugin **var_ptr = (PLpgSQL_plugin **)
-	find_rendezvous_variable("PLpgSQL_plugin");
+		find_rendezvous_variable("PLpgSQL_plugin");
 
 	*var_ptr = &plugin_funcs;
 }

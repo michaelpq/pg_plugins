@@ -38,8 +38,8 @@ PG_FUNCTION_INFO_V1(hmac_sha512);
 static inline bytea *
 hmac_internal(pg_cryptohash_type type, bytea *input, bytea *key)
 {
-	const uint8 *data;
-	const uint8 *keydata;
+	const		uint8 *data;
+	const		uint8 *keydata;
 	const char *typestr = NULL;
 	size_t		len,
 				keylen;

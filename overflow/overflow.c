@@ -26,7 +26,7 @@ typedef enum
 	UINT16,
 	UINT32,
 	UINT64
-}			PGOverflowType;
+} PGOverflowType;
 
 typedef enum
 {
@@ -34,7 +34,7 @@ typedef enum
 	OPR_ADD,
 	OPR_SUB,
 	OPR_MUL
-}			PGOverflowOpr;
+} PGOverflowOpr;
 
 /* smallint functions */
 PG_FUNCTION_INFO_V1(pg_overflow_check);

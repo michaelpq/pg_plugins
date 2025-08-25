@@ -16,8 +16,8 @@
 #include "nodes/pg_list.h"
 
 /* silence -Wmissing-variable-declarations */
-extern int hint_yychar;
-extern int hint_yynerrs;
+extern int	hint_yychar;
+extern int	hint_yynerrs;
 
 typedef struct HintConfigData
 {
@@ -42,10 +42,10 @@ extern PGDLLIMPORT char *hint_parse_error_msg;
  * Internal functions for parsing query strings in hint_gram.y and
  * hint_scanner.l.
  */
-extern int  hint_yyparse(void);
-extern int  hint_yylex(void);
+extern int	hint_yyparse(void);
+extern int	hint_yylex(void);
 extern void hint_yyerror(const char *str);
 extern void hint_scanner_init(const char *str);
 extern void hint_scanner_finish(void);
 
-#endif		/* HINT_PARSER_H */
+#endif							/* HINT_PARSER_H */

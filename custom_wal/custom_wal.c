@@ -28,11 +28,11 @@ PG_FUNCTION_INFO_V1(custom_wal);
 Datum
 custom_wal(PG_FUNCTION_ARGS)
 {
-	int		record_size = PG_GETARG_INT32(0);
-	int		record_number = PG_GETARG_INT32(1);
-	char   *message;
-	int		count;
-	XLogRecPtr lsn;
+	int			record_size = PG_GETARG_INT32(0);
+	int			record_number = PG_GETARG_INT32(1);
+	char	   *message;
+	int			count;
+	XLogRecPtr	lsn;
 
 	message = palloc0(sizeof(char) * record_size);
 	for (count = 0; count < record_size; count++)

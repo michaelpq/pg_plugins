@@ -38,7 +38,7 @@ PG_FUNCTION_INFO_V1(blackhole_tuplestore);
 Datum
 blackhole_tuplestore(PG_FUNCTION_ARGS)
 {
-	int		num = PG_GETARG_INT32(0);
+	int			num = PG_GETARG_INT32(0);
 	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 
 	InitMaterializedSRF(fcinfo, 0);
@@ -66,7 +66,7 @@ PG_FUNCTION_INFO_V1(blackhole_value_per_call);
 Datum
 blackhole_value_per_call(PG_FUNCTION_ARGS)
 {
-	int		num = PG_GETARG_INT32(0);
+	int			num = PG_GETARG_INT32(0);
 	FuncCallContext *funcctx;
 
 	/* First call of this function */
