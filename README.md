@@ -20,7 +20,7 @@ Simply run the following command with pg_config in PATH:
 
     make install
 
-All the subcommands of PGXS are available as well.  Note that some modules
+All the sub-commands of PGXS are available as well.  Note that some modules
 may fail to compile because of missing dependencies or a version of
 PostgreSQL code incompatible with the module.  You may want to compile
 individually modules if that is the case.  Each module is maintained to be
@@ -36,8 +36,8 @@ Copyright (c) 1996-2025, PostgreSQL Global Development Group
 Developer
 ---------
 
-The set of modules present in this repository have been written and are
-being maintained by Michael Paquier, PostgreSQL committer.
+The modules stored in this repository have been written and are being
+maintained by Michael Paquier, PostgreSQL committer.
 
 Links
 -----
