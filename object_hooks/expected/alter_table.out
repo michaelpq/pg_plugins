@@ -15,17 +15,21 @@ LINE 1: CREATE TABLE object_hook_tab (a int PRIMARY KEY, b int);
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: pg_catalog
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
-NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 ALTER TABLE object_hook_tab SET UNLOGGED;
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 ALTER TABLE object_hook_tab SET LOGGED;
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 ALTER TABLE object_hook_tab SET LOGGED; -- no-op
 ALTER TABLE object_hook_tab SET TABLESPACE pg_default; -- no-op
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap2;
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap;
+NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: public
 NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 ALTER TABLE object_hook_tab SET ACCESS METHOD heap; -- no-op
 ALTER TABLE object_hook_tab ADD column c int;
@@ -42,6 +46,7 @@ NOTICE:  access: OAT_POST_ALTER type: table, identity: public.object_hook_tab
 NOTICE:  access: OAT_POST_ALTER type: type, identity: public.object_hook_tab
 NOTICE:  access: OAT_POST_ALTER type: type, identity: public.object_hook_tab[]
 NOTICE:  access: OAT_POST_ALTER type: index, identity: public.object_hook_tab_pkey
+NOTICE:  access: OAT_POST_ALTER type: table constraint, identity: object_hook_tab_a_not_null on public.object_hook_tab
 NOTICE:  access: OAT_POST_ALTER type: table constraint, identity: object_hook_tab_pkey on public.object_hook_tab
 ALTER TABLE popo.object_hook_tab SET SCHEMA public;
 NOTICE:  access: OAT_NAMESPACE_SEARCH type: schema, identity: popo
@@ -49,6 +54,7 @@ NOTICE:  access: OAT_POST_ALTER type: table, identity: popo.object_hook_tab
 NOTICE:  access: OAT_POST_ALTER type: type, identity: popo.object_hook_tab
 NOTICE:  access: OAT_POST_ALTER type: type, identity: popo.object_hook_tab[]
 NOTICE:  access: OAT_POST_ALTER type: index, identity: popo.object_hook_tab_pkey
+NOTICE:  access: OAT_POST_ALTER type: table constraint, identity: object_hook_tab_a_not_null on popo.object_hook_tab
 NOTICE:  access: OAT_POST_ALTER type: table constraint, identity: object_hook_tab_pkey on popo.object_hook_tab
 -- Clean up
 DROP ACCESS METHOD heap2;
@@ -56,6 +62,7 @@ NOTICE:  access: OAT_DROP type: access method, identity: heap2
 DROP TABLE object_hook_tab;
 NOTICE:  access: OAT_DROP type: index, identity: public.object_hook_tab_pkey
 NOTICE:  access: OAT_DROP type: table constraint, identity: object_hook_tab_pkey on public.object_hook_tab
+NOTICE:  access: OAT_DROP type: table constraint, identity: object_hook_tab_a_not_null on public.object_hook_tab
 NOTICE:  access: OAT_DROP type: type, identity: public.object_hook_tab[]
 NOTICE:  access: OAT_DROP type: type, identity: public.object_hook_tab
 NOTICE:  access: OAT_DROP type: table, identity: public.object_hook_tab
