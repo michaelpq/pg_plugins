@@ -282,7 +282,8 @@ print_value(StringInfo s, Datum origval, Oid typid, bool isnull)
 	/* Print value */
 	if (isnull)
 		appendStringInfoString(s, "null");
-	else if (typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval))
+	else if (typisvarlena &&
+			 VARATT_IS_EXTERNAL_ONDISK(DatumGetPointer(origval)))
 	{
 		/*
 		 * This should not happen, the column and its value can be skipped
@@ -531,7 +532,8 @@ decoder_raw_update(StringInfo s,
 		 * TOASTed datum, but it is not changed so it can be skipped this in
 		 * the SET clause of this UPDATE query.
 		 */
-		if (!isnull && typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval))
+		if (!isnull && typisvarlena &&
+			VARATT_IS_EXTERNAL_ONDISK(DatumGetPointer(origval)))
 			continue;
 
 		/* Skip comma for first colums */
