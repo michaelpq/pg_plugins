@@ -15,8 +15,8 @@ INSERT INTO history_data VALUES (
 SELECT archive_parse_history(data) FROM history_data;
    archive_parse_history   
 ---------------------------
- (1,,0/9D4F390)
- (2,0/9D4F390,0/117BEB70)
+ (1,,0/09D4F390)
+ (2,0/09D4F390,0/117BEB70)
  (3,0/117BEB70,0/187BEB38)
  (4,0/187BEB38,0/188BEB38)
  (5,0/188BEB38,0/189BEB38)
