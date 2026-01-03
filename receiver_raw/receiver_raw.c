@@ -5,7 +5,7 @@
  *		creates some basics for a multi-master cluster using vanilla
  *		PostgreSQL without modifying its code.
  *
- * Copyright (c) 1996-2025, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2026, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		receiver_raw/receiver_raw.c

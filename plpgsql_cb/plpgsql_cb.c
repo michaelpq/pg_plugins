@@ -4,7 +4,7 @@
  *		Simple template making use of PLpgSQL plugin structure with its
  *		callbacks for statement and function controls.
  *
- * Copyright (c) 1996-2025, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2026, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		plpgsql_cb/plpgsql_cb.c

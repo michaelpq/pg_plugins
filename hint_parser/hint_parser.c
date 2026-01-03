@@ -3,7 +3,7 @@
  * hint_parser.c
  *		Set of functions to parse query hints from query strings.
  *
- * Copyright (c) 1996-2025, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2026, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  hint_parser/hint_parser.c

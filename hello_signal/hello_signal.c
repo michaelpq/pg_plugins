@@ -3,7 +3,7 @@
  * hello_signal.c
  *		bgworker logging message when receiving SIGHUP or SIGTERM.
  *
- * Copyright (c) 1996-2025, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2026, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		hello_signal/hello_signal.c

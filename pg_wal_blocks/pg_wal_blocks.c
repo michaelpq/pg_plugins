@@ -3,7 +3,7 @@
  * pg_wal_blocks.c
  *		Tracker of relation blocks touched by WAL records
  *
- * Copyright (c) 1996-2025, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2026, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		pg_wal_blocks/pg_wal_blocks.c

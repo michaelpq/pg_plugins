@@ -3,7 +3,7 @@
  * blackhole_cplusplus.cc
  *		Set of functions for a minimal C++ extension template
  *
- * Copyright (c) 1996-2025, PostgreSQL Global Development Group
+ * Copyright (c) 1996-2026, PostgreSQL Global Development Group
  *
  * IDENTIFICATION
  *		  blackhole_cplusplus/blackhole_cplusplus.cc
