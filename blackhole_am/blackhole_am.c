@@ -375,7 +375,7 @@ blackhole_scan_analyze_next_block(TableScanDesc scan, ReadStream *stream)
 }
 
 static bool
-blackhole_scan_analyze_next_tuple(TableScanDesc scan, TransactionId OldestXmin,
+blackhole_scan_analyze_next_tuple(TableScanDesc scan,
 								  double *liverows, double *deadrows,
 								  TupleTableSlot *slot)
 {

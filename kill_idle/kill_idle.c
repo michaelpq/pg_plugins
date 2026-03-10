@@ -25,6 +25,7 @@
 #include "storage/proc.h"
 #include "utils/guc.h"
 #include "utils/snapmgr.h"
+#include "utils/wait_event.h"
 
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;

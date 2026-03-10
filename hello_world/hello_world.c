@@ -13,12 +13,14 @@
 
 /* Minimum set of headers */
 #include "postgres.h"
+
+#include "fmgr.h"
 #include "pgstat.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
 #include "storage/latch.h"
 #include "storage/proc.h"
-#include "fmgr.h"
+#include "utils/wait_event.h"
 
 /* Essential for shared libs! */
 PG_MODULE_MAGIC;

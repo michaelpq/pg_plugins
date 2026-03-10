@@ -20,6 +20,7 @@
 #include "storage/ipc.h"
 #include "storage/latch.h"
 #include "utils/guc.h"
+#include "utils/wait_event.h"
 
 /* Allow load of this module in shared libs */
 PG_MODULE_MAGIC;

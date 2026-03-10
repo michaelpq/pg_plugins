@@ -30,6 +30,7 @@
 #include "lib/stringinfo.h"
 #include "utils/builtins.h"
 #include "utils/snapmgr.h"
+#include "utils/wait_event.h"
 
 PG_MODULE_MAGIC;
 

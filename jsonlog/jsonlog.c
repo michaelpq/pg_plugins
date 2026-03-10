@@ -321,8 +321,13 @@ jsonlog_write_json(ErrorData *edata)
 	edata->output_to_server = false;
 
 	/* Determine whether message is enabled for server log output */
+#if PG_VERSION_NUM >= 190000
+	if (!is_log_level_output(edata->elevel, log_min_messages[MyBackendType]))
+		return;
+#else
 	if (!is_log_level_output(edata->elevel, log_min_messages))
 		return;
+#endif
 
 	initStringInfo(&buf);
 

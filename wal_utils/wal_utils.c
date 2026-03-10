@@ -25,6 +25,7 @@
 #include "utils/builtins.h"
 #include "utils/memutils.h"
 #include "utils/pg_lsn.h"
+#include "varatt.h"
 
 PG_MODULE_MAGIC;
 

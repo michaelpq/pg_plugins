@@ -28,6 +28,7 @@
 #include "storage/shmem.h"
 #include "tcop/utility.h"
 #include "utils/snapmgr.h"
+#include "utils/wait_event.h"
 
 PG_MODULE_MAGIC;
 

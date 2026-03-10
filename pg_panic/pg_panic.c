@@ -29,7 +29,8 @@ void		_PG_fini(void);
 
 static PlannedStmt *
 panic_hook(Query *parse, const char *query_string,
-		   int cursorOptions, ParamListInfo boundParams)
+		   int cursorOptions, ParamListInfo boundParams,
+		   ExplainState *es)
 {
 	PlannedStmt *result;
 
@@ -39,10 +40,10 @@ panic_hook(Query *parse, const char *query_string,
 
 	if (prev_planner_hook)
 		result = (*prev_planner_hook) (parse, query_string, cursorOptions,
-									   boundParams);
+									   boundParams, es);
 	else
 		result = standard_planner(parse, query_string, cursorOptions,
-								  boundParams);
+								  boundParams, es);
 
 	return result;
 }
