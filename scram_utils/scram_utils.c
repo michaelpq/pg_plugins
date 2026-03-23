@@ -29,21 +29,15 @@
 PG_MODULE_MAGIC;
 
 PG_FUNCTION_INFO_V1(scram_utils_verifier);
+PG_FUNCTION_INFO_V1(scram_utils_verifier_bytea);
 
-/*
- * scram_utils_verifier
- *
- * Generate a verifier for SCRAM-SHA-256 authentication and update the
- * related user's pg_authid entry as per RFC 7677.
- */
-Datum
-scram_utils_verifier(PG_FUNCTION_ARGS)
+static void
+scram_utils_verifier_internal(const char *username,
+							  const char *password,
+							  int iterations,
+							  int saltlen)
 {
 	pg_saslprep_rc rc;
-	char	   *username = text_to_cstring(PG_GETARG_TEXT_PP(0));
-	const char *password = text_to_cstring(PG_GETARG_TEXT_PP(1));
-	int			iterations = PG_GETARG_INT32(2);
-	int			saltlen = PG_GETARG_INT32(3);
 	char	   *prep_password = NULL;
 	uint8	   *saltbuf;
 	char	   *verifier;
@@ -130,5 +124,59 @@ scram_utils_verifier(PG_FUNCTION_ARGS)
 	 */
 	table_close(rel, NoLock);
 
+}
+
+/*
+ * scram_utils_verifier
+ *
+ * Generate a verifier for SCRAM-SHA-256 authentication and update the
+ * related user's pg_authid entry as per RFC 7677.  With password given
+ * as text.
+ */
+Datum
+scram_utils_verifier(PG_FUNCTION_ARGS)
+{
+	const char *username = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	const char *password = text_to_cstring(PG_GETARG_TEXT_PP(1));
+	int			iterations = PG_GETARG_INT32(2);
+	int			saltlen = PG_GETARG_INT32(3);
+
+	scram_utils_verifier_internal(username, password, iterations, saltlen);
+	PG_RETURN_NULL();
+}
+
+/*
+ * scram_utils_verifier_bytea
+ *
+ * Similar to scram_utils_verifier(), with password given as a bytea, useful
+ * to test non-printable byte sequences.
+ */
+Datum
+scram_utils_verifier_bytea(PG_FUNCTION_ARGS)
+{
+	const char *username = text_to_cstring(PG_GETARG_TEXT_PP(0));
+	bytea      *raw_data = PG_GETARG_BYTEA_P(1);
+	int			iterations = PG_GETARG_INT32(2);
+	int			saltlen = PG_GETARG_INT32(3);
+	char	   *password;
+	int			passlen;
+
+	/*
+	 * Note that pg_saslprep() uses a char without a length, so saving the
+	 * length of the bytea is useless.  pg_saslprep() will just stop at the
+	 * first nul character.  This rebuilds a byte sequence given to
+	 * pg_saslprep(), complaining if at least one nul character exists.
+	 */
+	passlen = VARSIZE(raw_data) - VARHDRSZ;
+	password = palloc0(passlen + 1);
+	memcpy(password, VARDATA(raw_data), passlen);
+	password[passlen] = '\0';
+
+	if (strlen(password) != passlen)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("Incorrect password with nul characters")));
+
+	scram_utils_verifier_internal(username, password, iterations, saltlen);
 	PG_RETURN_NULL();
 }
