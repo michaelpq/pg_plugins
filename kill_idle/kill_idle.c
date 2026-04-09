@@ -32,7 +32,7 @@ PG_MODULE_MAGIC;
 
 /* Entry point of library loading */
 void		_PG_init(void);
-PGDLLEXPORT pg_noreturn void kill_idle_main(Datum main_arg);
+pg_noreturn PGDLLEXPORT void kill_idle_main(Datum main_arg);
 
 /* Signal handling */
 static volatile sig_atomic_t got_sigterm = false;

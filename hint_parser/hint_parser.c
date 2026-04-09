@@ -18,6 +18,7 @@
 #include "fmgr.h"
 #include "funcapi.h"
 #include "utils/builtins.h"
+#include "utils/tuplestore.h"
 
 PG_MODULE_MAGIC;
 

@@ -35,7 +35,7 @@
 PG_MODULE_MAGIC;
 
 void		_PG_init(void);
-PGDLLEXPORT pg_noreturn void count_relations_main(Datum main_arg);
+pg_noreturn PGDLLEXPORT void count_relations_main(Datum main_arg);
 
 static volatile sig_atomic_t got_sigterm = false;
 
