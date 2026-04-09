@@ -31,7 +31,6 @@ SUBDIRS = blackhole	\
 	pg_swap_pages	\
 	pg_trunc2del	\
 	pg_wal_blocks	\
-	pgmpc		\
 	receiver_raw	\
 	scram_utils	\
 	wal_utils
@@ -39,6 +38,11 @@ SUBDIRS = blackhole	\
 # This can only be compiled on Linux.
 ifeq ($(PORTNAME), linux)
 SUBDIRS += pg_mark_glibc
+endif
+
+# This module requires libmpdclient, so disable except if asked
+ifeq ($(with_libmpdclient), yes)
+SUBDIRS += pgmpc
 endif
 
 $(recurse)
