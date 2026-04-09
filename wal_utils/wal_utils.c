@@ -22,9 +22,11 @@
 #include "catalog/pg_type.h"
 #include "funcapi.h"
 #include "miscadmin.h"
+#include "storage/fd.h"
 #include "utils/builtins.h"
 #include "utils/memutils.h"
 #include "utils/pg_lsn.h"
+#include "utils/tuplestore.h"
 #include "varatt.h"
 
 PG_MODULE_MAGIC;
