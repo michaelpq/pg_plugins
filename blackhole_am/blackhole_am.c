@@ -127,7 +127,7 @@ blackhole_scan_getnextslot(TableScanDesc sscan, ScanDirection direction,
  */
 
 static IndexFetchTableData *
-blackhole_index_fetch_begin(Relation rel)
+blackhole_index_fetch_begin(Relation rel, uint32 flags)
 {
 	BLAM_NOTICE();
 
@@ -223,8 +223,9 @@ blackhole_index_delete_tuples(Relation rel,
  */
 
 static void
-blackhole_tuple_insert(Relation relation, TupleTableSlot *slot,
-					   CommandId cid, int options, BulkInsertState bistate)
+blackhole_tuple_insert(Relation rel, TupleTableSlot *slot,
+					   CommandId cid, uint32 options,
+					   BulkInsertStateData *bistate)
 {
 	BLAM_NOTICE();
 
@@ -233,7 +234,7 @@ blackhole_tuple_insert(Relation relation, TupleTableSlot *slot,
 
 static void
 blackhole_tuple_insert_speculative(Relation relation, TupleTableSlot *slot,
-								   CommandId cid, int options,
+								   CommandId cid, uint32 options,
 								   BulkInsertState bistate,
 								   uint32 specToken)
 {
@@ -252,9 +253,9 @@ blackhole_tuple_complete_speculative(Relation relation, TupleTableSlot *slot,
 }
 
 static void
-blackhole_multi_insert(Relation relation, TupleTableSlot **slots,
-					   int ntuples, CommandId cid, int options,
-					   BulkInsertState bistate)
+blackhole_multi_insert(Relation rel, TupleTableSlot **slots, int nslots,
+					   CommandId cid, uint32 options,
+					   BulkInsertStateData *bistate)
 {
 	BLAM_NOTICE();
 
@@ -262,9 +263,14 @@ blackhole_multi_insert(Relation relation, TupleTableSlot **slots,
 }
 
 static TM_Result
-blackhole_tuple_delete(Relation relation, ItemPointer tid, CommandId cid,
-					   Snapshot snapshot, Snapshot crosscheck, bool wait,
-					   TM_FailureData *tmfd, bool changingPart)
+blackhole_tuple_delete(Relation relation,
+					   ItemPointer tid,
+					   CommandId cid,
+					   uint32 options,
+					   Snapshot snapshot,
+					   Snapshot crosscheck,
+					   bool wait,
+					   TM_FailureData *tmfd)
 {
 	BLAM_NOTICE();
 
@@ -274,10 +280,15 @@ blackhole_tuple_delete(Relation relation, ItemPointer tid, CommandId cid,
 
 
 static TM_Result
-blackhole_tuple_update(Relation relation, ItemPointer otid,
-					   TupleTableSlot *slot, CommandId cid,
-					   Snapshot snapshot, Snapshot crosscheck,
-					   bool wait, TM_FailureData *tmfd,
+blackhole_tuple_update(Relation rel,
+					   ItemPointer otid,
+					   TupleTableSlot *slot,
+					   CommandId cid,
+					   uint32 options,
+					   Snapshot snapshot,
+					   Snapshot crosscheck,
+					   bool wait,
+					   TM_FailureData *tmfd,
 					   LockTupleMode *lockmode,
 					   TU_UpdateIndexes *update_indexes)
 {
@@ -300,7 +311,7 @@ blackhole_tuple_lock(Relation relation, ItemPointer tid, Snapshot snapshot,
 }
 
 static void
-blackhole_finish_bulk_insert(Relation relation, int options)
+blackhole_finish_bulk_insert(Relation relation, uint32 options)
 {
 	BLAM_NOTICE();
 
@@ -342,9 +353,12 @@ blackhole_copy_data(Relation rel, const RelFileLocator *newrnode)
 }
 
 static void
-blackhole_copy_for_cluster(Relation OldTable, Relation NewTable,
-						   Relation OldIndex, bool use_sort,
+blackhole_copy_for_cluster(Relation OldTable,
+						   Relation NewTable,
+						   Relation OldIndex,
+						   bool use_sort,
 						   TransactionId OldestXmin,
+						   Snapshot snapshot,
 						   TransactionId *xid_cutoff,
 						   MultiXactId *multi_cutoff,
 						   double *num_tuples,
@@ -357,8 +371,9 @@ blackhole_copy_for_cluster(Relation OldTable, Relation NewTable,
 }
 
 static void
-blackhole_vacuum(Relation onerel, const VacuumParams params,
-				 BufferAccessStrategy bstrategy)
+blackhole_relation_vacuum(Relation onerel,
+						  const VacuumParams *params,
+						  BufferAccessStrategy bstrategy)
 {
 	BLAM_NOTICE();
 
@@ -552,7 +567,7 @@ static const TableAmRoutine blackhole_methods = {
 	.relation_nontransactional_truncate = blackhole_relation_nontransactional_truncate,
 	.relation_copy_data = blackhole_copy_data,
 	.relation_copy_for_cluster = blackhole_copy_for_cluster,
-	.relation_vacuum = blackhole_vacuum,
+	.relation_vacuum = blackhole_relation_vacuum,
 	.scan_analyze_next_block = blackhole_scan_analyze_next_block,
 	.scan_analyze_next_tuple = blackhole_scan_analyze_next_tuple,
 	.index_build_range_scan = blackhole_index_build_range_scan,
