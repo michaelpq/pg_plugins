@@ -206,12 +206,17 @@ do_wal_parsing(TimeLineID timeline)
 							   &private);
 
 	/* first find a valid recptr to start from */
-	next_record = XLogFindNextRecord(state, first_record);
+	next_record = XLogFindNextRecord(state, first_record, &errormsg);
 
 	if (XLogRecPtrIsInvalid(next_record))
 	{
-		fprintf(stderr, "could not find valid first record after %X/%X\n",
-				(uint32) (first_record >> 32), (uint32) first_record);
+		if (errormsg)
+			fprintf(stderr, "could not find valid first record after %X/%X: %s\n",
+					(uint32) (first_record >> 32), (uint32) first_record,
+					errormsg);
+		else
+			fprintf(stderr, "could not find valid first record after %X/%X\n",
+					(uint32) (first_record >> 32), (uint32) first_record);
 		exit(EXIT_FAILURE);
 	}
 
