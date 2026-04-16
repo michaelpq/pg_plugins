@@ -68,7 +68,8 @@ lwt_shmem_request(void)
 		prev_shmem_request_hook();
 
 	RequestAddinShmemSpace(lwt_memsize());
-	RequestNamedLWLockTranche("lwlock_test", 2);
+	RequestNamedLWLockTranche("lwlock_test_updater", 1);
+	RequestNamedLWLockTranche("lwlock_test_waiter", 1);
 }
 
 /*
@@ -97,10 +98,12 @@ lwt_shmem_startup(void)
 	if (!found)
 	{
 		/* first time through */
-		LWLockPadded *locks = GetNamedLWLockTranche("lwlock_test");
+		LWLockPadded	*updater = GetNamedLWLockTranche("lwlock_test_updater");
+		LWLockPadded	*waiter = GetNamedLWLockTranche("lwlock_test_waiter");
 
-		lwt->updater = &(locks[0].lock);
-		lwt->waiter = &(locks[1].lock);
+		lwt->updater = &(updater[0].lock);
+		lwt->waiter = &(waiter[0].lock);
+
 		pg_atomic_init_u64(&lwt->updater_var, 0);
 		pg_atomic_init_u64(&lwt->waiter_var, 0);
 	}
