@@ -124,5 +124,18 @@ UPDATE tt SET t=t WHERE a=2;
 SELECT substr(data, 1, 50), substr(data, 3000, 45)
   FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
 DROP TABLE tt;
+
+-- TRUNCATE tests
+CREATE TABLE tt1 (a int primary key, t text);
+CREATE TABLE tt2 (a int primary key, t text);
+TRUNCATE tt1, tt2 CASCADE;
+TRUNCATE tt1, tt2 RESTRICT;
+TRUNCATE tt1, tt2 RESTART IDENTITY;
+TRUNCATE tt2, tt1, tt2 CONTINUE IDENTITY;
+TRUNCATE tt2, tt1 RESTART IDENTITY CASCADE;
+SELECT substr(data, 1, 60) AS data
+  FROM pg_logical_slot_get_changes('custom_slot', NULL, NULL, 'include_transaction', 'off');
+DROP TABLE tt1, tt2;
+
 -- Drop replication slot
 SELECT pg_drop_replication_slot('custom_slot');

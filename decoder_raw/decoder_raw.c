@@ -57,6 +57,11 @@ static void decoder_raw_commit_txn(LogicalDecodingContext *ctx,
 static void decoder_raw_change(LogicalDecodingContext *ctx,
 							   ReorderBufferTXN *txn, Relation rel,
 							   ReorderBufferChange *change);
+static void decoder_raw_truncate(LogicalDecodingContext *ctx,
+								 ReorderBufferTXN *txn,
+								 int nrelations,
+								 Relation relations[],
+								 ReorderBufferChange *change);
 
 void
 _PG_init(void)
@@ -75,6 +80,7 @@ _PG_output_plugin_init(OutputPluginCallbacks *cb)
 	cb->change_cb = decoder_raw_change;
 	cb->commit_cb = decoder_raw_commit_txn;
 	cb->shutdown_cb = decoder_raw_shutdown;
+	cb->truncate_cb = decoder_raw_truncate;
 }
 
 
@@ -627,6 +633,50 @@ decoder_raw_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
 			Assert(0);
 			break;
 	}
+
+	MemoryContextSwitchTo(old);
+	MemoryContextReset(data->context);
+}
+
+/*
+ * Callback for TRUNCATE
+ */
+static void
+decoder_raw_truncate(LogicalDecodingContext *ctx,
+					 ReorderBufferTXN *txn,
+					 int nrelations,
+					 Relation relations[],
+					 ReorderBufferChange *change)
+{
+	DecoderRawData *data;
+	MemoryContext	old;
+	StringInfo		s = ctx->out;
+
+	if (change->action != REORDER_BUFFER_CHANGE_TRUNCATE)
+		return;
+
+	data = ctx->output_plugin_private;
+
+	/* Avoid leaking memory by using and resetting our own context */
+	old = MemoryContextSwitchTo(data->context);
+
+	OutputPluginPrepareWrite(ctx, true);
+	appendStringInfo(s, "TRUNCATE ");
+
+	for (int i = 0; i < nrelations; i++)
+	{
+		if (i > 0)
+			appendStringInfo(s, ", ");
+		print_relname(s, relations[i]);
+	}
+
+	if (change->data.truncate.restart_seqs)
+		appendStringInfo(s, " RESTART IDENTITY");
+	if (change->data.truncate.cascade)
+		appendStringInfo(s, " CASCADE");
+
+	appendStringInfo(s, ";");
+	OutputPluginWrite(ctx, true);
 
 	MemoryContextSwitchTo(old);
 	MemoryContextReset(data->context);
