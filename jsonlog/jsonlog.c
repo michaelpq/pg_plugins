@@ -482,7 +482,7 @@ jsonlog_write_json(ErrorData *edata)
 	/* backend type */
 	if (MyProcPid == PostmasterPid)
 		appendJSONLiteral(&buf, "backend_type", "postmaster", true);
-	else if (MyBackendType == B_BG_WORKER)
+	else if (MyBackendType == B_BG_WORKER && MyBgworkerEntry)
 		appendJSONLiteral(&buf, "backend_type", MyBgworkerEntry->bgw_type, true);
 	else
 		appendJSONLiteral(&buf, "backend_type", GetBackendTypeDesc(MyBackendType), true);
@@ -516,7 +516,10 @@ jsonlog_write_json(ErrorData *edata)
 	/* Write to stderr, if enabled */
 	if ((Log_destination & LOG_DESTINATION_STDERR) != 0)
 	{
-#if PG_VERSION_NUM >= 130000
+#if PG_VERSION_NUM >= 190000
+		if (syslogger_setup_done && redirection_done &&
+			MyBackendType != B_LOGGER)
+#elif PG_VERSION_NUM >= 130000
 		if (redirection_done && MyBackendType != B_LOGGER)
 #else
 		if (redirection_done && !am_syslogger)
@@ -527,7 +530,9 @@ jsonlog_write_json(ErrorData *edata)
 	}
 
 	/* If in the syslogger process, try to write messages direct to file */
-#if PG_VERSION_NUM >= 130000
+#if PG_VERSION_NUM >= 190000
+	if (MyBackendType == B_LOGGER && syslogger_setup_done)
+#elif PG_VERSION_NUM >= 130000
 	if (MyBackendType == B_LOGGER)
 #else
 	if (am_syslogger)
