@@ -458,6 +458,26 @@ blackhole_relation_needs_toast_table(Relation rel)
 	return false;
 }
 
+/*
+ * No need for TOAST tables, so return an invalid value.
+ */
+static Oid
+blackhole_relation_toast_am(Relation rel)
+{
+	return InvalidOid;
+}
+
+/*
+ * Fetch a TOAST slice from a heap table.
+ */
+static void
+blackhole_fetch_toast_slice(Relation toastrel, Oid valueid, int32 attrsize,
+							int32 sliceoffset, int32 slicelength,
+							varlena *result)
+{
+	BLAM_NOTICE();
+	return;
+}
 
 /* ------------------------------------------------------------------------
  * Planner related callbacks for the blackhole AM
@@ -575,6 +595,8 @@ static const TableAmRoutine blackhole_methods = {
 
 	.relation_size = blackhole_relation_size,
 	.relation_needs_toast_table = blackhole_relation_needs_toast_table,
+	.relation_toast_am = blackhole_relation_toast_am,
+	.relation_fetch_toast_slice = blackhole_fetch_toast_slice,
 
 	.relation_estimate_size = blackhole_estimate_rel_size,
 

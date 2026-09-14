@@ -1,5 +1,5 @@
 CREATE EXTENSION blackhole_am;
-CREATE TABLE blackhole_tab (a int) USING blackhole_am;
+CREATE TABLE blackhole_tab (a int, b text) USING blackhole_am;
 NOTICE:  calling function blackhole_am_handler
 NOTICE:  calling function blackhole_relation_set_new_filelocator
 NOTICE:  calling function blackhole_am_handler
@@ -13,11 +13,11 @@ NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_scan_begin
 NOTICE:  calling function blackhole_scan_getnextslot
 NOTICE:  calling function blackhole_scan_end
- a 
----
+ a | b 
+---+---
 (0 rows)
 
-INSERT INTO blackhole_tab VALUES (1);
+INSERT INTO blackhole_tab VALUES (1, 'aaaa');
 NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_tuple_insert
 SELECT * FROM blackhole_tab;
@@ -26,8 +26,8 @@ NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_scan_begin
 NOTICE:  calling function blackhole_scan_getnextslot
 NOTICE:  calling function blackhole_scan_end
- a 
----
+ a | b 
+---+---
 (0 rows)
 
 UPDATE blackhole_tab SET a = 0 WHERE a = 1;
@@ -42,8 +42,8 @@ NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_scan_begin
 NOTICE:  calling function blackhole_scan_getnextslot
 NOTICE:  calling function blackhole_scan_end
- a 
----
+ a | b 
+---+---
 (0 rows)
 
 DELETE FROM blackhole_tab WHERE a = 1;
@@ -58,8 +58,8 @@ NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_scan_begin
 NOTICE:  calling function blackhole_scan_getnextslot
 NOTICE:  calling function blackhole_scan_end
- a 
----
+ a | b 
+---+---
 (0 rows)
 
 -- ALTER TABLE SET ACCESS METHOD
@@ -70,17 +70,18 @@ NOTICE:  calling function blackhole_scan_begin
 NOTICE:  calling function blackhole_scan_getnextslot
 NOTICE:  calling function blackhole_scan_end
 NOTICE:  calling function blackhole_am_handler
-INSERT INTO blackhole_tab VALUES (1);
+INSERT INTO blackhole_tab VALUES (1, 'bbbb');
 SELECT * FROM blackhole_tab;
- a 
----
- 1
+ a |  b   
+---+------
+ 1 | bbbb
 (1 row)
 
 ALTER TABLE blackhole_tab SET ACCESS METHOD blackhole_am;
 NOTICE:  calling function blackhole_am_handler
 NOTICE:  calling function blackhole_relation_set_new_filelocator
 NOTICE:  calling function blackhole_am_handler
+NOTICE:  calling function blackhole_relation_needs_toast_table
 NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_tuple_insert
 NOTICE:  calling function blackhole_finish_bulk_insert
@@ -94,8 +95,8 @@ NOTICE:  calling function blackhole_slot_callbacks
 NOTICE:  calling function blackhole_scan_begin
 NOTICE:  calling function blackhole_scan_getnextslot
 NOTICE:  calling function blackhole_scan_end
- a 
----
+ a | b 
+---+---
 (0 rows)
 
 -- Clean up

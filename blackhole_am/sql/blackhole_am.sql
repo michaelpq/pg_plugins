@@ -1,7 +1,7 @@
 CREATE EXTENSION blackhole_am;
-CREATE TABLE blackhole_tab (a int) USING blackhole_am;
+CREATE TABLE blackhole_tab (a int, b text) USING blackhole_am;
 SELECT * FROM blackhole_tab;
-INSERT INTO blackhole_tab VALUES (1);
+INSERT INTO blackhole_tab VALUES (1, 'aaaa');
 SELECT * FROM blackhole_tab;
 UPDATE blackhole_tab SET a = 0 WHERE a = 1;
 SELECT * FROM blackhole_tab;
@@ -10,7 +10,7 @@ SELECT * FROM blackhole_tab;
 
 -- ALTER TABLE SET ACCESS METHOD
 ALTER TABLE blackhole_tab SET ACCESS METHOD heap;
-INSERT INTO blackhole_tab VALUES (1);
+INSERT INTO blackhole_tab VALUES (1, 'bbbb');
 SELECT * FROM blackhole_tab;
 ALTER TABLE blackhole_tab SET ACCESS METHOD blackhole_am;
 SELECT * FROM blackhole_tab;
